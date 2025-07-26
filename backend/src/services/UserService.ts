@@ -1,11 +1,16 @@
 import User from '@models/User';
+import Language from '@models/Language';
 import { HashUtils } from '@utils/HashUtils';
 import { CustomError } from '@middleware/errorHandler';
 import { IUser } from '@/types/user';
 
 export class UserService {
+    private static generateVerificationCode(): string {
+        return Math.floor(100000 + Math.random() * 900000).toString();
+    }
+
     static async getProfile(userId: string): Promise<IUser> {
-        const user = await User.findById(userId);
+        const user = await User.findById(userId).populate('language');
         if (!user) {
             throw new CustomError('User not found', 404);
         }
@@ -24,14 +29,31 @@ export class UserService {
                 throw new CustomError('Email already in use', 400);
             }
             user.emailVerifiedAt = null;
-            user.verificationCode = Math.floor(100 + Math.random() * 900).toString();
-            // TODO: Send verification email
-            console.log(`New verification code ${user.verificationCode} would be sent to ${updateData.email}`);
+            const verificationCode = this.generateVerificationCode();
+            user.verificationCode = await HashUtils.hashVerificationCode(verificationCode);
+            console.log(`New verification code ${verificationCode} would be sent to ${updateData.email}`);
         }
 
         Object.assign(user, updateData);
         await user.save();
         return user;
+    }
+
+    static async updateLanguage(userId: string, languageCode: string): Promise<IUser> {
+        const user = await User.findById(userId);
+        if (!user) {
+            throw new CustomError('User not found', 404);
+        }
+
+        const language = await Language.findOne({ code: languageCode, isActive: true });
+        if (!language) {
+            throw new CustomError('Invalid or inactive language code', 400);
+        }
+
+        user.language = language._id as string;
+        await user.save();
+
+        return user.populate('language');
     }
 
     static async changePassword(
