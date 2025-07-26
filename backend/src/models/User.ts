@@ -19,8 +19,7 @@ const userSchema = new Schema({
         required: true
     },
     verificationCode: {
-        type: String,
-        length: 3
+        type: String
     },
     emailVerifiedAt: {
         type: Date,
@@ -28,6 +27,23 @@ const userSchema = new Schema({
     },
     lastSentOtp: {
         type: Date,
+        default: null
+    },
+    resetPasswordToken: {
+        type: String,
+        default: null
+    },
+    resetPasswordExpires: {
+        type: Date,
+        default: null
+    },
+    lastResetRequest: {
+        type: Date,
+        default: null
+    },
+    language: {
+        type: Schema.Types.ObjectId,
+        ref: 'Language',
         default: null
     }
 }, { 
@@ -39,6 +55,9 @@ const userSchema = new Schema({
             delete transformed.password;
             delete transformed.verificationCode;
             delete transformed.lastSentOtp;
+            delete transformed.resetPasswordToken;
+            delete transformed.resetPasswordExpires;
+            delete transformed.lastResetRequest;
             delete transformed.__v;
             delete transformed.createdAt;
             delete transformed.updatedAt;
