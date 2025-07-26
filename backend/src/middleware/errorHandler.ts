@@ -44,6 +44,6 @@ export const errorHandler = (err: Error, req: Request, res: Response, next: Next
         ResponseUtils.error(res, 'Duplicate key error');
         return;
     }
-
+    
     ResponseUtils.serverError(res, 'Something went wrong');
 }; 
