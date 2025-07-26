@@ -1,5 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
-import { IUser } from '../types/user';
+import { IUser } from '@/types/user';
 
 const userSchema = new Schema({
     email: {
@@ -17,6 +17,14 @@ const userSchema = new Schema({
     password: {
         type: String,
         required: true
+    },
+    verificationCode: {
+        type: String,
+        length: 3
+    },
+    email_verified_at: {
+        type: Date,
+        default: null
     }
 }, { timestamps: true });
 
