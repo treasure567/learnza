@@ -17,13 +17,13 @@ export const notFoundHandler = (req: Request, res: Response): void => {
 };
 
 export const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction): void => {
-    console.error('Error:', {
-        name: err.name,
-        message: err.message,
-        stack: err.stack,
-        path: req.path,
-        method: req.method
-    });
+    // console.error('Error:', {
+    //     name: err.name,
+    //     message: err.message,
+    //     stack: err.stack,
+    //     path: req.path,
+    //     method: req.method
+    // });
 
     if (err instanceof CustomError) {
         ResponseUtils.error(res, err.message, err.statusCode);
