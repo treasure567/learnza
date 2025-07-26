@@ -1,5 +1,6 @@
-import { Language } from '@/types/misc';
+import { Language, Accessibility } from '@/types/misc';
 import LanguageModel from '@models/Language';
+import AccessibilityModel from '@models/Accessibility';
 import { CustomError } from '@middleware/errorHandler';
 
 class MiscService {
@@ -20,11 +21,18 @@ class MiscService {
     private async initialize(): Promise<void> {
         if (this.initialized) return;
 
-        console.log('Initializing MiscService - Seeding languages');
+        console.log('Initializing MiscService - Seeding data');
         try {
-            const languageCount = await LanguageModel.countDocuments();
+            const [languageCount, accessibilityCount] = await Promise.all([
+                LanguageModel.countDocuments(),
+                AccessibilityModel.countDocuments()
+            ]);
+
             if (languageCount === 0) {
                 await this.seedLanguages();
+            }
+            if (accessibilityCount === 0) {
+                await this.seedAccessibilities();
             }
             this.initialized = true;
         } catch (error) {
@@ -117,9 +125,78 @@ class MiscService {
         }
     }
 
+    private async seedAccessibilities(): Promise<void> {
+        const defaultAccessibilities: Accessibility[] = [
+            {
+                value: 'signLanguage',
+                name: 'Sign Language',
+                description: 'Needs sign language translation or overlay'
+            },
+            {
+                value: 'textToSpeech',
+                name: 'Text to Speech',
+                description: 'Needs lessons read out loud automatically'
+            },
+            {
+                value: 'speechToText',
+                name: 'Speech to Text',
+                description: 'Needs audio/video lessons transcribed'
+            },
+            {
+                value: 'highContrast',
+                name: 'High Contrast',
+                description: 'Needs high contrast UI for low vision'
+            },
+            {
+                value: 'largeText',
+                name: 'Large Text',
+                description: 'Needs larger text / bigger fonts'
+            },
+            {
+                value: 'captions',
+                name: 'Captions',
+                description: 'Needs closed captions for videos'
+            },
+            {
+                value: 'audioDescription',
+                name: 'Audio Description',
+                description: 'Needs audio description of visuals'
+            },
+            {
+                value: 'keyboardOnly',
+                name: 'Keyboard Only',
+                description: 'Needs to navigate fully by keyboard (no mouse)'
+            },
+            {
+                value: 'slowMode',
+                name: 'Slow Mode',
+                description: 'Needs extra time / reduced animations'
+            }
+        ];
+
+        try {
+            const operations = defaultAccessibilities.map(accessibility => ({
+                updateOne: {
+                    filter: { value: accessibility.value },
+                    update: { ...accessibility, isActive: true },
+                    upsert: true
+                }
+            }));
+
+            await AccessibilityModel.bulkWrite(operations);
+        } catch (error) {
+            throw new CustomError('Failed to seed accessibilities', 500);
+        }
+    }
+
     public async getLanguages(): Promise<Language[]> {
         await this.initialize();
         return LanguageModel.find({ isActive: true });
+    }
+
+    public async getAccessibilities(): Promise<Accessibility[]> {
+        await this.initialize();
+        return AccessibilityModel.find({ isActive: true });
     }
 }
 
