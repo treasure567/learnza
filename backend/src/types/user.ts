@@ -12,6 +12,7 @@ export interface IUser extends Document {
     resetPasswordExpires: Date | null;
     lastResetRequest: Date | null;
     language: string | null;
+    accessibilityNeeds: string[];
     createdAt: Date;
     updatedAt: Date;
 }
@@ -36,4 +37,8 @@ export interface ResetPasswordRequest {
 
 export interface UpdateLanguageRequest {
     languageCode: string;
+}
+
+export interface UpdateAccessibilityRequest {
+    accessibilityIds: string[];
 } 
