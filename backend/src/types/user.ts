@@ -5,7 +5,8 @@ export interface IUser extends Document {
     name: string;
     password: string;
     verificationCode?: string;
-    email_verified_at: Date | null;
+    emailVerifiedAt: Date | null;
+    lastSentOtp: Date | null;
     createdAt: Date;
     updatedAt: Date;
 }
