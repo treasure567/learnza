@@ -31,7 +31,7 @@ contract Learnza is ERC20, ERC20Burnable, Ownable {
 
     constructor() ERC20("Learnza Token", "LEARNZA") Ownable(msg.sender) {
         _mint(msg.sender, TOTAL_SUPPLY);
-        totalPdfxMinted += TOTAL_SUPPLY;
+        totalLearnzaMinted += TOTAL_SUPPLY;
     }
 
     function claimTokens() public {
