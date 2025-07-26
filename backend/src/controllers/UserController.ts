@@ -2,7 +2,7 @@ import { Response } from 'express';
 import { ResponseUtils } from '@utils/ResponseUtils';
 import { AuthRequest } from '@middleware/authMiddleware';
 import { UserService } from '@services/UserService';
-import { UpdateLanguageRequest } from '@/types/user';
+import { UpdateLanguageRequest, UpdateAccessibilityRequest } from '@/types/user';
 
 export class UserController {
     static async getProfile(req: AuthRequest, res: Response): Promise<void> {
@@ -29,6 +29,16 @@ export class UserController {
             const { languageCode } = req.body as UpdateLanguageRequest;
             const user = await UserService.updateLanguage(req.user._id, languageCode);
             ResponseUtils.success(res, user, 'Language preference updated successfully');
+        } catch (error) {
+            ResponseUtils.error(res, (error as Error).message);
+        }
+    }
+
+    static async updateAccessibilityNeeds(req: AuthRequest, res: Response): Promise<void> {
+        try {
+            const { accessibilityIds } = req.body as UpdateAccessibilityRequest;
+            const user = await UserService.updateAccessibilityNeeds(req.user._id, accessibilityIds);
+            ResponseUtils.success(res, user, 'Accessibility needs updated successfully');
         } catch (error) {
             ResponseUtils.error(res, (error as Error).message);
         }
