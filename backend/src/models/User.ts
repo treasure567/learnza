@@ -45,7 +45,11 @@ const userSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'Language',
         default: null
-    }
+    },
+    accessibilityNeeds: [{
+        type: Schema.Types.ObjectId,
+        ref: 'Accessibility'
+    }]
 }, { 
     timestamps: true,
     toJSON: {
