@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { JwtUtils } from '@utils/JwtUtils';
 import { CustomError } from '@middleware/errorHandler';
 import User from '@models/User';
+import { ResponseUtils } from '@utils/ResponseUtils';
 
 export interface AuthRequest extends Request {
     user?: any;
@@ -26,8 +27,8 @@ export const authMiddleware = async (req: AuthRequest, res: Response, next: Next
         next();
     } catch (error) {
         if (error instanceof Error) {
-            throw new CustomError(error.message, 401);
+            return ResponseUtils.unauthorized(res, "Authentication failed");
         }
-        throw new CustomError('Authentication failed', 401);
+        return ResponseUtils.unauthorized(res, 'Authentication failed');
     }
 }; 
