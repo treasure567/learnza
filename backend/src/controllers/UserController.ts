@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { ResponseUtils } from '@utils/ResponseUtils';
 import { AuthRequest } from '@middleware/authMiddleware';
 import { UserService } from '@services/UserService';
+import { UpdateLanguageRequest } from '@/types/user';
 
 export class UserController {
     static async getProfile(req: AuthRequest, res: Response): Promise<void> {
@@ -18,6 +19,16 @@ export class UserController {
             const { name, email } = req.body;
             const user = await UserService.updateProfile(req.user._id, { name, email });
             ResponseUtils.success(res, user, 'Profile updated successfully');
+        } catch (error) {
+            ResponseUtils.error(res, (error as Error).message);
+        }
+    }
+
+    static async updateLanguage(req: AuthRequest, res: Response): Promise<void> {
+        try {
+            const { languageCode } = req.body as UpdateLanguageRequest;
+            const user = await UserService.updateLanguage(req.user._id, languageCode);
+            ResponseUtils.success(res, user, 'Language preference updated successfully');
         } catch (error) {
             ResponseUtils.error(res, (error as Error).message);
         }
