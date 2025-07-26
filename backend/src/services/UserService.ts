@@ -1,5 +1,6 @@
 import User from '@models/User';
 import Language from '@models/Language';
+import Accessibility from '@models/Accessibility';
 import { HashUtils } from '@utils/HashUtils';
 import { CustomError } from '@middleware/errorHandler';
 import { IUser } from '@/types/user';
@@ -10,7 +11,9 @@ export class UserService {
     }
 
     static async getProfile(userId: string): Promise<IUser> {
-        const user = await User.findById(userId).populate('language');
+        const user = await User.findById(userId)
+            .populate('language')
+            .populate('accessibilityNeeds');
         if (!user) {
             throw new CustomError('User not found', 404);
         }
@@ -54,6 +57,31 @@ export class UserService {
         await user.save();
 
         return user.populate('language');
+    }
+
+    static async updateAccessibilityNeeds(userId: string, accessibilityIds: string[]): Promise<IUser> {
+        const user = await User.findById(userId);
+        if (!user) {
+            throw new CustomError('User not found', 404);
+        }
+
+        if (accessibilityIds.length > 0) {
+            const accessibilities = await Accessibility.find({
+                value: { $in: accessibilityIds },
+                isActive: true
+            });
+
+            if (accessibilities.length !== accessibilityIds.length) {
+                throw new CustomError('One or more invalid or inactive accessibility options', 400);
+            }
+
+            user.accessibilityNeeds = accessibilities.map(a => a._id as string);
+        } else {
+            user.accessibilityNeeds = [];
+        }
+
+        await user.save();
+        return user.populate(['language', 'accessibilityNeeds']);
     }
 
     static async changePassword(
