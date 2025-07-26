@@ -112,7 +112,10 @@ contract Learnza is ERC20, ERC20Burnable, Ownable {
         return balanceOf(msg.sender);
     }
 
-    function deductFromUserBalance(address _user, uint256 _amount) public onlyOwner {
+    function deductFromUserBalance(
+        address _user,
+        uint256 _amount
+    ) public onlyOwner {
         _burn(_user, _amount);
     }
 }
