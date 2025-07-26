@@ -1,6 +1,7 @@
 import User from '@models/User';
 import { HashUtils } from '@utils/HashUtils';
 import { JwtUtils } from '@utils/JwtUtils';
+import { RateLimitUtils } from '@utils/RateLimitUtils';
 import { IUser, UserResponse } from '@/types/user';
 import { CustomError } from '@middleware/errorHandler';
 
@@ -18,7 +19,8 @@ export class AuthService {
             email,
             name,
             password: hashedPassword,
-            verificationCode
+            verificationCode,
+            lastSentOtp: new Date()
         });
 
         // TODO: Send verification code to user's email
@@ -49,7 +51,7 @@ export class AuthService {
             throw new CustomError('User not found', 404);
         }
 
-        if (user.email_verified_at) {
+        if (user.emailVerifiedAt) {
             throw new CustomError('Email already verified', 400);
         }
 
@@ -57,7 +59,7 @@ export class AuthService {
             throw new CustomError('Invalid verification code', 400);
         }
 
-        user.email_verified_at = new Date();
+        user.emailVerifiedAt = new Date();
         user.verificationCode = undefined;
         await user.save();
 
@@ -70,12 +72,18 @@ export class AuthService {
             throw new CustomError('User not found', 404);
         }
 
-        if (user.email_verified_at) {
+        if (user.emailVerifiedAt) {
             throw new CustomError('Email already verified', 400);
+        }
+
+        if (!RateLimitUtils.canResendOtp(user.lastSentOtp)) {
+            const secondsRemaining = RateLimitUtils.getTimeUntilNextAttempt(user.lastSentOtp);
+            throw new CustomError(`Please wait ${secondsRemaining} seconds before requesting a new code`, 429);
         }
 
         const verificationCode = Math.floor(100 + Math.random() * 900).toString();
         user.verificationCode = verificationCode;
+        user.lastSentOtp = new Date();
         await user.save();
 
         // TODO: Send new verification code to user's email
