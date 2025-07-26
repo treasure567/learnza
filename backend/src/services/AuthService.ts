@@ -1,21 +1,28 @@
-import User from '../models/User';
-import { HashUtils } from '../utils/HashUtils';
-import { JwtUtils } from '../utils/JwtUtils';
-import { IUser, UserResponse } from '../types/user';
+import User from '@models/User';
+import { HashUtils } from '@utils/HashUtils';
+import { JwtUtils } from '@utils/JwtUtils';
+import { IUser, UserResponse } from '@/types/user';
+import { CustomError } from '@middleware/errorHandler';
 
 export class AuthService {
     static async register(email: string, name: string, password: string): Promise<UserResponse> {
         const existingUser = await User.findOne({ email });
         if (existingUser) {
-            throw new Error('Email already registered');
+            throw new CustomError('Email already registered', 400);
         }
 
         const hashedPassword = await HashUtils.hash(password);
+        const verificationCode = Math.floor(100 + Math.random() * 900).toString();
+        
         const user = await User.create({
             email,
             name,
-            password: hashedPassword
+            password: hashedPassword,
+            verificationCode
         });
+
+        // TODO: Send verification code to user's email
+        console.log(`Verification code ${verificationCode} would be sent to ${email}`);
 
         const token = JwtUtils.generateToken({ userId: user._id as string });
         return { user, token };
@@ -24,15 +31,54 @@ export class AuthService {
     static async login(email: string, password: string): Promise<UserResponse> {
         const user = await User.findOne({ email });
         if (!user) {
-            throw new Error('Invalid credentials');
+            throw new CustomError('Invalid credentials', 401);
         }
 
         const isValidPassword = await HashUtils.compare(password, user.password);
         if (!isValidPassword) {
-            throw new Error('Invalid credentials');
+            throw new CustomError('Invalid credentials', 401);
         }
 
         const token = JwtUtils.generateToken({ userId: user._id as string });
         return { user, token };
+    }
+
+    static async verifyEmail(userId: string, code: string): Promise<IUser> {
+        const user = await User.findById(userId);
+        if (!user) {
+            throw new CustomError('User not found', 404);
+        }
+
+        if (user.email_verified_at) {
+            throw new CustomError('Email already verified', 400);
+        }
+
+        if (user.verificationCode !== code) {
+            throw new CustomError('Invalid verification code', 400);
+        }
+
+        user.email_verified_at = new Date();
+        user.verificationCode = undefined;
+        await user.save();
+
+        return user;
+    }
+
+    static async resendVerificationCode(userId: string): Promise<void> {
+        const user = await User.findById(userId);
+        if (!user) {
+            throw new CustomError('User not found', 404);
+        }
+
+        if (user.email_verified_at) {
+            throw new CustomError('Email already verified', 400);
+        }
+
+        const verificationCode = Math.floor(100 + Math.random() * 900).toString();
+        user.verificationCode = verificationCode;
+        await user.save();
+
+        // TODO: Send new verification code to user's email
+        console.log(`New verification code ${verificationCode} would be sent to ${user.email}`);
     }
 } 
