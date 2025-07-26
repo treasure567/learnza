@@ -11,4 +11,13 @@ export class MiscController {
             ResponseUtils.error(res, (error as Error).message);
         }
     }
+
+    static async getAccessibilities(req: Request, res: Response): Promise<void> {
+        try {
+            const accessibilities = await MiscService.getAccessibilities();
+            ResponseUtils.success(res, { accessibilities }, 'Accessibility options retrieved successfully');
+        } catch (error) {
+            ResponseUtils.error(res, (error as Error).message);
+        }
+    }
 }
