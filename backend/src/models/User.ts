@@ -22,10 +22,29 @@ const userSchema = new Schema({
         type: String,
         length: 3
     },
-    email_verified_at: {
+    emailVerifiedAt: {
+        type: Date,
+        default: null
+    },
+    lastSentOtp: {
         type: Date,
         default: null
     }
-}, { timestamps: true });
+}, { 
+    timestamps: true,
+    toJSON: {
+        transform: function(_doc: any, ret: Record<string, any>) {
+            const transformed = { ...ret };
+            delete transformed._id;
+            delete transformed.password;
+            delete transformed.verificationCode;
+            delete transformed.lastSentOtp;
+            delete transformed.__v;
+            delete transformed.createdAt;
+            delete transformed.updatedAt;
+            return transformed;
+        }
+    }
+});
 
 export default mongoose.model<IUser>('User', userSchema); 
