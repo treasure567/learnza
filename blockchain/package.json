@@ -1,0 +1,46 @@
+{
+  "name": "learnza-blockchain",
+  "version": "1.0.0",
+  "description": "Learnza Token on EduChain Network",
+  "main": "index.js",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:local": "hardhat run scripts/deploy.ts --network hardhat",
+    "deploy:educhain": "hardhat run scripts/deploy.ts --network eduChainTestnet",
+    "verify:educhain": "hardhat run scripts/verify.ts --network eduChainTestnet",
+    "main": "hardhat run scripts/main.ts --network eduChainTestnet",
+    "clean": "hardhat clean",
+    "coverage": "hardhat coverage",
+    "server": "hardhat run server.ts --network eduChainTestnet",
+    "server:dev": "nodemon -x 'hardhat run server.ts --network eduChainTestnet'"
+  },
+  "keywords": [
+    "educhain",
+    "opencampus",
+    "ethereum",
+    "hardhat",
+    "solidity",
+    "token"
+  ],
+  "author": "Learnza",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@openzeppelin/contracts": "^5.4.0",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.10.6",
+    "dotenv": "^16.3.1",
+    "hardhat": "^2.19.4",
+    "nodemon": "^3.0.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "axios": "^1.10.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "openzeppelin": "^1.0.0"
+  }
+}
