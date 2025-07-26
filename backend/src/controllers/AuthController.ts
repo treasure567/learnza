@@ -1,15 +1,17 @@
 import { Request, Response } from 'express';
-import { AuthService } from '../services/AuthService';
-import { UserResponse } from '../types/user';
+import { AuthService } from '@services/AuthService';
+import { UserResponse, VerifyEmailRequest } from '@/types/user';
+import { ResponseUtils } from '@utils/ResponseUtils';
+import { AuthRequest } from '@middleware/authMiddleware';
 
 export class AuthController {
     static async register(req: Request, res: Response): Promise<void> {
         try {
             const { email, name, password } = req.body;
             const result: UserResponse = await AuthService.register(email, name, password);
-            res.status(201).json(result);
+            ResponseUtils.created(res, result, 'User registered successfully. Please check your email for verification code.');
         } catch (error) {
-            res.status(400).json({ error: (error as Error).message });
+            ResponseUtils.error(res, (error as Error).message);
         }
     }
 
@@ -17,9 +19,28 @@ export class AuthController {
         try {
             const { email, password } = req.body;
             const result: UserResponse = await AuthService.login(email, password);
-            res.status(200).json(result);
+            ResponseUtils.success(res, result, 'Login successful');
         } catch (error) {
-            res.status(401).json({ error: (error as Error).message });
+            ResponseUtils.unauthorized(res, (error as Error).message);
+        }
+    }
+
+    static async verifyEmail(req: AuthRequest, res: Response): Promise<void> {
+        try {
+            const { code } = req.body as VerifyEmailRequest;
+            const user = await AuthService.verifyEmail(req.user._id, code);
+            ResponseUtils.success(res, user, 'Email verified successfully');
+        } catch (error) {
+            ResponseUtils.error(res, (error as Error).message);
+        }
+    }
+
+    static async resendVerificationCode(req: AuthRequest, res: Response): Promise<void> {
+        try {
+            await AuthService.resendVerificationCode(req.user._id);
+            ResponseUtils.success(res, null, 'Verification code resent successfully');
+        } catch (error) {
+            ResponseUtils.error(res, (error as Error).message);
         }
     }
 } 
