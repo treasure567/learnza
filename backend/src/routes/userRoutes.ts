@@ -10,6 +10,6 @@ const router = Router();
 router.get('/profile', authMiddleware, verifiedEmailMiddleware, UserController.getProfile);
 router.put('/profile', authMiddleware, UserController.updateProfile);
 router.post('/change-password', authMiddleware, verifiedEmailMiddleware, UserController.changePassword);
-router.put('/language', authMiddleware, validateRequest(updateLanguageRules), UserController.updateLanguage);
+router.put('/update-language', authMiddleware, validateRequest(updateLanguageRules), UserController.updateLanguage);
 
 export default router; 
