@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 import express, { Application } from 'express';
 import mongoose from 'mongoose';
 import authRoutes from '@/routes/authRoutes';
+import userRoutes from '@/routes/userRoutes';
 import { errorHandler, notFoundHandler } from '@middleware/errorHandler';
 
 dotenv.config();
@@ -11,9 +12,9 @@ const app: Application = express();
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);
+app.use('/api/user', userRoutes);
 
 app.use(notFoundHandler);
-
 app.use(errorHandler);
 
 const MONGO_URI = process.env.MONGO_URI!;
