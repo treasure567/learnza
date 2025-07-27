@@ -4,7 +4,7 @@ import localFont from "next/font/local";
 import { AOS } from "./components/global";
 import { Montserrat } from "next/font/google";
 import type { Metadata, Viewport } from "next";
-import { ThemeProvider } from "./components/theme-provider";
+import { ThemeProvider } from "./components/global/theme-provider";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",

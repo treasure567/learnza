@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Button } from "@/app/components/ui";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/app/components/ui";
 
 export default function VerifyEmailPage() {
   const router = useRouter();

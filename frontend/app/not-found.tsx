@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { useTheme } from "./components/theme-provider";
+import { useTheme } from "./components/global/theme-provider";
 
 export default function NotFound() {
   const { theme } = useTheme();

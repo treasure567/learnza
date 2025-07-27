@@ -1,5 +1,5 @@
 import React from "react";
-import ThemeToggle from "../components/theme-toggle";
+import ThemeToggle from "../components/global/theme-toggle";
 
 export default function AuthLayout({
   children,
