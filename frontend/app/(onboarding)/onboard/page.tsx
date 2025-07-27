@@ -14,13 +14,14 @@ type Language = {
 };
 
 type LanguageOption = {
-  label: React.ReactNode;
+  label: string;
   value: string;
 };
 
-type Accessibility = {
-  label: string;
+type AccessibilityOption = {
   value: string;
+  description: string;
+  name: string;
 };
 
 type ApiResponse<T> = {
@@ -29,10 +30,38 @@ type ApiResponse<T> = {
   data?: T;
 };
 
+const AccessibilityIcon = ({ selected }: { selected: boolean }) => (
+  <div
+    className={`shrink-0 w-5 h-5 rounded-md border-2 transition-colors ${
+      selected
+        ? "bg-primary border-primary"
+        : "border-[#FFFFFF40] hover:border-[#FFFFFF60]"
+    }`}
+  >
+    {selected && (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        className="w-full h-full p-0.5 text-white"
+      >
+        <path
+          d="M20 6L9 17L4 12"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    )}
+  </div>
+);
+
 export default function OnboardPage() {
   const router = useRouter();
   const [languages, setLanguages] = useState<LanguageOption[]>([]);
-  const [accessibilities, setAccessibilities] = useState<Accessibility[]>([]);
+  const [accessibilities, setAccessibilities] = useState<AccessibilityOption[]>(
+    []
+  );
   const [loading, setLoading] = useState(false);
   const {
     step,
@@ -50,37 +79,22 @@ export default function OnboardPage() {
           miscApi.getLanguages() as Promise<
             ApiResponse<{ languages: Language[] }>
           >,
-          miscApi.getAccessibilities(),
+          miscApi.getAccessibilities() as Promise<
+            ApiResponse<{ accessibilities: AccessibilityOption[] }>
+          >,
         ]);
 
         if (langRes.data?.languages) {
           setLanguages(
             langRes.data.languages.map((lang) => ({
               value: lang.code,
-              label: (
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium text-white">{lang.name}</span>
-                    <span className="text-sm text-[#FFFFFF80]">
-                      {lang.region}
-                    </span>
-                  </div>
-                  <span className="text-sm text-[#FFFFFF80]">
-                    {lang.nativeName}
-                  </span>
-                </div>
-              ),
+              label: lang.name,
             }))
           );
         }
 
         if (accRes.data?.accessibilities) {
-          setAccessibilities(
-            accRes.data.accessibilities.map((acc: string) => ({
-              label: acc,
-              value: acc.toLowerCase(),
-            }))
-          );
+          setAccessibilities(accRes.data.accessibilities);
         }
       } catch (error) {
         console.error("Failed to fetch onboarding data:", error);
@@ -114,11 +128,11 @@ export default function OnboardPage() {
     }
   };
 
-  const handleAccessibilityToggle = (id: string) => {
+  const handleAccessibilityToggle = (value: string) => {
     setAccessibilityIds(
-      accessibilityIds.includes(id)
-        ? accessibilityIds.filter((accId) => accId !== id)
-        : [...accessibilityIds, id]
+      accessibilityIds.includes(value)
+        ? accessibilityIds.filter((accId) => accId !== value)
+        : [...accessibilityIds, value]
     );
   };
 
@@ -160,31 +174,51 @@ export default function OnboardPage() {
                 onChange={setLanguage}
                 options={languages}
                 placeholder="Select language"
-                className="[&>div]:min-h-[4.5rem]"
               />
             </div>
           ) : (
             <div className="space-y-4">
-              <h2 className="text-xl font-semibold">
-                Accessibility preferences
-              </h2>
-              <p className="text-[#FFFFFF80] text-sm">
-                Select any accessibility features you need
-              </p>
-              <div className="space-y-3">
+              <div>
+                <h2 className="text-xl font-semibold">
+                  Accessibility preferences
+                </h2>
+                <p className="text-[#FFFFFF80] text-sm mt-1">
+                  Select any accessibility features you need
+                </p>
+              </div>
+
+              <div className="grid gap-3">
                 {accessibilities.map((acc) => (
                   <button
                     key={acc.value}
                     onClick={() => handleAccessibilityToggle(acc.value)}
-                    className={`w-full px-4 py-3 rounded-[12px] border text-left transition-colors ${
+                    className={`w-full p-4 rounded-xl border text-left transition-all hover:border-[#FFFFFF40] ${
                       accessibilityIds.includes(acc.value)
-                        ? "border-primary bg-primary/10 text-white"
-                        : "border-[#FFFFFF29] text-[#FFFFFF80] hover:border-[#FFFFFF40]"
+                        ? "border-primary bg-primary/5"
+                        : "border-[#FFFFFF29]"
                     }`}
                   >
-                    {acc.label}
+                    <div className="flex gap-3">
+                      <AccessibilityIcon
+                        selected={accessibilityIds.includes(acc.value)}
+                      />
+                      <div className="flex-1">
+                        <div className="font-medium text-white">{acc.name}</div>
+                        <div className="text-sm text-[#FFFFFF80] mt-0.5">
+                          {acc.description}
+                        </div>
+                      </div>
+                    </div>
                   </button>
                 ))}
+              </div>
+
+              <div className="text-sm text-[#FFFFFF80] mt-2 text-center">
+                {accessibilityIds.length === 0
+                  ? "No accessibility features selected"
+                  : `${accessibilityIds.length} feature${
+                      accessibilityIds.length === 1 ? "" : "s"
+                    } selected`}
               </div>
             </div>
           )}
@@ -193,7 +227,7 @@ export default function OnboardPage() {
             {step === 2 && (
               <button
                 onClick={handleBack}
-                className="flex-1 px-4 py-3 rounded-[12px] border border-[#FFFFFF29] text-white hover:bg-[#FFFFFF0A] transition-colors"
+                className="flex-1 px-4 py-3 rounded-xl border border-[#FFFFFF29] text-white hover:bg-[#FFFFFF0A] transition-colors"
               >
                 Back
               </button>
@@ -201,7 +235,7 @@ export default function OnboardPage() {
             <button
               onClick={handleNext}
               disabled={step === 1 && !language}
-              className={`flex-1 px-4 py-3 rounded-[12px] font-medium transition-colors ${
+              className={`flex-1 px-4 py-3 rounded-xl font-medium transition-colors ${
                 loading
                   ? "bg-primary/50 cursor-not-allowed"
                   : step === 1 && !language
