@@ -24,8 +24,10 @@ export default function Input({
             {...(props as React.TextareaHTMLAttributes<HTMLTextAreaElement>)}
             placeholder={placeholder}
             className={clsx(
-              "w-full bg-dark p-4 rounded-[12px] text-light placeholder:text-light/60 font-aloe text-base leading-[22.4px] focus:outline-none focus:ring-0 focus:ring-primary/20 focus:bg-dark-100",
-              error && "border-1 border-red-500"
+              "w-full bg-white p-4 rounded-lg border border-text/10 text-text placeholder:text-text/50 text-base leading-relaxed transition-colors",
+              "focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary hover:border-text/20",
+              error &&
+                "border-red-500 focus:ring-red-500/20 focus:border-red-500"
             )}
           />
         ) : (
@@ -35,26 +37,25 @@ export default function Input({
             placeholder={placeholder}
             autoComplete="off"
             className={clsx(
-              "w-full bg-dark h-full p-4 rounded-[12px] text-light placeholder:text-light/60 font-aloe text-base leading-[22.4px] focus:outline-none focus:ring-0 focus:ring-primary/20 focus:bg-dark-100",
-              error && "border-1 border-red-500",
+              "w-full bg-white h-full p-4 rounded-lg border border-text/10 text-text placeholder:text-text/50 text-base leading-relaxed transition-colors",
+              "focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary hover:border-text/20",
+              error &&
+                "border-red-500 focus:ring-red-500/20 focus:border-red-500",
               type === "password" && "pr-12"
             )}
           />
         )}
         {type === "password" && (
-          <span
+          <button
+            type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-light/60 hover:text-light transition-colors"
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-text/40 hover:text-text/70 transition-colors"
           >
-            <EyeIcon fill={showPassword ? "#F1FAEE" : "#F1FAEE80"} />
-          </span>
+            <EyeIcon fill={showPassword ? "#333333" : "#55555580"} />
+          </button>
         )}
       </div>
-      {error && (
-        <p className="text-red-500 font-aloe text-xs leading-[22.4px] mt-1">
-          {error}
-        </p>
-      )}
+      {error && <p className="text-red-500 text-sm mt-1.5">{error}</p>}
     </fieldset>
   );
 }
