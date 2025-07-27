@@ -78,7 +78,7 @@ export class AuthService {
         user.verificationCode = undefined;
         await user.save();
 
-        return user;
+        return await UserUtils.populateUser(user);
     }
 
     static async resendVerificationCode(userId: string): Promise<void> {
