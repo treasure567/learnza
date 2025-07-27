@@ -37,10 +37,7 @@ const lessonSchema = new Schema({
     userRequest: {
         type: String,
         required: true // Store the original user request
-    },
-    contents: [{
-        type: Schema.Types.Mixed // Store the generated lesson contents
-    }]
+    }
 }, { timestamps: true });
 
 export default mongoose.model<ILesson>('Lesson', lessonSchema); 

@@ -36,7 +36,6 @@ export class LessonGeneratorController {
                         description: result.lesson.description,
                         difficulty: result.lesson.difficulty,
                         estimatedTime: result.lesson.estimatedTime,
-                        estimatedTimeFormatted: this.formatTime(result.lesson.estimatedTime),
                         userId: result.lesson.userId,
                         userRequest: result.lesson.userRequest,
                         createdAt: result.lesson.createdAt
@@ -51,8 +50,7 @@ export class LessonGeneratorController {
                     totalSections: result.contents.length,
                     contentEstimatedTimes: result.lesson.contents.map((content: any) => ({
                         title: content.title,
-                        estimatedTime: content.estimatedTime,
-                        estimatedTimeFormatted: this.formatTime(content.estimatedTime)
+                        estimatedTime: content.estimatedTime
                     }))
                 }
             });
@@ -63,20 +61,6 @@ export class LessonGeneratorController {
                 success: false,
                 message: error.message || 'Error generating lesson content'
             });
-        }
-    }
-
-    private formatTime(seconds: number): string {
-        const hours = Math.floor(seconds / 3600);
-        const minutes = Math.floor((seconds % 3600) / 60);
-        const remainingSeconds = seconds % 60;
-
-        if (hours > 0) {
-            return `${hours}h ${minutes}m ${remainingSeconds}s`;
-        } else if (minutes > 0) {
-            return `${minutes}m ${remainingSeconds}s`;
-        } else {
-            return `${remainingSeconds}s`;
         }
     }
 } 
