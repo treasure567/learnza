@@ -56,7 +56,7 @@ export class UserService {
         user.language = language._id as string;
         await user.save();
 
-        return user.populate('language');
+        return user.populate(['language', 'accessibilityNeeds']);
     }
 
     static async updateAccessibilityNeeds(userId: string, accessibilityIds: string[]): Promise<IUser> {
