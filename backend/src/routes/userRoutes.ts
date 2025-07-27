@@ -10,12 +10,14 @@ import { changePasswordRules } from '@rules/user/changePassword';
 import { updatePreferencesRules } from '@rules/user/updatePreferences';
 
 const router = Router();
+router.use(authMiddleware);
+router.use(verifiedEmailMiddleware);
 
-router.get('/profile', authMiddleware, UserController.getProfile);
-router.put('/profile', authMiddleware, validateRequest(updateProfileRules), UserController.updateProfile);
-router.put('/update-preferences', authMiddleware, validateRequest(updatePreferencesRules), UserController.updatePreferences);
-router.put('/update-language', authMiddleware, validateRequest(updateLanguageRules), UserController.updateLanguage);
-router.put('/update-accessibility', authMiddleware, validateRequest(updateAccessibilityRules), UserController.updateAccessibilityNeeds);
-router.put('/change-password', authMiddleware, verifiedEmailMiddleware, validateRequest(changePasswordRules), UserController.changePassword);
+router.get('/profile', UserController.getProfile);
+router.put('/profile', validateRequest(updateProfileRules), UserController.updateProfile);
+router.put('/update-preferences', validateRequest(updatePreferencesRules), UserController.updatePreferences);
+router.put('/update-language', validateRequest(updateLanguageRules), UserController.updateLanguage);
+router.put('/update-accessibility', validateRequest(updateAccessibilityRules), UserController.updateAccessibilityNeeds);
+router.put('/change-password', validateRequest(changePasswordRules), UserController.changePassword);
 
 export default router; 
