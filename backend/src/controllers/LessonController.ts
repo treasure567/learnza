@@ -28,4 +28,13 @@ export class LessonController {
             ResponseUtils.error(res, (error as Error).message);
         }
     }
+
+    static async generateLesson(req: AuthRequest, res: Response): Promise<void> {
+        try {
+            const lesson = await LessonService.generateLesson(req.user._id, req.body);
+            ResponseUtils.success(res, lesson, 'Lesson generated successfully');
+        } catch (error) {
+            ResponseUtils.error(res, (error as Error).message);
+        }
+    }
 }

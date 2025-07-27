@@ -8,7 +8,8 @@ const router = Router();
 router.use(authMiddleware);
 router.use(verifiedEmailMiddleware);
 
-router.get('/', authMiddleware, verifiedEmailMiddleware, LessonController.getLessons);
-
+router.get('/', LessonController.getLessons);
+router.get('/:id', LessonController.getLesson);
+router.post('/generate', LessonController.generateLesson);
 
 export default router; 

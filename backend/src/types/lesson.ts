@@ -24,6 +24,10 @@ export interface ILessonContent extends Document {
     updatedAt: Date;
 }
 
+export interface GenerateLessonRequest {
+    message: string;
+}
+
 export interface CreateLessonRequest {
     title: string;
     description: string;
