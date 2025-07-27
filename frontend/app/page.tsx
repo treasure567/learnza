@@ -1,8 +1,9 @@
 "use client";
 
 import React from "react";
-import { Button } from "./components/ui";
+import Link from "next/link";
 import { motion } from "framer-motion";
+import { Button } from "./components/ui";
 import { Blocks, Brain, Award, Coins, Languages, Users } from "lucide-react";
 
 export default function LandingPage() {
@@ -105,13 +106,15 @@ export default function LandingPage() {
               to everyone.
             </p>
             <div className="flex gap-4 justify-center">
-              <Button
-                variant="primary"
-                size="lg"
-                className="backdrop-blur-sm bg-primary/90 hover:bg-primary"
-              >
-                Start Learning
-              </Button>
+              <Link href="/signup">
+                <Button
+                  variant="primary"
+                  size="lg"
+                  className="backdrop-blur-sm bg-primary/90 hover:bg-primary"
+                >
+                  Start Learning
+                </Button>
+              </Link>
               <Button
                 variant="secondary"
                 size="lg"
