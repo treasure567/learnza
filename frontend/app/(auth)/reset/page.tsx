@@ -41,43 +41,47 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-[430px] space-y-6">
-        <div className="space-y-2 text-center">
-          <h1 className="text-3xl font-semibold text-text">Reset Password</h1>
-          <p className="text-text/70">
-            Enter your email address and we'll send you instructions to reset
-            your password.
-          </p>
-        </div>
+    <div className="w-full max-w-[430px] mx-auto">
+      <div className="bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-2xl p-8 backdrop-blur-sm">
+        <div className="space-y-6">
+          <div className="space-y-2 text-center">
+            <h1 className="text-3xl font-semibold text-dark dark:text-light">
+              Reset Password
+            </h1>
+            <p className="text-text-muted dark:text-text-light/70">
+              Enter your email address and we'll send you instructions to reset
+              your password.
+            </p>
+          </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            type="email"
-            placeholder="Email Address"
-            value={email}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setEmail(e.target.value)
-            }
-          />
-          <Button
-            type="submit"
-            loading={loading}
-            disabled={!email || loading}
-            className="w-full"
-          >
-            Send Reset Instructions
-          </Button>
-        </form>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Input
+              type="email"
+              placeholder="Email Address"
+              value={email}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setEmail(e.target.value)
+              }
+            />
+            <Button
+              type="submit"
+              loading={loading}
+              disabled={!email || loading}
+              className="w-full"
+            >
+              Send Reset Instructions
+            </Button>
+          </form>
 
-        <div className="text-center">
-          <Button
-            variant="secondary"
-            onClick={() => window.history.back()}
-            className="text-sm"
-          >
-            Back to Sign In
-          </Button>
+          <div className="text-center">
+            <Button
+              variant="secondary"
+              onClick={() => window.history.back()}
+              className="text-sm"
+            >
+              Back to Sign In
+            </Button>
+          </div>
         </div>
       </div>
     </div>

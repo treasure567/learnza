@@ -1,7 +1,7 @@
 "use client";
 
-import { toast } from "sonner";
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { Button } from "@/app/components/ui";
 import { useRouter } from "next/navigation";
 
@@ -103,59 +103,62 @@ export default function VerifyEmailPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-[430px] space-y-6">
-        <div className="space-y-2 text-center">
-          <h1 className="text-3xl font-semibold text-text">
-            Verify Your Email
-          </h1>
-          <p className="text-text/70">
-            We've sent a verification code to
-            <br />
-            <span className="text-text font-medium">{email}</span>
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="flex justify-center gap-2">
-            {code.map((digit, index) => (
-              <input
-                key={index}
-                id={`code-${index}`}
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                maxLength={1}
-                className="w-12 h-12 text-center text-lg font-medium bg-white text-dark rounded-lg border border-text/10 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
-                value={digit}
-                onChange={(e) => handleCodeChange(index, e.target.value)}
-                onKeyDown={(e) => handleKeyDown(index, e)}
-              />
-            ))}
+    <div className="w-full max-w-[430px] mx-auto">
+      <div className="bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-2xl p-8 backdrop-blur-sm">
+        <div className="space-y-6">
+          <div className="space-y-2 text-center">
+            <h1 className="text-3xl font-semibold text-dark dark:text-light">
+              Verify Your Email
+            </h1>
+            <p className="text-text-muted dark:text-text-light/70">
+              We've sent a verification code to
+              <br />
+              <span className="text-dark dark:text-light font-medium">
+                {email}
+              </span>
+            </p>
           </div>
 
-          <Button
-            type="submit"
-            loading={loading}
-            disabled={code.join("").length !== 6 || loading}
-            className="w-full"
-          >
-            Verify Email
-          </Button>
-        </form>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="flex justify-center gap-2">
+              {code.map((digit, index) => (
+                <input
+                  key={index}
+                  id={`code-${index}`}
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={1}
+                  className="w-12 h-12 text-center text-lg font-medium bg-light dark:bg-dark-surface text-dark dark:text-light rounded-lg border border-light-border dark:border-dark-border focus:border-primary dark:focus:border-primary-dark focus:ring-1 focus:ring-primary dark:focus:ring-primary-dark outline-none transition-all"
+                  value={digit}
+                  onChange={(e) => handleCodeChange(index, e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(index, e)}
+                />
+              ))}
+            </div>
 
-        <div className="text-center space-y-4">
-          <p className="text-text/70">
-            Didn't receive the code?{" "}
             <Button
-              variant="secondary"
-              onClick={handleResend}
-              disabled={resendLoading}
-              className="text-primary hover:text-primary-100 transition-colors"
+              type="submit"
+              loading={loading}
+              disabled={code.join("").length !== 6 || loading}
+              className="w-full"
             >
-              Resend
+              Verify Email
             </Button>
-          </p>
+          </form>
+
+          <div className="text-center space-y-4">
+            <p className="text-text-muted dark:text-text-light/70">
+              Didn't receive the code?{" "}
+              <button
+                onClick={handleResend}
+                disabled={resendLoading}
+                className="text-primary dark:text-primary-dark hover:text-primary-100 dark:hover:text-primary font-medium disabled:opacity-50 transition-colors"
+              >
+                Resend
+              </button>
+            </p>
+          </div>
         </div>
       </div>
     </div>
