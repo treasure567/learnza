@@ -4,10 +4,28 @@ import Lesson from '@models/Lesson';
 import LessonContent from '@models/LessonContent';
 import { ILesson, ILessonContent, GenerateLessonRequest } from '@/types/lesson';
 import { PaginationUtils, PaginationOptions, PaginatedResponse } from '@/utils/PaginationUtils';
+import { MicroserviceUtils, MicroService } from '@/utils/MicroserviceUtils';
+
+interface GenerateLessonResponse {
+    success: boolean;
+    lessonPlan: string;
+}
 
 export class LessonService {
     static async generateLesson(userId: string, data: GenerateLessonRequest): Promise<boolean> {
-        return true;
+        try {
+            const response = await MicroserviceUtils.post<GenerateLessonResponse>(
+                MicroService.AI,
+                '/generate',
+                {
+                    userRequest: data.message,
+                    userId
+                }
+            );
+            return response.success;
+        } catch (error) {
+            throw new CustomError('Failed to generate lesson', 500);
+        }
     }
 
     static async getLessons(userId: string, options?: PaginationOptions): Promise<PaginatedResponse<ILesson>> {
