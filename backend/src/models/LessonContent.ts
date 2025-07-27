@@ -43,6 +43,10 @@ const lessonContentSchema = new Schema({
         min: 0,
         max: 100
     },
+    estimatedTime: {
+        type: Number,
+        required: true
+    },
     lastAccessedAt: {
         type: Date,
         default: null
