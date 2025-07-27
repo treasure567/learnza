@@ -13,7 +13,7 @@ export class UserController {
             ResponseUtils.error(res, (error as Error).message);
         }
     }
-
+    
     static async updateProfile(req: AuthRequest, res: Response): Promise<void> {
         try {
             const { name, email } = req.body;
