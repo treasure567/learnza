@@ -18,6 +18,15 @@ const userSchema = new Schema({
         type: String,
         required: true
     },
+    preferences: {
+        type: Map,
+        of: Schema.Types.Mixed,
+        default: {
+            emailNotification: false,
+            pushNotification: false,
+            theme: 'light',
+        }
+    },
     verificationCode: {
         type: String
     },
