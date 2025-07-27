@@ -35,7 +35,7 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 });
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/learnza')
+mongoose.connect(process.env.MONGODB_URI as string)
     .then(() => {
         console.log('Connected to MongoDB');
         
