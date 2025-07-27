@@ -1,7 +1,7 @@
 import { useAuthStore } from "./store/auth";
 
-const API_KEY = process.env.NEXT_PUBLIC_API_KEY || "";
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_KEY = process.env.NEXT_PUBLIC_API_KEY!;
+const API_URL = process.env.NEXT_PUBLIC_API_URL!;
 
 // API Response types
 type ApiResponse<T = any> = {
