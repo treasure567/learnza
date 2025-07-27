@@ -15,6 +15,7 @@ export interface IUser extends Document {
     accessibilityNeeds: string[];
     createdAt: Date;
     updatedAt: Date;
+    preferences: Map<string, any>;
 }
 
 export interface UserResponse {
