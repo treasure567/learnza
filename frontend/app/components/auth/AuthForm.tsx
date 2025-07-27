@@ -3,17 +3,11 @@
 import * as z from "zod";
 import Link from "next/link";
 import { toast } from "sonner";
-import Cookies from "js-cookie";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Button, Input } from "@/app/components/ui";
-import { useSearchParams } from "next/navigation";
-
-interface FormData {
-  email: string;
-  password: string;
-  name?: string;
-}
+import { useLogin, useRegister } from "@/lib/hooks/useAuth";
+import { useOnlineStatus } from "../../../lib/hooks/useOnlineStatus";
+import { UseMutationResult } from "@tanstack/react-query";
 
 const signupSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -21,53 +15,22 @@ const signupSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
-type Props = {
-  route: "register" | "login";
-};
-
-export default function AuthForm({ route }: Props) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const googleAuth = searchParams.get("google");
-
-  // If googleAuth exist in params set in application and cookies storage
-  useEffect(() => {
-    if (!!googleAuth) {
-      Cookies.set("token", googleAuth, { expires: 7 });
-      localStorage.setItem("user", JSON.stringify(googleAuth));
-      router.push("/dashboard");
-    }
-  }, [googleAuth, router]);
-
-  const [formData, setFormData] = useState<FormData>({
+export default function AuthForm({ route }: AuthFormProps) {
+  // Form state
+  const [formData, setFormData] = useState<
+    LoginCredentials | RegisterCredentials
+  >({
     email: "",
     password: "",
-    name: "",
+    ...(route === "register" ? { name: "" } : {}),
   });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [errors, setErrors] = useState<Partial<FormData>>({});
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [errors, setErrors] = useState<Partial<RegisterCredentials>>({});
 
-  useEffect(() => {
-    const handleOnline = () => {
-      setIsOnline(true);
-      toast.success("Internet connection restored");
-    };
-
-    const handleOffline = () => {
-      setIsOnline(false);
-      toast.error("No internet connection");
-    };
-
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
-
-    return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
-    };
-  }, []);
+  // Hooks
+  const isOnline = useOnlineStatus();
+  const { mutate: loginMutate, isPending: isLoginPending } = useLogin();
+  const { mutate: registerMutate, isPending: isRegisterPending } =
+    useRegister();
 
   const validateForm = () => {
     if (route !== "register") return true;
@@ -78,9 +41,9 @@ export default function AuthForm({ route }: Props) {
       return true;
     } catch (err) {
       if (err instanceof z.ZodError) {
-        const fieldErrors: Partial<FormData> = {};
+        const fieldErrors: Partial<RegisterCredentials> = {};
         err.errors.forEach((error) => {
-          const field = error.path[0] as keyof FormData;
+          const field = error.path[0] as keyof RegisterCredentials;
           fieldErrors[field] = error.message;
         });
         setErrors(fieldErrors);
@@ -102,78 +65,10 @@ export default function AuthForm({ route }: Props) {
       return;
     }
 
-    setLoading(true);
-    setError(null);
-
-    try {
-      const payload =
-        route === "login"
-          ? {
-              email: formData.email,
-              password: formData.password,
-            }
-          : {
-              email: formData.email,
-              name: formData.name,
-              password: formData.password,
-            };
-
-      const response = await fetch(`/api/auth/${route}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Authentication failed");
-      }
-
-      if (data.status) {
-        if (route === "register") {
-          localStorage.setItem(
-            "user",
-            JSON.stringify({
-              email: data.data?.email,
-              isEmailApproved: false,
-            })
-          );
-          Cookies.set("token", data.data?.token, { expires: 7 });
-          toast.success(
-            "Account created! Please verify your email to continue"
-          );
-          router.push("/verify");
-          return;
-        }
-
-        // For login, check email verification status
-        if (!data.data?.isEmailApproved) {
-          localStorage.setItem("user", JSON.stringify(data.data));
-          Cookies.set("token", data.data?.token, { expires: 7 });
-          toast.warning("Please verify your email to continue");
-          router.push("/verify");
-          return;
-        }
-
-        // Proceed with normal login for verified users
-        Cookies.set("token", data.data?.token, { expires: 7 });
-        localStorage.setItem("user", JSON.stringify(data.data));
-        toast.success("Successfully logged in!");
-        router.push("/dashboard");
-      }
-    } catch (err) {
-      setError((err as Error).message || "Something went wrong");
-      toast.error((err as Error).message || "Authentication failed");
-    } finally {
-      setLoading(false);
-      setFormData({
-        email: "",
-        password: "",
-        name: "",
-      });
+    if (route === "login") {
+      loginMutate(formData as LoginCredentials);
+    } else {
+      registerMutate(formData as RegisterCredentials);
     }
   };
 
@@ -185,7 +80,9 @@ export default function AuthForm({ route }: Props) {
   const isDisabled =
     route === "login"
       ? !formData.email || !formData.password
-      : !formData.email || !formData.password || !formData.name;
+      : !formData.email ||
+        !formData.password ||
+        !(formData as RegisterCredentials).name;
 
   return (
     <div className="space-y-6">
@@ -229,7 +126,7 @@ export default function AuthForm({ route }: Props) {
               onChange={handleChange}
               placeholder="Full Name"
               error={errors.name}
-              value={formData.name}
+              value={(formData as RegisterCredentials).name}
             />
           </div>
         )}
@@ -271,7 +168,7 @@ export default function AuthForm({ route }: Props) {
 
         <Button
           type="submit"
-          loading={loading}
+          loading={isLoginPending || isRegisterPending}
           disabled={isDisabled}
           className="w-full"
         >

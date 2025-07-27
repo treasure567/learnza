@@ -6,11 +6,13 @@ declare module "*.svg" {
   const content: string;
   export default content;
 }
+
 interface SVGProps {
   fill?: string;
   className?: string;
   onClick?: () => void;
 }
+
 type Props = {
   show?: boolean;
 };
@@ -84,4 +86,68 @@ type TextareaProps = {
 
 type OTPState = {
   [key: string]: string;
+};
+
+// Auth Types
+type User = {
+  id: string;
+  email: string;
+  name: string;
+  isEmailApproved: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type LoginCredentials = {
+  email: string;
+  password: string;
+};
+
+type RegisterCredentials = {
+  email: string;
+  name: string;
+  password: string;
+};
+
+type AuthFormProps = {
+  route: "register" | "login";
+};
+
+type AuthResponse = {
+  token: string;
+  user: User;
+};
+
+type VerificationResponse = {
+  verified: boolean;
+};
+
+type ResetPasswordResponse = {
+  success: boolean;
+};
+
+// Settings Types
+type AccessibilitySettings = {
+  highContrast?: boolean;
+  fontSize?: "small" | "medium" | "large";
+  reduceMotion?: boolean;
+  screenReader?: boolean;
+  signLanguage?: boolean;
+  [key: string]: any;
+};
+
+type LanguageSettings = {
+  language: string;
+};
+
+// API Types
+type ApiResponse<T = any> = {
+  status: boolean;
+  message: string;
+  data?: T;
+};
+
+type ApiError = {
+  status: number;
+  message: string;
 };

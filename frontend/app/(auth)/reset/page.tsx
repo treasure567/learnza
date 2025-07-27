@@ -1,42 +1,30 @@
 "use client";
 
 import { useState } from "react";
-import { toast } from "sonner";
 import { Button, Input } from "@/app/components/ui";
+import { useForgotPassword } from "@/lib/hooks/useAuth";
+import { z } from "zod";
+
+const schema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+});
 
 export default function ResetPasswordPage() {
   const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const { mutate: forgotPassword, isPending } = useForgotPassword();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) {
-      toast.error("Please enter your email address");
-      return;
-    }
 
-    setLoading(true);
     try {
-      const response = await fetch("/api/auth/forgot-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to send reset email");
+      schema.parse({ email });
+      setError("");
+      forgotPassword(email);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        setError(err.errors[0].message);
       }
-
-      toast.success("Password reset instructions sent to your email");
-      setEmail("");
-    } catch (error) {
-      toast.error((error as Error).message || "Something went wrong");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -62,26 +50,18 @@ export default function ResetPasswordPage() {
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 setEmail(e.target.value)
               }
+              error={error}
             />
+
             <Button
               type="submit"
-              loading={loading}
-              disabled={!email || loading}
+              loading={isPending}
+              disabled={!email || isPending}
               className="w-full"
             >
               Send Reset Instructions
             </Button>
           </form>
-
-          <div className="text-center">
-            <Button
-              variant="secondary"
-              onClick={() => window.history.back()}
-              className="text-sm"
-            >
-              Back to Sign In
-            </Button>
-          </div>
         </div>
       </div>
     </div>

@@ -1,27 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { toast } from "sonner";
+import { useState } from "react";
 import { Button } from "@/app/components/ui";
-import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/lib/store/auth";
+import { useVerifyEmail, useResendVerification } from "@/lib/hooks/useAuth";
 
 export default function VerifyEmailPage() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [resendLoading, setResendLoading] = useState(false);
   const [code, setCode] = useState(["", "", "", "", "", ""]);
-  const [email, setEmail] = useState<string>("");
-
-  useEffect(() => {
-    const user = localStorage.getItem("user");
-    if (user) {
-      const userData = JSON.parse(user);
-      setEmail(userData.email || "");
-    }
-  }, []);
+  const user = useAuthStore((state) => state.user);
+  const { mutate: verify, isPending: isVerifying } = useVerifyEmail();
+  const { mutate: resend, isPending: isResending } = useResendVerification();
 
   const handleCodeChange = (index: number, value: string) => {
     if (value.length > 1) return;
+    if (!/^\d*$/.test(value)) return;
+
     const newCode = [...code];
     newCode[index] = value;
     setCode(newCode);
@@ -33,73 +26,21 @@ export default function VerifyEmailPage() {
     }
   };
 
-  const handleKeyDown = (
-    index: number,
-    e: React.KeyboardEvent<HTMLInputElement>
-  ) => {
+  const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
     if (e.key === "Backspace" && !code[index] && index > 0) {
       const prevInput = document.getElementById(`code-${index - 1}`);
       prevInput?.focus();
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const verificationCode = code.join("");
-
-    if (verificationCode.length !== 6) {
-      toast.error("Please enter the complete verification code");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const response = await fetch("/api/auth/verify-email", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ code: verificationCode }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Verification failed");
-      }
-
-      toast.success("Email verified successfully!");
-      router.push("/dashboard");
-    } catch (error) {
-      toast.error((error as Error).message || "Verification failed");
-    } finally {
-      setLoading(false);
-    }
+    verify(verificationCode);
   };
 
-  const handleResend = async () => {
-    setResendLoading(true);
-    try {
-      const response = await fetch("/api/auth/resend-verification", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to resend code");
-      }
-
-      toast.success("Verification code resent to your email");
-      setCode(["", "", "", "", "", ""]);
-    } catch (error) {
-      toast.error((error as Error).message || "Failed to resend code");
-    } finally {
-      setResendLoading(false);
-    }
+  const handleResend = () => {
+    resend();
   };
 
   return (
@@ -114,7 +55,7 @@ export default function VerifyEmailPage() {
               We've sent a verification code to
               <br />
               <span className="text-dark dark:text-light font-medium">
-                {email}
+                {user?.email}
               </span>
             </p>
           </div>
@@ -139,8 +80,8 @@ export default function VerifyEmailPage() {
 
             <Button
               type="submit"
-              loading={loading}
-              disabled={code.join("").length !== 6 || loading}
+              loading={isVerifying}
+              disabled={code.join("").length !== 6 || isVerifying}
               className="w-full"
             >
               Verify Email
@@ -152,7 +93,7 @@ export default function VerifyEmailPage() {
               Didn't receive the code?{" "}
               <button
                 onClick={handleResend}
-                disabled={resendLoading}
+                disabled={isResending}
                 className="text-primary dark:text-primary-dark hover:text-primary-100 dark:hover:text-primary font-medium disabled:opacity-50 transition-colors"
               >
                 Resend

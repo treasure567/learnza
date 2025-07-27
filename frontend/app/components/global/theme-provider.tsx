@@ -1,12 +1,13 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { useSettingsStore } from "@/lib/store/settings";
 
 type Theme = "dark" | "light" | "system";
 
 type ThemeProviderProps = {
   children: React.ReactNode;
+  defaultTheme?: Theme;
+  storageKey?: string;
 };
 
 type ThemeProviderState = {
@@ -21,8 +22,13 @@ const initialState: ThemeProviderState = {
 
 const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
-export function ThemeProvider({ children }: ThemeProviderProps) {
-  const { theme, setTheme } = useSettingsStore();
+export function ThemeProvider({
+  children,
+  defaultTheme = "system",
+  storageKey = "ui-theme",
+  ...props
+}: ThemeProviderProps) {
+  const [theme, setTheme] = useState<Theme>(defaultTheme);
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -42,12 +48,15 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   }, [theme]);
 
   const value = {
-    theme: theme as Theme,
-    setTheme,
+    theme,
+    setTheme: (theme: Theme) => {
+      localStorage.setItem(storageKey, theme);
+      setTheme(theme);
+    },
   };
 
   return (
-    <ThemeProviderContext.Provider value={value}>
+    <ThemeProviderContext.Provider {...props} value={value}>
       {children}
     </ThemeProviderContext.Provider>
   );
