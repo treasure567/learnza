@@ -3,6 +3,7 @@ import { Types } from 'mongoose';
 import Lesson from '@models/Lesson';
 import LessonContent from '@models/LessonContent';
 import { ILesson, ILessonContent, CreateLessonRequest, UpdateLessonRequest, CreateLessonContentRequest, UpdateLessonContentRequest, UpdateProgressRequest } from '@/types/lesson';
+import { PaginationUtils, PaginationOptions, PaginatedResponse } from '@/utils/PaginationUtils';
 
 export class LessonService {
     static async createLesson(userId: string, data: CreateLessonRequest): Promise<ILesson> {
@@ -14,8 +15,9 @@ export class LessonService {
         return lesson;
     }
 
-    static async getLessons(userId: string): Promise<ILesson[]> {
-        return Lesson.find({ userId: new Types.ObjectId(userId) });
+    static async getLessons(userId: string, options?: PaginationOptions): Promise<PaginatedResponse<ILesson>> {
+        const query = Lesson.find({ userId: new Types.ObjectId(userId) }).populate('userId');
+        return PaginationUtils.paginate(query, options);
     }
 
     static async getLesson(userId: string, lessonId: string): Promise<ILesson> {
