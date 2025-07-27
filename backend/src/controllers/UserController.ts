@@ -44,6 +44,16 @@ export class UserController {
         }
     }
 
+    static async updatePreferences(req: AuthRequest, res: Response): Promise<void> {
+        try {
+            const preferences = req.body;
+            const user = await UserService.updatePreferences(req.user._id, preferences);
+            ResponseUtils.success(res, user, 'Preferences updated successfully');
+        } catch (error) {
+            ResponseUtils.error(res, (error as Error).message);
+        }
+    }
+
     static async changePassword(req: AuthRequest, res: Response): Promise<void> {
         try {
             const { currentPassword, newPassword } = req.body;
