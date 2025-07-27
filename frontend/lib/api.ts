@@ -4,14 +4,14 @@ const API_KEY = process.env.NEXT_PUBLIC_API_KEY || "";
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 // Types
-type Language = {
+export type Language = {
   code: string;
   name: string;
   nativeName: string;
   region: string;
 };
 
-type AccessibilityOption = {
+export type AccessibilityOption = {
   value: string;
   description: string;
   name: string;
@@ -21,26 +21,17 @@ export type UserPreferences = {
   email: string;
   name: string;
   emailVerifiedAt: string;
-  language: {
-    code: string;
-    name: string;
-    nativeName: string;
-    region: string;
-  };
-  accessibilityNeeds: {
-    value: string;
-    description: string;
-    name: string;
-  }[];
+  language: Language;
+  accessibilityNeeds: AccessibilityOption[];
   preferences: {
     emailNotification: boolean;
     pushNotification: boolean;
-    theme: string;
+    theme: "light" | "dark";
   };
 };
 
 // API Response types
-type ApiResponse<T = any> = {
+export type ApiResponse<T = any> = {
   status: boolean;
   message: string;
   data?: T;
@@ -185,7 +176,7 @@ export const authApi = {
 
 // User API
 export const userApi = {
-  getProfile: () => apiFetch<{ user: any }>("/user/profile"),
+  getProfile: () => apiFetch<UserPreferences>("/user/profile"),
 
   updateProfile: async (data: { name?: string; email?: string }) => {
     const response = await apiFetch<{ user: any }>("/user/profile", {
@@ -208,6 +199,18 @@ export const userApi = {
 
   updateAccessibility: (data: { accessibilityIds: string[] }) =>
     apiFetch<UserPreferences>("/user/update-accessibility", {
+      method: "PUT",
+      body: data,
+    }),
+
+  changePassword: (data: { currentPassword: string; newPassword: string }) =>
+    apiFetch<null>("/user/change-password", {
+      method: "PUT",
+      body: data,
+    }),
+
+  updatePreferences: (data: UserPreferences["preferences"]) =>
+    apiFetch<UserPreferences>("/user/update-preferences", {
       method: "PUT",
       body: data,
     }),
