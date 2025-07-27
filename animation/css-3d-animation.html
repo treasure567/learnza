@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learnza - Pure CSS 3D Character Animation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .container {
+            perspective: 1000px;
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .scene {
+            transform-style: preserve-3d;
+            transform: rotateX(-10deg) rotateY(0deg);
+            transition: transform 0.5s ease;
+        }
+
+        .character {
+            transform-style: preserve-3d;
+            position: relative;
+            width: 120px;
+            height: 300px;
+            transform: translateY(-50px);
+        }
+
+        /* Head */
+        .head {
+            width: 65px;
+            height: 75px;
+            background: linear-gradient(135deg, #8b5a3c 0%, #a0734a 50%, #8b5a3c 100%);
+            border-radius: 50% 50% 45% 45%;
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3), inset 0 2px 5px rgba(255,255,255,0.1);
+        }
+
+        /* Eyes */
+        .head::before {
+            content: '';
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: radial-gradient(circle, #2c1810 0%, #000 70%);
+            border-radius: 50%;
+            top: 25px;
+            left: 16px;
+            box-shadow: 25px 0 0 radial-gradient(circle, #2c1810 0%, #000 70%), 
+                        0 0 3px rgba(255,255,255,0.8), 
+                        25px 0 3px rgba(255,255,255,0.8);
+        }
+
+        /* Nose */
+        .nose {
+            position: absolute;
+            width: 8px;
+            height: 12px;
+            background: linear-gradient(135deg, #7a4d33 0%, #9e6b47 100%);
+            border-radius: 50% 50% 60% 60%;
+            top: 32px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        /* Mouth */
+        .head::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 8px;
+            background: linear-gradient(to bottom, #c67c5c 0%, #a0563d 100%);
+            border-radius: 0 0 50% 50%;
+            top: 48px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        /* Eyebrows */
+        .eyebrows {
+            position: absolute;
+            top: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .eyebrows::before,
+        .eyebrows::after {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 3px;
+            background: #2c1810;
+            border-radius: 50px;
+            transform: rotate(-10deg);
+        }
+
+        .eyebrows::before {
+            left: -20px;
+        }
+
+        .eyebrows::after {
+            right: -20px;
+            transform: rotate(10deg);
+        }
+
+        /* Hair - Natural textured style */
+        .hair {
+            width: 85px;
+            height: 60px;
+            background: radial-gradient(ellipse at center top, #2c1810 0%, #1a0f08 70%);
+            border-radius: 50px 50px 30px 30px;
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+        }
+
+        /* Hair texture */
+        .hair::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(44,24,16,0.8) 2px, transparent 2px),
+                radial-gradient(circle at 60% 20%, rgba(44,24,16,0.8) 2px, transparent 2px),
+                radial-gradient(circle at 80% 40%, rgba(44,24,16,0.8) 2px, transparent 2px),
+                radial-gradient(circle at 30% 60%, rgba(44,24,16,0.8) 2px, transparent 2px),
+                radial-gradient(circle at 70% 70%, rgba(44,24,16,0.8) 2px, transparent 2px);
+            background-size: 15px 15px;
+            border-radius: inherit;
+        }
+
+        /* Hair side parts */
+        .hair::after {
+            content: '';
+            position: absolute;
+            width: 25px;
+            height: 35px;
+            background: radial-gradient(ellipse, #2c1810 0%, #1a0f08 70%);
+            border-radius: 50% 70% 60% 80%;
+            top: 15px;
+            left: -12px;
+            box-shadow: 85px 0 0 radial-gradient(ellipse, #2c1810 0%, #1a0f08 70%);
+            transform: rotate(-15deg);
+        }
+
+        /* Neck */
+        .neck {
+            width: 20px;
+            height: 15px;
+            background: linear-gradient(135deg, #8b5a3c 0%, #a0734a 50%, #8b5a3c 100%);
+            position: absolute;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        /* Body */
+        .torso {
+            width: 90px;
+            height: 110px;
+            background: linear-gradient(135deg, #1a1a1a 0%, #000 50%, #1a1a1a 100%);
+            position: absolute;
+            top: 75px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 15px 15px 25px 25px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4), inset 0 2px 5px rgba(255,255,255,0.1);
+        }
+
+        /* T-shirt texture and fit */
+        .torso::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                linear-gradient(90deg, transparent 48%, rgba(255,255,255,0.1) 49%, rgba(255,255,255,0.1) 51%, transparent 52%),
+                linear-gradient(0deg, transparent 48%, rgba(255,255,255,0.05) 49%, rgba(255,255,255,0.05) 51%, transparent 52%);
+            background-size: 8px 8px;
+        }
+
+        .shirt-text {
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            font-family: 'Arial', sans-serif;
+            position: absolute;
+            top: 45%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            letter-spacing: 1.5px;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+            z-index: 2;
+        }
+
+        /* Arms */
+        .arm {
+            transform-style: preserve-3d;
+            position: absolute;
+            top: 90px;
+        }
+
+        .arm.left {
+            left: 5px;
+        }
+
+        .arm.right {
+            right: 5px;
+        }
+
+        .upper-arm {
+            width: 22px;
+            height: 65px;
+            background: linear-gradient(135deg, #8b5a3c 0%, #a0734a 50%, #8b5a3c 100%);
+            border-radius: 11px;
+            transform-origin: top center;
+            position: relative;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3), inset 0 2px 5px rgba(255,255,255,0.1);
+        }
+
+        .forearm {
+            width: 20px;
+            height: 55px;
+            background: linear-gradient(135deg, #8b5a3c 0%, #a0734a 50%, #8b5a3c 100%);
+            border-radius: 10px;
+            transform-origin: top center;
+            position: absolute;
+            top: 60px;
+            left: 1px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2), inset 0 1px 3px rgba(255,255,255,0.1);
+        }
+
+        .hand {
+            width: 18px;
+            height: 22px;
+            background: linear-gradient(135deg, #8b5a3c 0%, #a0734a 50%, #8b5a3c 100%);
+            border-radius: 60% 60% 50% 50%;
+            position: absolute;
+            top: 50px;
+            left: 1px;
+            transform-origin: center bottom;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        /* Fingers */
+        .hand::before {
+            content: '';
+            position: absolute;
+            width: 3px;
+            height: 8px;
+            background: linear-gradient(135deg, #7a4d33 0%, #9e6b47 100%);
+            border-radius: 50%;
+            top: -4px;
+            left: 3px;
+            box-shadow: 
+                4px 0 0 linear-gradient(135deg, #7a4d33 0%, #9e6b47 100%),
+                8px 0 0 linear-gradient(135deg, #7a4d33 0%, #9e6b47 100%),
+                12px 0 0 linear-gradient(135deg, #7a4d33 0%, #9e6b47 100%);
+        }
+
+        /* Thumb */
+        .hand::after {
+            content: '';
+            position: absolute;
+            width: 3px;
+            height: 6px;
+            background: linear-gradient(135deg, #7a4d33 0%, #9e6b47 100%);
+            border-radius: 50%;
+            top: 8px;
+            left: -2px;
+            transform: rotate(-30deg);
+        }
+
+        /* Legs */
+        .leg {
+            transform-style: preserve-3d;
+            position: absolute;
+            top: 175px;
+        }
+
+        .leg.left {
+            left: 30px;
+        }
+
+        .leg.right {
+            right: 30px;
+        }
+
+        .thigh {
+            width: 28px;
+            height: 75px;
+            background: linear-gradient(135deg, #1a1a1a 0%, #333 50%, #1a1a1a 100%);
+            border-radius: 14px;
+            transform-origin: top center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3), inset 0 2px 5px rgba(255,255,255,0.1);
+        }
+
+        .shin {
+            width: 25px;
+            height: 65px;
+            background: linear-gradient(135deg, #8b5a3c 0%, #a0734a 50%, #8b5a3c 100%);
+            border-radius: 12px;
+            transform-origin: top center;
+            position: absolute;
+            top: 70px;
+            left: 1.5px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2), inset 0 1px 3px rgba(255,255,255,0.1);
+        }
+
+        .foot {
+            width: 32px;
+            height: 18px;
+            background: linear-gradient(135deg, #2c1810 0%, #1a0f08 100%);
+            border-radius: 8px 8px 5px 5px;
+            position: absolute;
+            top: 60px;
+            left: -3px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.4);
+        }
+
+        /* Controls */
+        .controls {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            z-index: 100;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn.wave {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .btn.dance {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .btn.jump {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        .btn.asl {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn.asl::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .btn.asl:hover::before {
+            left: 100%;
+        }
+
+        /* Animations */
+        @keyframes wave {
+            0%, 100% {
+                transform: rotateZ(0deg) rotateX(0deg);
+            }
+            25% {
+                transform: rotateZ(-30deg) rotateX(20deg);
+            }
+            75% {
+                transform: rotateZ(-45deg) rotateX(30deg);
+            }
+        }
+
+        @keyframes waveHand {
+            0%, 100% {
+                transform: rotateZ(0deg);
+            }
+            50% {
+                transform: rotateZ(-30deg);
+            }
+        }
+
+        /* ASL Hello Animation */
+        @keyframes aslHello {
+            0%, 100% {
+                transform: rotateX(-10deg) rotateY(0deg) rotateZ(0deg);
+            }
+            25% {
+                transform: rotateX(-45deg) rotateY(-20deg) rotateZ(-20deg);
+            }
+            50% {
+                transform: rotateX(-60deg) rotateY(-30deg) rotateZ(-30deg);
+            }
+            75% {
+                transform: rotateX(-45deg) rotateY(-20deg) rotateZ(-20deg);
+            }
+        }
+
+        @keyframes aslHelloHand {
+            0%, 100% {
+                transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg);
+            }
+            25% {
+                transform: rotateX(-10deg) rotateY(15deg) rotateZ(10deg);
+            }
+            50% {
+                transform: rotateX(-20deg) rotateY(20deg) rotateZ(15deg);
+            }
+            75% {
+                transform: rotateX(-10deg) rotateY(15deg) rotateZ(10deg);
+            }
+        }
+
+        /* ASL "How are you?" sequence */
+        @keyframes aslPoint {
+            0%, 100% {
+                transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg);
+            }
+            20%, 40% {
+                transform: rotateX(-20deg) rotateY(-45deg) rotateZ(-30deg);
+            }
+            60%, 80% {
+                transform: rotateX(20deg) rotateY(30deg) rotateZ(20deg);
+            }
+        }
+
+        @keyframes aslHow {
+            0%, 20%, 80%, 100% {
+                transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg);
+            }
+            40%, 60% {
+                transform: rotateX(-90deg) rotateY(0deg) rotateZ(0deg);
+            }
+        }
+
+        @keyframes aslHowBoth {
+            0%, 20%, 80%, 100% {
+                transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg);
+            }
+            40%, 60% {
+                transform: rotateX(-90deg) rotateY(0deg) rotateZ(0deg);
+            }
+        }
+
+        @keyframes aslPointSelf {
+            0%, 60%, 100% {
+                transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg);
+            }
+            80%, 90% {
+                transform: rotateX(20deg) rotateY(30deg) rotateZ(20deg);
+            }
+        }
+
+        @keyframes dance {
+            0%, 100% {
+                transform: rotateY(0deg) translateX(0);
+            }
+            25% {
+                transform: rotateY(15deg) translateX(10px);
+            }
+            50% {
+                transform: rotateY(0deg) translateX(0);
+            }
+            75% {
+                transform: rotateY(-15deg) translateX(-10px);
+            }
+        }
+
+        @keyframes danceArm {
+            0%, 100% {
+                transform: rotateZ(0deg);
+            }
+            50% {
+                transform: rotateZ(45deg);
+            }
+        }
+
+        @keyframes jump {
+            0%, 100% {
+                transform: translateY(0) rotateX(-10deg);
+            }
+            50% {
+                transform: translateY(-80px) rotateX(0deg);
+            }
+        }
+
+        @keyframes walkCycle {
+            0%, 100% {
+                transform: rotateX(0deg);
+            }
+            25% {
+                transform: rotateX(20deg);
+            }
+            75% {
+                transform: rotateX(-20deg);
+            }
+        }
+
+        @keyframes walkCycleOpposite {
+            0%, 100% {
+                transform: rotateX(0deg);
+            }
+            25% {
+                transform: rotateX(-20deg);
+            }
+            75% {
+                transform: rotateX(20deg);
+            }
+        }
+
+        @keyframes headBob {
+            0%, 100% {
+                transform: translateX(-50%) translateY(0);
+            }
+            50% {
+                transform: translateX(-50%) translateY(-5px);
+            }
+        }
+
+        /* Animation Classes */
+        .character.waving .arm.right .upper-arm {
+            animation: wave 1s ease-in-out 3;
+        }
+
+        .character.waving .arm.right .forearm {
+            animation: waveHand 0.5s ease-in-out 6;
+        }
+
+        /* ASL Hello Animation */
+        .character.asl-hello .arm.right .upper-arm {
+            animation: aslHello 2s ease-in-out 2;
+        }
+
+        .character.asl-hello .arm.right .hand {
+            animation: aslHelloHand 1s ease-in-out 4;
+        }
+
+        /* ASL "How are you?" Animation */
+        .character.asl-how-are-you .arm.right .upper-arm {
+            animation: aslPoint 6s ease-in-out 1;
+        }
+
+        .character.asl-how-are-you .arm.left .upper-arm {
+            animation: aslHowBoth 6s ease-in-out 1;
+        }
+
+        .character.asl-how-are-you .arm.right .hand {
+            animation: aslPoint 6s ease-in-out 1;
+        }
+
+        .character.asl-how-are-you .arm.left .hand {
+            animation: aslHowBoth 6s ease-in-out 1;
+        }
+
+        .character.dancing {
+            animation: dance 1s ease-in-out infinite;
+        }
+
+        .character.dancing .arm .upper-arm {
+            animation: danceArm 1s ease-in-out infinite;
+        }
+
+        .character.dancing .head {
+            animation: headBob 1s ease-in-out infinite;
+        }
+
+        .character.jumping .scene {
+            animation: jump 1.5s ease-in-out;
+        }
+
+        .character.walking .leg.left .thigh {
+            animation: walkCycle 1s ease-in-out infinite;
+        }
+
+        .character.walking .leg.right .thigh {
+            animation: walkCycleOpposite 1s ease-in-out infinite;
+        }
+
+        .character.walking .arm.left .upper-arm {
+            animation: walkCycleOpposite 1s ease-in-out infinite;
+        }
+
+        .character.walking .arm.right .upper-arm {
+            animation: walkCycle 1s ease-in-out infinite;
+        }
+
+        /* Rotation Controls */
+        .rotation-controls {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .rotation-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .rotation-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.1);
+        }
+
+        /* Info Panel */
+        .info {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            max-width: 200px;
+            font-size: 14px;
+        }
+
+        .info h3 {
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .info p {
+            margin-bottom: 5px;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="scene" id="scene">
+            <div class="character" id="character">
+                <div class="hair"></div>
+                <div class="head">
+                    <div class="eyebrows"></div>
+                    <div class="nose"></div>
+                </div>
+                <div class="neck"></div>
+                
+                <div class="torso">
+                    <div class="shirt-text">Learnza</div>
+                </div>
+                
+                <div class="arm left">
+                    <div class="upper-arm">
+                        <div class="forearm">
+                            <div class="hand"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="arm right">
+                    <div class="upper-arm">
+                        <div class="forearm">
+                            <div class="hand"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="leg left">
+                    <div class="thigh">
+                        <div class="shin">
+                            <div class="foot"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="leg right">
+                    <div class="thigh">
+                        <div class="shin">
+                            <div class="foot"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="rotation-controls">
+        <button class="rotation-btn" onclick="rotateScene('up')">↑</button>
+        <button class="rotation-btn" onclick="rotateScene('left')">←</button>
+        <button class="rotation-btn" onclick="rotateScene('right')">→</button>
+        <button class="rotation-btn" onclick="rotateScene('down')">↓</button>
+        <button class="rotation-btn" onclick="resetRotation()">⌂</button>
+    </div>
+
+    <div class="controls">
+        <button class="btn asl" onclick="playASLHello()">🤟 ASL Hello</button>
+        <button class="btn asl" onclick="playASLHowAreYou()">🤲 How Are You?</button>
+        <button class="btn wave" onclick="playWave()">👋 Wave Hi</button>
+        <button class="btn dance" onclick="playDance()">💃 Dance</button>
+        <button class="btn jump" onclick="playJump()">🦘 Jump</button>
+        <button class="btn" onclick="stopAnimation()">⏹️ Stop</button>
+    </div>
+
+    <div class="info">
+        <h3>🎮 Controls</h3>
+        <p><strong>Arrows:</strong> Rotate view</p>
+        <p><strong>Home:</strong> Reset view</p>
+        <p><strong>H:</strong> ASL Hello</p>
+        <p><strong>Y:</strong> How are you?</p>
+        <p><strong>W:</strong> Wave</p>
+        <p><strong>D:</strong> Dance</p>
+        <p><strong>J:</strong> Jump</p>
+        <p><strong>Space:</strong> Stop</p>
+    </div>
+
+    <script>
+        class CSS3DCharacter {
+            constructor() {
+                this.character = document.getElementById('character');
+                this.scene = document.getElementById('scene');
+                this.currentAnimation = null;
+                this.rotationX = -10;
+                this.rotationY = 0;
+                
+                this.setupKeyboardControls();
+                this.setupMouseControls();
+            }
+            
+            setupKeyboardControls() {
+                document.addEventListener('keydown', (event) => {
+                    switch(event.code) {
+                        case 'KeyH':
+                            this.playASLHello();
+                            break;
+                        case 'KeyY':
+                            this.playASLHowAreYou();
+                            break;
+                        case 'KeyW':
+                            this.playWave();
+                            break;
+                        case 'KeyD':
+                            this.playDance();
+                            break;
+                        case 'KeyJ':
+                            this.playJump();
+                            break;
+                        case 'Space':
+                            event.preventDefault();
+                            this.stopAnimation();
+                            break;
+                        case 'ArrowUp':
+                            this.rotateScene('up');
+                            break;
+                        case 'ArrowDown':
+                            this.rotateScene('down');
+                            break;
+                        case 'ArrowLeft':
+                            this.rotateScene('left');
+                            break;
+                        case 'ArrowRight':
+                            this.rotateScene('right');
+                            break;
+                        case 'Home':
+                            this.resetRotation();
+                            break;
+                    }
+                });
+            }
+            
+            setupMouseControls() {
+                let isDragging = false;
+                let startX, startY;
+                
+                this.scene.addEventListener('mousedown', (e) => {
+                    isDragging = true;
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    this.scene.style.cursor = 'grabbing';
+                });
+                
+                document.addEventListener('mousemove', (e) => {
+                    if (!isDragging) return;
+                    
+                    const deltaX = e.clientX - startX;
+                    const deltaY = e.clientY - startY;
+                    
+                    this.rotationY += deltaX * 0.5;
+                    this.rotationX -= deltaY * 0.5;
+                    
+                    this.rotationX = Math.max(-45, Math.min(45, this.rotationX));
+                    this.rotationY = this.rotationY % 360;
+                    
+                    this.updateSceneRotation();
+                    
+                    startX = e.clientX;
+                    startY = e.clientY;
+                });
+                
+                document.addEventListener('mouseup', () => {
+                    isDragging = false;
+                    this.scene.style.cursor = 'grab';
+                });
+            }
+            
+            playWave() {
+                this.stopAnimation();
+                this.character.classList.add('waving');
+                this.currentAnimation = 'waving';
+                
+                setTimeout(() => {
+                    if (this.currentAnimation === 'waving') {
+                        this.stopAnimation();
+                    }
+                }, 3000);
+            }
+            
+            playDance() {
+                this.stopAnimation();
+                this.character.classList.add('dancing');
+                this.currentAnimation = 'dancing';
+            }
+            
+            playJump() {
+                this.stopAnimation();
+                this.character.classList.add('jumping');
+                this.currentAnimation = 'jumping';
+                
+                setTimeout(() => {
+                    if (this.currentAnimation === 'jumping') {
+                        this.stopAnimation();
+                    }
+                }, 1500);
+            }
+            
+            playASLHello() {
+                this.stopAnimation();
+                this.character.classList.add('asl-hello');
+                this.currentAnimation = 'asl-hello';
+                
+                setTimeout(() => {
+                    if (this.currentAnimation === 'asl-hello') {
+                        this.stopAnimation();
+                    }
+                }, 4000);
+            }
+            
+            playASLHowAreYou() {
+                this.stopAnimation();
+                this.character.classList.add('asl-how-are-you');
+                this.currentAnimation = 'asl-how-are-you';
+                
+                setTimeout(() => {
+                    if (this.currentAnimation === 'asl-how-are-you') {
+                        this.stopAnimation();
+                    }
+                }, 6000);
+            }
+            
+            playWalk() {
+                this.stopAnimation();
+                this.character.classList.add('walking');
+                this.currentAnimation = 'walking';
+            }
+            
+            stopAnimation() {
+                this.character.classList.remove('waving', 'dancing', 'jumping', 'walking', 'asl-hello', 'asl-how-are-you');
+                this.currentAnimation = null;
+            }
+            
+            rotateScene(direction) {
+                const step = 15;
+                
+                switch(direction) {
+                    case 'up':
+                        this.rotationX = Math.max(-45, this.rotationX - step);
+                        break;
+                    case 'down':
+                        this.rotationX = Math.min(45, this.rotationX + step);
+                        break;
+                    case 'left':
+                        this.rotationY -= step;
+                        break;
+                    case 'right':
+                        this.rotationY += step;
+                        break;
+                }
+                
+                this.rotationY = this.rotationY % 360;
+                this.updateSceneRotation();
+            }
+            
+            resetRotation() {
+                this.rotationX = -10;
+                this.rotationY = 0;
+                this.updateSceneRotation();
+            }
+            
+            updateSceneRotation() {
+                this.scene.style.transform = `rotateX(${this.rotationX}deg) rotateY(${this.rotationY}deg)`;
+            }
+        }
+        
+        // Global functions for button clicks
+        let character3D;
+        
+        function playASLHello() {
+            character3D.playASLHello();
+        }
+        
+        function playASLHowAreYou() {
+            character3D.playASLHowAreYou();
+        }
+        
+        function playWave() {
+            character3D.playWave();
+        }
+        
+        function playDance() {
+            character3D.playDance();
+        }
+        
+        function playJump() {
+            character3D.playJump();
+        }
+        
+        function playWalk() {
+            character3D.playWalk();
+        }
+        
+        function stopAnimation() {
+            character3D.stopAnimation();
+        }
+        
+        function rotateScene(direction) {
+            character3D.rotateScene(direction);
+        }
+        
+        function resetRotation() {
+            character3D.resetRotation();
+        }
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            character3D = new CSS3DCharacter();
+            
+            // Welcome animation - ASL Hello
+            setTimeout(() => {
+                character3D.playASLHello();
+            }, 1000);
+        });
+    </script>
+</body>
+</html> 
