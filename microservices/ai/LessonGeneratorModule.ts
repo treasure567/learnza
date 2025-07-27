@@ -115,10 +115,7 @@ export class LessonGeneratorModule {
             // Step 3: Generate outline
             const outline = await this.generateOutline(userRequest, topic, lessonTitle);
             
-            // Step 4: Generate a unique lesson ID
-            const lessonId = new mongoose.Types.ObjectId();
-            
-            // Step 5: Generate content for each section with time estimation
+            // Step 4: Generate content for each section with time estimation
             const contentData = await Promise.all(
                 outline.map(async (sectionTitle, index) => {
                     const content = await this.generateContent(userRequest, topic, sectionTitle);
@@ -133,14 +130,14 @@ export class LessonGeneratorModule {
                 })
             );
             
-            // Step 6: Calculate total estimated time by summing all content times
+            // Step 5: Calculate total estimated time
             const totalEstimatedTime = contentData.reduce((total, item) => total + item.estimatedTime, 0);
             
-            // Step 7: Create and save the lesson record
+            // Step 6: Create and save the lesson record
             const lesson = new Lesson({
                 title: lessonTitle,
                 description: description,
-                difficulty: 'beginner', // You can make this dynamic based on content analysis
+                difficulty: 'beginner',
                 estimatedTime: totalEstimatedTime,
                 userId: new mongoose.Types.ObjectId(userId),
                 userRequest: userRequest,
@@ -154,11 +151,11 @@ export class LessonGeneratorModule {
             
             const savedLesson = await lesson.save();
             
-            // Step 8: Create and save individual lesson content records
+            // Step 7: Create and save individual lesson content records, linked to the new lesson
             const lessonContents = await Promise.all(
-                contentData.map(async (item) => {
+                contentData.map(item => {
                     const lessonContent = new LessonContent({
-                        lessonId: lessonId,
+                        lessonId: savedLesson._id, // Use the ID from the saved lesson
                         userId: new mongoose.Types.ObjectId(userId),
                         title: item.sectionTitle,
                         description: item.index === 0 ? description : `Section ${item.index + 1} of ${lessonTitle}`,
@@ -174,7 +171,7 @@ export class LessonGeneratorModule {
             );
 
             return {
-                lesson: savedLesson,
+                lesson: savedLesson.toObject(), // Convert to plain object to ensure 'contents' is included
                 contents: lessonContents
             };
         } catch (error) {
