@@ -7,7 +7,14 @@ import { useOnboardingStore } from "@/lib/store/onboarding";
 import { miscApi, userApi } from "@/lib/api";
 
 type Language = {
-  label: string;
+  code: string;
+  name: string;
+  nativeName: string;
+  region: string;
+};
+
+type LanguageOption = {
+  label: React.ReactNode;
   value: string;
 };
 
@@ -16,26 +23,53 @@ type Accessibility = {
   value: string;
 };
 
+type ApiResponse<T> = {
+  status: boolean;
+  message: string;
+  data?: T;
+};
+
 export default function OnboardPage() {
   const router = useRouter();
-  const [languages, setLanguages] = useState<Language[]>([]);
+  const [languages, setLanguages] = useState<LanguageOption[]>([]);
   const [accessibilities, setAccessibilities] = useState<Accessibility[]>([]);
   const [loading, setLoading] = useState(false);
-  const { step, language, accessibilityIds, setStep, setLanguage, setAccessibilityIds } = useOnboardingStore();
+  const {
+    step,
+    language,
+    accessibilityIds,
+    setStep,
+    setLanguage,
+    setAccessibilityIds,
+  } = useOnboardingStore();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [langRes, accRes] = await Promise.all([
-          miscApi.getLanguages(),
+          miscApi.getLanguages() as Promise<
+            ApiResponse<{ languages: Language[] }>
+          >,
           miscApi.getAccessibilities(),
         ]);
 
         if (langRes.data?.languages) {
           setLanguages(
-            langRes.data.languages.map((lang: string) => ({
-              label: lang,
-              value: lang.toLowerCase(),
+            langRes.data.languages.map((lang) => ({
+              value: lang.code,
+              label: (
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-white">{lang.name}</span>
+                    <span className="text-sm text-[#FFFFFF80]">
+                      {lang.region}
+                    </span>
+                  </div>
+                  <span className="text-sm text-[#FFFFFF80]">
+                    {lang.nativeName}
+                  </span>
+                </div>
+              ),
             }))
           );
         }
@@ -89,35 +123,54 @@ export default function OnboardPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#1A202C] text-white p-4">
+    <div className="flex items-center justify-center text-white p-4">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
-          <h1 className="text-3xl font-bold mb-2">Welcome to Learnza</h1>
-          <p className="text-[#FFFFFF80]">Let's personalize your experience</p>
+          <h1 className="text-3xl text-dark dark:text-light font-bold mb-2">
+            Welcome to Learnza
+          </h1>
+          <p className="text-text-muted dark:text-text-light/70">
+            Let's personalize your experience
+          </p>
         </div>
 
         <div className="bg-[#283142] rounded-2xl p-6 shadow-xl space-y-6">
           {/* Progress indicator */}
           <div className="flex gap-2 mb-6">
-            <div className={`h-1 flex-1 rounded-full ${step === 1 ? "bg-primary" : "bg-[#FFFFFF29]"}`} />
-            <div className={`h-1 flex-1 rounded-full ${step === 2 ? "bg-primary" : "bg-[#FFFFFF29]"}`} />
+            <div
+              className={`h-1 flex-1 rounded-full ${
+                step === 1 ? "bg-primary" : "bg-[#FFFFFF29]"
+              }`}
+            />
+            <div
+              className={`h-1 flex-1 rounded-full ${
+                step === 2 ? "bg-primary" : "bg-[#FFFFFF29]"
+              }`}
+            />
           </div>
 
           {step === 1 ? (
             <div className="space-y-4">
               <h2 className="text-xl font-semibold">Choose your language</h2>
-              <p className="text-[#FFFFFF80] text-sm">Select your preferred language for learning</p>
+              <p className="text-[#FFFFFF80] text-sm">
+                Select your preferred language for learning
+              </p>
               <Select
                 value={language}
                 onChange={setLanguage}
                 options={languages}
                 placeholder="Select language"
+                className="[&>div]:min-h-[4.5rem]"
               />
             </div>
           ) : (
             <div className="space-y-4">
-              <h2 className="text-xl font-semibold">Accessibility preferences</h2>
-              <p className="text-[#FFFFFF80] text-sm">Select any accessibility features you need</p>
+              <h2 className="text-xl font-semibold">
+                Accessibility preferences
+              </h2>
+              <p className="text-[#FFFFFF80] text-sm">
+                Select any accessibility features you need
+              </p>
               <div className="space-y-3">
                 {accessibilities.map((acc) => (
                   <button
