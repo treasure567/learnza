@@ -1,0 +1,46 @@
+{
+  "name": "learnza",
+  "version": "1.0.0",
+  "description": "A modern learning platform with a fresh teal green and warm color palette",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@types/js-cookie": "^3.0.6",
+    "aos": "^2.3.4",
+    "axios": "^1.7.9",
+    "clsx": "^2.1.1",
+    "framer-motion": "^11.11.9",
+    "js-cookie": "^3.0.5",
+    "lucide-react": "^0.471.1",
+    "next": "^15.1.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "sonner": "^1.7.2",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "eslint": "^8",
+    "eslint-config-next": "15.0.0",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
+  },
+  "keywords": [
+    "learning",
+    "education",
+    "platform",
+    "nextjs",
+    "react",
+    "typescript"
+  ],
+  "author": "Learnza Team",
+  "license": "MIT"
+}

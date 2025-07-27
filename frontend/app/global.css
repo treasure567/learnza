@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  color: #333333; /* Default text color */
+  background-color: #f1faee; /* Soft off-white background */
+  overflow-x: hidden;
+}
+
+/* Dark mode styles */
+.dark body {
+  color: #f8fafc;
+  background-color: #1a1d1f;
+}
+
+/* Grid patterns */
+.bg-grid-light {
+  background-size: 40px 40px;
+  background-image: linear-gradient(to right, #333 1px, transparent 1px),
+    linear-gradient(to bottom, #333 1px, transparent 1px);
+}
+
+.bg-grid-dark {
+  background-size: 40px 40px;
+  background-image: linear-gradient(to right, #fff 1px, transparent 1px),
+    linear-gradient(to bottom, #fff 1px, transparent 1px);
+}
+
+body::-webkit-scrollbar {
+  @apply w-1 bg-transparent;
+}
+
+body::-webkit-scrollbar-corner {
+  @apply bg-transparent;
+}
+
+/* scrollbar */
+body::-webkit-scrollbar-track {
+  @apply bg-light-100;
+}
+
+body::-webkit-scrollbar-track-piece {
+  @apply bg-transparent;
+}
+
+body::-webkit-scrollbar-thumb {
+  @apply transition-all duration-500 
+  rounded-full bg-primary hover:bg-primary-100;
+}
+
+html.lenis {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
+}
+
+/* CODE TO REMOVE NUMBER RANGE ON INPUT */
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
+}
