@@ -9,7 +9,7 @@ type SelectProps = {
   placeholder?: string;
   defaultValue?: string;
   onChange?: (value: string) => void;
-  options: { label: string; value: string }[];
+  options: { label: React.ReactNode; value: string }[];
 };
 
 export default function Select({
@@ -46,7 +46,7 @@ export default function Select({
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={clsx(
-          "w-full  px-4 py-3 rounded-[12px] border border-[#FFFFFF29] text-white text-[12px] md:text-base font-medium font-aloeMed gap-2 text-left flex items-center justify-between",
+          "w-full px-4 py-3 rounded-[12px] border border-[#FFFFFF29] text-white text-[12px] md:text-base font-medium font-aloeMed gap-2 text-left flex items-center justify-between",
           className
         )}
       >

@@ -179,4 +179,7 @@ export const userApi = {
 // Misc API
 export const miscApi = {
   getLanguages: () => apiFetch<{ languages: string[] }>("/misc/languages"),
+
+  getAccessibilities: () =>
+    apiFetch<{ accessibilities: string[] }>("/misc/accessibilities"),
 };
