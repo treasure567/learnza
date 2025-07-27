@@ -2,6 +2,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { ILessonContent } from './types/lesson';
 import mongoose from 'mongoose';
 import LessonContent from './models/LessonContent';
+import Lesson from './models/Lesson';
 
 export class LessonGeneratorModule {
     private genAI: GoogleGenerativeAI;
@@ -9,7 +10,7 @@ export class LessonGeneratorModule {
 
     constructor(apiKey: string) {
         this.genAI = new GoogleGenerativeAI(apiKey);
-        this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+        this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
     }
 
     private extractJsonFromResponse(response: string): any {
@@ -73,41 +74,109 @@ export class LessonGeneratorModule {
         return result.response.text();
     }
 
+    async estimateContentTime(content: string): Promise<number> {
+        const prompt = `Based on this educational content: "${content}",
+                       estimate how many seconds it would take for an AI to explain this content to a student.
+                       Consider:
+                       - Reading time for the content
+                       - Time to explain concepts
+                       - Time for examples and clarifications
+                       - Interactive discussion time
+                       
+                       Return only a number representing seconds. No text, no JSON, just the number.
+                       Example responses: 180, 240, 360`;
+        
+        const result = await this.model.generateContent(prompt);
+        const timeText = result.response.text().trim();
+        const timeSeconds = parseInt(timeText.replace(/[^\d]/g, ''));
+        
+        // Fallback calculation if AI doesn't return a valid number
+        if (isNaN(timeSeconds) || timeSeconds <= 0) {
+            // Rough estimate: 150 words per minute reading + 50% for explanation
+            const wordCount = content.split(/\s+/).length;
+            const readingTime = (wordCount / 150) * 60; // seconds
+            return Math.round(readingTime * 1.5); // Add 50% for explanation
+        }
+        
+        return timeSeconds;
+    }
+
     async generateAndStoreLessonContent(
         userRequest: string,
-        userId: string,
-        lessonId: string
-    ): Promise<ILessonContent[]> {
+        userId: string
+    ): Promise<{ lesson: any, contents: ILessonContent[] }> {
         try {
-            // Form a proper topic from user request
+            // Step 1: Form a proper topic from user request
             const topic = await this.formTopicFromUserRequest(userRequest);
             
-            // Generate title and description
+            // Step 2: Generate title and description
             const { title: lessonTitle, description } = await this.generateTitle(userRequest, topic);
             
-            // Generate outline
+            // Step 3: Generate outline
             const outline = await this.generateOutline(userRequest, topic, lessonTitle);
             
-            // Generate and store content for each section
-            const contentPromises = outline.map(async (sectionTitle, index) => {
-                const content = await this.generateContent(userRequest, topic, sectionTitle);
-                
-                const lessonContent = new LessonContent({
-                    lessonId: new mongoose.Types.ObjectId(lessonId),
-                    userId: new mongoose.Types.ObjectId(userId),
-                    title: sectionTitle,
-                    description: index === 0 ? description : `Section ${index + 1} of ${lessonTitle}`,
-                    sequenceNumber: index + 1,
-                    content: content,
-                    completionStatus: 'not_started',
-                    currentProgress: 0,
-                    lastAccessedAt: null
-                });
-
-                return lessonContent.save();
+            // Step 4: Generate a unique lesson ID
+            const lessonId = new mongoose.Types.ObjectId();
+            
+            // Step 5: Generate content for each section with time estimation
+            const contentData = await Promise.all(
+                outline.map(async (sectionTitle, index) => {
+                    const content = await this.generateContent(userRequest, topic, sectionTitle);
+                    const estimatedTime = await this.estimateContentTime(content);
+                    
+                    return {
+                        sectionTitle,
+                        content,
+                        estimatedTime,
+                        index
+                    };
+                })
+            );
+            
+            // Step 6: Calculate total estimated time by summing all content times
+            const totalEstimatedTime = contentData.reduce((total, item) => total + item.estimatedTime, 0);
+            
+            // Step 7: Create and save the lesson record
+            const lesson = new Lesson({
+                title: lessonTitle,
+                description: description,
+                difficulty: 'beginner', // You can make this dynamic based on content analysis
+                estimatedTime: totalEstimatedTime,
+                userId: new mongoose.Types.ObjectId(userId),
+                userRequest: userRequest,
+                contents: contentData.map(item => ({
+                    title: item.sectionTitle,
+                    content: item.content,
+                    estimatedTime: item.estimatedTime,
+                    sequenceNumber: item.index + 1
+                }))
             });
+            
+            const savedLesson = await lesson.save();
+            
+            // Step 8: Create and save individual lesson content records
+            const lessonContents = await Promise.all(
+                contentData.map(async (item) => {
+                    const lessonContent = new LessonContent({
+                        lessonId: lessonId,
+                        userId: new mongoose.Types.ObjectId(userId),
+                        title: item.sectionTitle,
+                        description: item.index === 0 ? description : `Section ${item.index + 1} of ${lessonTitle}`,
+                        sequenceNumber: item.index + 1,
+                        content: item.content,
+                        completionStatus: 'not_started',
+                        currentProgress: 0,
+                        lastAccessedAt: null
+                    });
 
-            return Promise.all(contentPromises);
+                    return lessonContent.save();
+                })
+            );
+
+            return {
+                lesson: savedLesson,
+                contents: lessonContents
+            };
         } catch (error) {
             console.error('Error generating lesson content:', error);
             throw error;

@@ -3,6 +3,7 @@ import { config } from 'dotenv';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import { LessonGeneratorController } from './LessonGeneratorController';
+import { authMiddleware } from './middleware/authMiddleware';
 
 // Load environment variables
 config();
@@ -23,7 +24,7 @@ app.get('/health', (req, res) => {
 });
 
 // Routes
-app.post('/generate', lessonGeneratorController.generateLessonContent);
+app.post('/generate', authMiddleware, lessonGeneratorController.generateLessonContent);
 
 // Global error handler
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -33,11 +34,11 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
         message: 'Internal server error'
     });
 });
-
 // Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI as string)
+const mongoUri = process.env.MONGODB_URI;
+mongoose.connect(mongoUri as string)
     .then(() => {
-        console.log('Connected to MongoDB');
+        console.log('AI Service connected to MongoDB');
         
         // Start server
         app.listen(PORT, () => {
@@ -45,6 +46,6 @@ mongoose.connect(process.env.MONGODB_URI as string)
         });
     })
     .catch((error) => {
-        console.error('MongoDB connection error:', error);
+        console.error('AI Service MongoDB connection error:', error);
         process.exit(1);
     }); 
