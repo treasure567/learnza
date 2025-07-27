@@ -6,6 +6,7 @@ import { Select } from "@/app/components/ui";
 import { useOnboardingStore } from "@/lib/store/onboarding";
 import { miscApi, userApi } from "@/lib/api";
 import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
 
 type Language = {
   code: string;
@@ -29,31 +30,96 @@ type ApiResponse<T> = {
   status: boolean;
   message: string;
   data?: T;
+  errors?: Record<string, string[]>;
+};
+
+type UserPreferences = {
+  email: string;
+  name: string;
+  emailVerifiedAt: string;
+  language: Language;
+  accessibilityNeeds: AccessibilityOption[];
+  preferences: {
+    emailNotification: boolean;
+    pushNotification: boolean;
+    theme: string;
+  };
 };
 
 const AccessibilityIcon = ({ selected }: { selected: boolean }) => (
-  <div
-    className={`shrink-0 w-5 h-5 rounded-md border-2 transition-colors ${
+  <motion.div
+    whileTap={{ scale: 0.95 }}
+    className={`relative w-6 h-6 rounded-lg border-2 transition-all duration-300 ${
       selected
-        ? "bg-primary border-primary"
-        : "border-[#FFFFFF40] hover:border-[#FFFFFF60]"
+        ? "bg-gradient-to-br from-primary via-primary-100 to-primary-200 border-primary shadow-lg shadow-primary/25"
+        : "border-light-border dark:border-dark-border bg-light dark:bg-dark-surface hover:border-primary/50 dark:hover:border-primary-dark/50"
     }`}
   >
-    {selected && (
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        className="w-full h-full p-0.5 text-white"
-      >
-        <path
-          d="M20 6L9 17L4 12"
-          stroke="currentColor"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    )}
+    <AnimatePresence>
+      {selected && (
+        <motion.svg
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0, opacity: 0 }}
+          transition={{ duration: 0.2, ease: "backOut" }}
+          viewBox="0 0 24 24"
+          fill="none"
+          className="absolute inset-0.5 text-white"
+        >
+          <path
+            d="M20 6L9 17L4 12"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </motion.svg>
+      )}
+    </AnimatePresence>
+  </motion.div>
+);
+
+const StepIndicator = ({
+  currentStep,
+  totalSteps,
+}: {
+  currentStep: number;
+  totalSteps: number;
+}) => (
+  <div className="flex items-center justify-center space-x-4 mb-8">
+    {Array.from({ length: totalSteps }, (_, i) => i + 1).map((step) => (
+      <div key={step} className="flex items-center">
+        <motion.div
+          animate={{
+            backgroundColor: step <= currentStep ? "#2A9D8F" : "transparent",
+            borderColor: step <= currentStep ? "#2A9D8F" : "#E5E7EB",
+            scale: step === currentStep ? 1.1 : 1,
+          }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+          className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+            step <= currentStep
+              ? "text-white shadow-lg"
+              : "text-text-muted dark:text-text-light/70 border-light-border dark:border-dark-border"
+          }`}
+        >
+          <motion.span
+            animate={{ scale: step === currentStep ? 1.1 : 1 }}
+            className="font-semibold text-sm"
+          >
+            {step}
+          </motion.span>
+        </motion.div>
+        {step < totalSteps && (
+          <motion.div
+            animate={{
+              backgroundColor: step < currentStep ? "#2A9D8F" : "#E5E7EB",
+            }}
+            transition={{ duration: 0.3, delay: 0.1 }}
+            className="w-16 h-1 mx-2 rounded-full"
+          />
+        )}
+      </div>
+    ))}
   </div>
 );
 
@@ -90,7 +156,7 @@ export default function OnboardPage() {
           setLanguages(
             langRes.data.languages.map((lang) => ({
               value: lang.code,
-              label: lang.name,
+              label: `${lang.name} (${lang.nativeName}) - ${lang.region}`,
             }))
           );
         }
@@ -112,12 +178,22 @@ export default function OnboardPage() {
 
     setSavingLanguage(true);
     try {
-      await userApi.updateLanguage(language);
-      toast.success("Language preference saved!");
+      const response = await userApi.updateLanguage({ languageCode: language });
+
+      if (!response.status) {
+        if (response.errors?.languageCode) {
+          toast.error(response.errors.languageCode[0]);
+        } else {
+          toast.error(response.message || "Failed to save language preference");
+        }
+        return;
+      }
+
+      toast.success(response.message);
       setStep(2);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to save language:", error);
-      toast.error("Failed to save language preference. Please try again.");
+      toast.error(error.message || "Failed to save language preference");
     } finally {
       setSavingLanguage(false);
     }
@@ -126,17 +202,29 @@ export default function OnboardPage() {
   const handleAccessibilitySubmit = async () => {
     setSavingPreferences(true);
     try {
-      await userApi.updateAccessibility({ settings: { accessibilityIds } });
-      toast.success("Accessibility preferences saved!");
+      const response = await userApi.updateAccessibility({
+        settings: { accessibilityIds },
+      });
+
+      if (!response.status) {
+        toast.error(
+          response.message || "Failed to save accessibility preferences"
+        );
+        return;
+      }
+
+      toast.success(response.message);
       router.push("/dashboard");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to save accessibility preferences:", error);
-      toast.error(
-        "Failed to save accessibility preferences. Please try again."
-      );
+      toast.error(error.message || "Failed to save accessibility preferences");
     } finally {
       setSavingPreferences(false);
     }
+  };
+
+  const handleSkip = () => {
+    router.push("/dashboard");
   };
 
   const handleBack = () => {
@@ -154,123 +242,252 @@ export default function OnboardPage() {
   };
 
   return (
-    <div className="flex items-center justify-center text-white p-4">
-      <div className="w-full max-w-md space-y-8">
-        <div className="text-center">
-          <h1 className="text-3xl text-dark dark:text-light font-bold mb-2">
-            Welcome to Learnza
-          </h1>
-          <p className="text-text-muted dark:text-text-light/70">
-            Let's personalize your experience
-          </p>
-        </div>
-
-        <div className="bg-[#283142] rounded-2xl p-6 shadow-xl space-y-6">
-          {/* Progress indicator */}
-          <div className="flex gap-2 mb-6">
-            <div
-              className={`h-1 flex-1 rounded-full transition-colors ${
-                step === 1 ? "bg-primary" : "bg-[#FFFFFF29]"
-              }`}
-            />
-            <div
-              className={`h-1 flex-1 rounded-full transition-colors ${
-                step === 2 ? "bg-primary" : "bg-[#FFFFFF29]"
-              }`}
-            />
-          </div>
-
-          {step === 1 ? (
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold">Choose your language</h2>
-              <p className="text-[#FFFFFF80] text-sm">
-                Select your preferred language for learning
-              </p>
-              <Select
-                value={language}
-                onChange={setLanguage}
-                options={languages}
-                placeholder="Select language"
-              />
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div>
-                <h2 className="text-xl font-semibold">
-                  Accessibility preferences
-                </h2>
-                <p className="text-[#FFFFFF80] text-sm mt-1">
-                  Select any accessibility features you need
-                </p>
-              </div>
-
-              <div className="grid gap-3">
-                {accessibilities.map((acc) => (
-                  <button
-                    key={acc.value}
-                    onClick={() => handleAccessibilityToggle(acc.value)}
-                    className={`w-full p-4 rounded-xl border text-left transition-all hover:border-[#FFFFFF40] ${
-                      accessibilityIds.includes(acc.value)
-                        ? "border-primary bg-primary/5"
-                        : "border-[#FFFFFF29]"
-                    }`}
-                  >
-                    <div className="flex gap-3">
-                      <AccessibilityIcon
-                        selected={accessibilityIds.includes(acc.value)}
-                      />
-                      <div className="flex-1">
-                        <div className="font-medium text-white">{acc.name}</div>
-                        <div className="text-sm text-[#FFFFFF80] mt-0.5">
-                          {acc.description}
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-
-              <div className="text-sm text-[#FFFFFF80] mt-2 text-center">
-                {accessibilityIds.length === 0
-                  ? "No accessibility features selected"
-                  : `${accessibilityIds.length} feature${
-                      accessibilityIds.length === 1 ? "" : "s"
-                    } selected`}
-              </div>
-            </div>
-          )}
-
-          <div className="flex gap-3 pt-4">
-            {step === 2 && (
-              <button
-                onClick={handleBack}
-                className="flex-1 px-4 py-3 rounded-xl border border-[#FFFFFF29] text-white hover:bg-[#FFFFFF0A] transition-colors"
-              >
-                Back
-              </button>
-            )}
-            <button
-              onClick={
-                step === 1 ? handleLanguageSubmit : handleAccessibilitySubmit
-              }
-              disabled={
-                (step === 1 && !language) || savingLanguage || savingPreferences
-              }
-              className={`flex-1 px-4 py-3 rounded-xl font-medium transition-colors ${
-                savingLanguage || savingPreferences || (step === 1 && !language)
-                  ? "bg-primary/50 cursor-not-allowed"
-                  : "bg-primary hover:bg-primary/90"
-              }`}
+    <div className="w-full max-w-2xl mx-auto">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="space-y-8"
+      >
+        {/* Header */}
+        <div className="text-center space-y-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary via-primary-100 to-primary-200 shadow-xl shadow-primary/25"
+          >
+            <svg
+              className="w-8 h-8 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              {savingLanguage || savingPreferences
-                ? "Saving..."
-                : step === 1
-                ? "Save & Continue"
-                : "Finish Setup"}
-            </button>
-          </div>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C20.168 18.477 18.582 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+              />
+            </svg>
+          </motion.div>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent dark:from-primary-dark dark:via-secondary-dark dark:to-accent-dark"
+          >
+            Welcome to Learnza
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="text-lg text-text-muted dark:text-text-light/70 max-w-md mx-auto"
+          >
+            Let's personalize your learning experience with a few quick
+            questions
+          </motion.p>
+
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            onClick={handleSkip}
+            className="text-text-muted dark:text-text-light/70 hover:text-primary dark:hover:text-primary-dark transition-colors"
+          >
+            Skip for now
+          </motion.button>
         </div>
-      </div>
+
+        {/* Step Indicator */}
+        <StepIndicator currentStep={step} totalSteps={2} />
+
+        {/* Main Card */}
+        <motion.div
+          layout
+          className="relative bg-gradient-to-br from-light-surface via-light-surface to-light-100 dark:from-dark-surface dark:via-dark-surface dark:to-dark-100 backdrop-blur-xl border border-light-border/50 dark:border-dark-border/50 rounded-3xl p-8 shadow-2xl"
+        >
+          {/* Background decoration */}
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 dark:from-primary-dark/5 dark:to-accent-dark/5 rounded-3xl" />
+
+          <div className="relative">
+            <AnimatePresence mode="wait">
+              {step === 1 ? (
+                <motion.div
+                  key="language"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.4, ease: "easeInOut" }}
+                  className="space-y-6"
+                >
+                  <div className="space-y-3">
+                    <h2 className="text-2xl md:text-3xl font-bold text-dark dark:text-light">
+                      Choose your language
+                    </h2>
+                    <p className="text-text-muted dark:text-text-light/70 text-lg">
+                      Select your preferred language for the best learning
+                      experience
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <Select
+                      value={language}
+                      onChange={setLanguage}
+                      options={languages}
+                      placeholder="Select your language"
+                      className="text-lg"
+                    />
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="accessibility"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.4, ease: "easeInOut" }}
+                  className="space-y-6"
+                >
+                  <div className="space-y-3">
+                    <h2 className="text-2xl md:text-3xl font-bold text-dark dark:text-light">
+                      Accessibility preferences
+                    </h2>
+                    <p className="text-text-muted dark:text-text-light/70 text-lg">
+                      Help us make learning accessible for you
+                    </p>
+                  </div>
+
+                  <div className="grid gap-4 max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
+                    {accessibilities.map((acc, index) => (
+                      <motion.button
+                        key={acc.value}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: index * 0.05 }}
+                        whileHover={{
+                          scale: 1.02,
+                          transition: { duration: 0.2 },
+                        }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => handleAccessibilityToggle(acc.value)}
+                        className={`group p-5 rounded-2xl border-2 text-left transition-all duration-300 ${
+                          accessibilityIds.includes(acc.value)
+                            ? "border-primary bg-gradient-to-br from-primary/5 to-primary/10 shadow-lg shadow-primary/10 dark:border-primary-dark dark:from-primary-dark/5 dark:to-primary-dark/10"
+                            : "border-light-border dark:border-dark-border bg-light-surface/50 dark:bg-dark-surface/50 hover:border-primary/30 dark:hover:border-primary-dark/30 hover:shadow-lg"
+                        }`}
+                      >
+                        <div className="flex items-start gap-4">
+                          <AccessibilityIcon
+                            selected={accessibilityIds.includes(acc.value)}
+                          />
+                          <div className="flex-1 space-y-1">
+                            <h3 className="font-semibold text-lg text-dark dark:text-light group-hover:text-primary dark:group-hover:text-primary-dark transition-colors">
+                              {acc.name}
+                            </h3>
+                            <p className="text-text-muted dark:text-text-light/70 leading-relaxed">
+                              {acc.description}
+                            </p>
+                          </div>
+                        </div>
+                      </motion.button>
+                    ))}
+                  </div>
+
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                    className="text-center p-4 rounded-xl bg-gradient-to-r from-primary/5 to-accent/5 dark:from-primary-dark/5 dark:to-accent-dark/5 border border-primary/10 dark:border-primary-dark/10"
+                  >
+                    <p className="text-text-muted dark:text-text-light/70 font-medium">
+                      {accessibilityIds.length === 0 ? (
+                        "No accessibility features selected"
+                      ) : (
+                        <>
+                          <span className="text-primary dark:text-primary-dark font-bold">
+                            {accessibilityIds.length}
+                          </span>{" "}
+                          feature{accessibilityIds.length === 1 ? "" : "s"}{" "}
+                          selected
+                        </>
+                      )}
+                    </p>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Action Buttons */}
+            <motion.div
+              layout
+              className="flex gap-4 pt-8 mt-8 border-t border-light-border/50 dark:border-dark-border/50"
+            >
+              <AnimatePresence>
+                {step === 2 && (
+                  <motion.button
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleBack}
+                    className="flex-1 px-6 py-4 rounded-2xl border-2 border-light-border dark:border-dark-border text-dark dark:text-light font-semibold hover:border-primary/30 dark:hover:border-primary-dark/30 hover:bg-light-100 dark:hover:bg-dark-100 transition-all duration-300"
+                  >
+                    Back
+                  </motion.button>
+                )}
+              </AnimatePresence>
+
+              <motion.button
+                layout
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={
+                  step === 1 ? handleLanguageSubmit : handleAccessibilitySubmit
+                }
+                disabled={
+                  (step === 1 && !language) ||
+                  savingLanguage ||
+                  savingPreferences
+                }
+                className={`${
+                  step === 2 ? "flex-1" : "w-full"
+                } px-6 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 ${
+                  savingLanguage ||
+                  savingPreferences ||
+                  (step === 1 && !language)
+                    ? "bg-gradient-to-r from-primary/50 to-primary-200/50 cursor-not-allowed text-white/70"
+                    : "bg-gradient-to-r from-primary via-primary-100 to-primary-200 hover:from-primary-200 hover:via-primary-100 hover:to-primary text-white shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30"
+                }`}
+              >
+                {savingLanguage || savingPreferences ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{
+                        duration: 1,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
+                      className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full"
+                    />
+                    Saving...
+                  </div>
+                ) : step === 1 ? (
+                  "Continue"
+                ) : (
+                  "Complete Setup"
+                )}
+              </motion.button>
+            </motion.div>
+          </div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }

@@ -1,13 +1,41 @@
 import { useAuthStore } from "./store/auth";
 
-const API_KEY = process.env.NEXT_PUBLIC_API_KEY!;
-const API_URL = process.env.NEXT_PUBLIC_API_URL!;
+const API_KEY = process.env.NEXT_PUBLIC_API_KEY || "";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+
+// Types
+type Language = {
+  code: string;
+  name: string;
+  nativeName: string;
+  region: string;
+};
+
+type AccessibilityOption = {
+  value: string;
+  description: string;
+  name: string;
+};
+
+type UserPreferences = {
+  email: string;
+  name: string;
+  emailVerifiedAt: string;
+  language: Language;
+  accessibilityNeeds: AccessibilityOption[];
+  preferences: {
+    emailNotification: boolean;
+    pushNotification: boolean;
+    theme: string;
+  };
+};
 
 // API Response types
 type ApiResponse<T = any> = {
   status: boolean;
   message: string;
   data?: T;
+  errors?: Record<string, string[]>;
 };
 
 // Custom fetch options type
@@ -163,23 +191,25 @@ export const userApi = {
     return response;
   },
 
-  updateAccessibility: (data: { settings: Record<string, any> }) =>
-    apiFetch<{ settings: any }>("/user/accessibility", {
+  updateLanguage: (data: { languageCode: string }) =>
+    apiFetch<UserPreferences>("/user/update-language", {
       method: "PUT",
       body: data,
     }),
 
-  updateLanguage: (language: string) =>
-    apiFetch<{ language: string }>("/user/update-language", {
+  updateAccessibility: (data: { settings: { accessibilityIds: string[] } }) =>
+    apiFetch<UserPreferences>("/user/update-accessibility", {
       method: "PUT",
-      body: { language },
+      body: data,
     }),
 };
 
 // Misc API
 export const miscApi = {
-  getLanguages: () => apiFetch<{ languages: string[] }>("/misc/languages"),
+  getLanguages: () => apiFetch<{ languages: Language[] }>("/misc/languages"),
 
   getAccessibilities: () =>
-    apiFetch<{ accessibilities: string[] }>("/misc/accessibilities"),
+    apiFetch<{ accessibilities: AccessibilityOption[] }>(
+      "/misc/accessibilities"
+    ),
 };
