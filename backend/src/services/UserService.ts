@@ -4,6 +4,8 @@ import Accessibility from '@models/Accessibility';
 import { HashUtils } from '@utils/HashUtils';
 import { CustomError } from '@middleware/errorHandler';
 import { IUser } from '@/types/user';
+import { updatePreferencesRules } from '@/rules/user/updatePreferences';
+import { UserUtils } from '@/utils/UserUtils';
 
 export class UserService {
     private static generateVerificationCode(): string {
@@ -11,13 +13,11 @@ export class UserService {
     }
 
     static async getProfile(userId: string): Promise<IUser> {
-        const user = await User.findById(userId)
-            .populate('language')
-            .populate('accessibilityNeeds');
+        const user = await User.findById(userId);
         if (!user) {
             throw new CustomError('User not found', 404);
         }
-        return user;
+        return UserUtils.populateUser(user);
     }
 
     static async updateProfile(userId: string, updateData: { name?: string; email?: string }): Promise<IUser> {
@@ -39,7 +39,7 @@ export class UserService {
 
         Object.assign(user, updateData);
         await user.save();
-        return user;
+        return UserUtils.populateUser(user);
     }
 
     static async updateLanguage(userId: string, languageCode: string): Promise<IUser> {
@@ -55,8 +55,7 @@ export class UserService {
 
         user.language = language._id as string;
         await user.save();
-
-        return user.populate(['language', 'accessibilityNeeds']);
+        return UserUtils.populateUser(user);
     }
 
     static async updateAccessibilityNeeds(userId: string, accessibilityIds: string[]): Promise<IUser> {
@@ -81,14 +80,31 @@ export class UserService {
         }
 
         await user.save();
-        return user.populate(['language', 'accessibilityNeeds']);
+        return UserUtils.populateUser(user);
     }
 
-    static async changePassword(
-        userId: string, 
-        currentPassword: string, 
-        newPassword: string
-    ): Promise<void> {
+    static async updatePreferences(userId: string, preferences: Record<string, any>): Promise<IUser> {
+        const validKeys = Object.keys(updatePreferencesRules);
+        const preferenceKeys = Object.keys(preferences);
+        const invalidKeys = preferenceKeys.filter(key => !validKeys.includes(key));
+        if (invalidKeys.length > 0) {
+            throw new CustomError('Invalid preference keys: ' + invalidKeys.join(', '), 400);
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            throw new CustomError('User not found', 404);
+        }
+
+        Object.entries(preferences).forEach(([key, value]) => {
+            user.preferences.set(key, value);
+        });
+
+        await user.save();
+        return UserUtils.populateUser(user);
+    }
+
+    static async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
         const user = await User.findById(userId);
         if (!user) {
             throw new CustomError('User not found', 404);
