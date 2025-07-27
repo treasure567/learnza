@@ -33,19 +33,6 @@ type ApiResponse<T> = {
   errors?: Record<string, string[]>;
 };
 
-type UserPreferences = {
-  email: string;
-  name: string;
-  emailVerifiedAt: string;
-  language: Language;
-  accessibilityNeeds: AccessibilityOption[];
-  preferences: {
-    emailNotification: boolean;
-    pushNotification: boolean;
-    theme: string;
-  };
-};
-
 const AccessibilityIcon = ({ selected }: { selected: boolean }) => (
   <motion.div
     whileTap={{ scale: 0.95 }}
@@ -203,14 +190,24 @@ export default function OnboardPage() {
     setSavingPreferences(true);
     try {
       const response = await userApi.updateAccessibility({
-        settings: { accessibilityIds },
+        accessibilityIds,
       });
 
       if (!response.status) {
-        toast.error(
-          response.message || "Failed to save accessibility preferences"
-        );
+        if (response.errors?.accessibilityIds) {
+          toast.error(response.errors.accessibilityIds[0]);
+        } else {
+          toast.error(
+            response.message || "Failed to save accessibility preferences"
+          );
+        }
         return;
+      }
+
+      // Update local state with the new user preferences if needed
+      if (response.data) {
+        // You might want to update your auth store or settings store here
+        // with the new user preferences
       }
 
       toast.success(response.message);

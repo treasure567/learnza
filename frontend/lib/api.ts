@@ -17,12 +17,21 @@ type AccessibilityOption = {
   name: string;
 };
 
-type UserPreferences = {
+export type UserPreferences = {
   email: string;
   name: string;
   emailVerifiedAt: string;
-  language: Language;
-  accessibilityNeeds: AccessibilityOption[];
+  language: {
+    code: string;
+    name: string;
+    nativeName: string;
+    region: string;
+  };
+  accessibilityNeeds: {
+    value: string;
+    description: string;
+    name: string;
+  }[];
   preferences: {
     emailNotification: boolean;
     pushNotification: boolean;
@@ -197,7 +206,7 @@ export const userApi = {
       body: data,
     }),
 
-  updateAccessibility: (data: { settings: { accessibilityIds: string[] } }) =>
+  updateAccessibility: (data: { accessibilityIds: string[] }) =>
     apiFetch<UserPreferences>("/user/update-accessibility", {
       method: "PUT",
       body: data,
