@@ -6,11 +6,13 @@ declare module "*.svg" {
   const content: string;
   export default content;
 }
+
 interface SVGProps {
   fill?: string;
   className?: string;
   onClick?: () => void;
 }
+
 type Props = {
   show?: boolean;
 };
@@ -86,8 +88,7 @@ type OTPState = {
   [key: string]: string;
 };
 
-// Types for accessibility and language settings
-
+// Auth Types
 type User = {
   id: string;
   email: string;
@@ -97,16 +98,56 @@ type User = {
   updatedAt: string;
 };
 
+type LoginCredentials = {
+  email: string;
+  password: string;
+};
+
+type RegisterCredentials = {
+  email: string;
+  name: string;
+  password: string;
+};
+
+type AuthFormProps = {
+  route: "register" | "login";
+};
+
+type AuthResponse = {
+  token: string;
+  user: User;
+};
+
+type VerificationResponse = {
+  verified: boolean;
+};
+
+type ResetPasswordResponse = {
+  success: boolean;
+};
+
+// Settings Types
 type AccessibilitySettings = {
-  settings: Record<string, any>;
+  highContrast?: boolean;
+  fontSize?: "small" | "medium" | "large";
+  reduceMotion?: boolean;
+  screenReader?: boolean;
+  signLanguage?: boolean;
+  [key: string]: any;
 };
 
 type LanguageSettings = {
   language: string;
 };
 
-type ApiResponse<T> = {
+// API Types
+type ApiResponse<T = any> = {
   status: boolean;
   message: string;
   data?: T;
+};
+
+type ApiError = {
+  status: number;
+  message: string;
 };

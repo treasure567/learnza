@@ -1,5 +1,7 @@
-import env from "@/env";
 import { useAuthStore } from "./store/auth";
+
+const API_KEY = process.env.NEXT_PUBLIC_API_KEY || "";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 // API Response types
 type ApiResponse<T = any> = {
@@ -28,7 +30,7 @@ export async function apiFetch<T>(
   const { params, body, headers: customHeaders, ...rest } = options;
 
   // Build URL with query params
-  const url = new URL(`${env.API_URL}${endpoint}`);
+  const url = new URL(`${API_URL}${endpoint}`);
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
       url.searchParams.append(key, value);
@@ -41,7 +43,7 @@ export async function apiFetch<T>(
   // Prepare headers
   const headers = new Headers({
     "Content-Type": "application/json",
-    "x-api-key": env.API_KEY,
+    "x-api-key": API_KEY,
     ...customHeaders,
   });
 
