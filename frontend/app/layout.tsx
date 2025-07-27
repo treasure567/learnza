@@ -34,25 +34,21 @@ export const metadata: Metadata = {
   },
   title: "IILCB - Inclusive Interactive Learning & Credential Blockchain",
   description:
-    "An accessible learning platform for everyone, powered by blockchain technology. Learn, earn, and store your credentials securely on-chain.",
+    "An accessible learning platform for everyone, powered by blockchain technology. Learn, earn, and verify credentials on-chain.",
   applicationName: "IILCB Platform",
   authors: [{ name: "Learnza Team", url: "https://learnza.xyz" }],
   keywords: [
-    "Blockchain Education",
-    "Accessible Learning",
-    "Interactive Learning",
-    "Blockchain Credentials",
-    "Learn to Earn",
+    "Education",
+    "Blockchain",
+    "Accessibility",
+    "Learning",
+    "Credentials",
+    "Web3",
+    "Inclusive Learning",
     "Sign Language",
     "Voice Learning",
-    "Inclusive Education",
-    "Nigerian Languages",
-    "Yoruba",
-    "Igbo",
-    "Hausa",
-    "Educational Technology",
-    "Web3",
-    "Blockchain",
+    "Cultural Education",
+    "Learn to Earn",
   ],
   creator: "Learnza Team",
   publisher: "Learnza",
@@ -67,13 +63,13 @@ export const metadata: Metadata = {
     url: "https://learnza.xyz",
     title: "IILCB - Inclusive Interactive Learning & Credential Blockchain",
     siteName: "IILCB Platform",
-    locale: "en_NG",
+    locale: "en_US",
     images: [
       {
         url: "/images/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "IILCB Platform - Inclusive Learning for All",
+        alt: "IILCB Platform - Inclusive Learning for Everyone",
       },
     ],
   },
@@ -82,7 +78,7 @@ export const metadata: Metadata = {
     creator: "@learnza",
     title: "IILCB - Inclusive Interactive Learning & Credential Blockchain",
     description:
-      "An accessible learning platform for everyone, powered by blockchain technology. Learn, earn, and store your credentials securely on-chain.",
+      "An accessible learning platform for everyone, powered by blockchain technology. Learn, earn, and verify credentials on-chain.",
     card: "summary_large_image",
     images: ["/images/twitter-card.jpg"],
   },
@@ -92,7 +88,7 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
   },
   formatDetection: {
-    telephone: true,
+    telephone: false,
   },
   abstract:
     "IILCB is a revolutionary learning platform that combines accessibility, blockchain technology, and cultural inclusivity to make education accessible to everyone.",
@@ -108,7 +104,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${montserrat.className} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${montserrat.className} ${geistMono.variable} antialiased bg-light text-text`}
       >
         <Toaster richColors />
         <AOS />
