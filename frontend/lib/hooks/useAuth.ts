@@ -2,8 +2,8 @@
 
 import { useMutation } from "@tanstack/react-query";
 import { authApi } from "../api";
-import { useAuthStore } from "../store/auth";
 import { toast } from "sonner";
+import { useAuthStore } from "../store/auth";
 import { useRouter } from "next/navigation";
 
 export function useLogin() {
@@ -12,11 +12,13 @@ export function useLogin() {
   return useMutation({
     mutationFn: authApi.login,
     onSuccess: (data) => {
-      if (!data.data?.user?.isEmailApproved) {
-        router.push("/verify");
-        return;
-      }
-      router.push("/dashboard");
+      // todo redirect to dashboard if email is approved
+      // if (!data.data?.user?.isEmailApproved) {
+      //   router.push("/verify");
+      //   return;
+      // }
+      // router.push("/dashboard");
+      toast.success("Login successful");
     },
     onError: (error: Error) => {
       toast.error(error.message);

@@ -170,7 +170,7 @@ export const userApi = {
     }),
 
   updateLanguage: (language: string) =>
-    apiFetch<{ language: string }>("/user/language", {
+    apiFetch<{ language: string }>("/user/update-language", {
       method: "PUT",
       body: { language },
     }),

@@ -7,7 +7,6 @@ import { useState } from "react";
 import { Button, Input } from "@/app/components/ui";
 import { useLogin, useRegister } from "@/lib/hooks/useAuth";
 import { useOnlineStatus } from "../../../lib/hooks/useOnlineStatus";
-import { UseMutationResult } from "@tanstack/react-query";
 
 const signupSchema = z.object({
   email: z.string().email("Invalid email address"),

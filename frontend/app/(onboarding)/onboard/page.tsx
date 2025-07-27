@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Select } from "@/app/components/ui";
 import { useOnboardingStore } from "@/lib/store/onboarding";
 import { miscApi, userApi } from "@/lib/api";
+import { toast } from "sonner";
 
 type Language = {
   code: string;
@@ -62,7 +63,8 @@ export default function OnboardPage() {
   const [accessibilities, setAccessibilities] = useState<AccessibilityOption[]>(
     []
   );
-  const [loading, setLoading] = useState(false);
+  const [savingLanguage, setSavingLanguage] = useState(false);
+  const [savingPreferences, setSavingPreferences] = useState(false);
   const {
     step,
     language,
@@ -98,27 +100,42 @@ export default function OnboardPage() {
         }
       } catch (error) {
         console.error("Failed to fetch onboarding data:", error);
+        toast.error("Failed to load onboarding data. Please try again.");
       }
     };
 
     fetchData();
   }, []);
 
-  const handleNext = async () => {
-    if (step === 1 && language) {
+  const handleLanguageSubmit = async () => {
+    if (!language) return;
+
+    setSavingLanguage(true);
+    try {
+      await userApi.updateLanguage(language);
+      toast.success("Language preference saved!");
       setStep(2);
-    } else if (step === 2) {
-      setLoading(true);
-      try {
-        await Promise.all([
-          userApi.updateLanguage(language),
-          userApi.updateAccessibility({ settings: { accessibilityIds } }),
-        ]);
-        router.push("/dashboard"); // Redirect to dashboard after onboarding
-      } catch (error) {
-        console.error("Failed to save onboarding data:", error);
-      }
-      setLoading(false);
+    } catch (error) {
+      console.error("Failed to save language:", error);
+      toast.error("Failed to save language preference. Please try again.");
+    } finally {
+      setSavingLanguage(false);
+    }
+  };
+
+  const handleAccessibilitySubmit = async () => {
+    setSavingPreferences(true);
+    try {
+      await userApi.updateAccessibility({ settings: { accessibilityIds } });
+      toast.success("Accessibility preferences saved!");
+      router.push("/dashboard");
+    } catch (error) {
+      console.error("Failed to save accessibility preferences:", error);
+      toast.error(
+        "Failed to save accessibility preferences. Please try again."
+      );
+    } finally {
+      setSavingPreferences(false);
     }
   };
 
@@ -152,12 +169,12 @@ export default function OnboardPage() {
           {/* Progress indicator */}
           <div className="flex gap-2 mb-6">
             <div
-              className={`h-1 flex-1 rounded-full ${
+              className={`h-1 flex-1 rounded-full transition-colors ${
                 step === 1 ? "bg-primary" : "bg-[#FFFFFF29]"
               }`}
             />
             <div
-              className={`h-1 flex-1 rounded-full ${
+              className={`h-1 flex-1 rounded-full transition-colors ${
                 step === 2 ? "bg-primary" : "bg-[#FFFFFF29]"
               }`}
             />
@@ -233,17 +250,23 @@ export default function OnboardPage() {
               </button>
             )}
             <button
-              onClick={handleNext}
-              disabled={step === 1 && !language}
+              onClick={
+                step === 1 ? handleLanguageSubmit : handleAccessibilitySubmit
+              }
+              disabled={
+                (step === 1 && !language) || savingLanguage || savingPreferences
+              }
               className={`flex-1 px-4 py-3 rounded-xl font-medium transition-colors ${
-                loading
-                  ? "bg-primary/50 cursor-not-allowed"
-                  : step === 1 && !language
+                savingLanguage || savingPreferences || (step === 1 && !language)
                   ? "bg-primary/50 cursor-not-allowed"
                   : "bg-primary hover:bg-primary/90"
               }`}
             >
-              {loading ? "Saving..." : step === 1 ? "Next" : "Finish"}
+              {savingLanguage || savingPreferences
+                ? "Saving..."
+                : step === 1
+                ? "Save & Continue"
+                : "Finish Setup"}
             </button>
           </div>
         </div>
