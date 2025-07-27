@@ -10,9 +10,9 @@
 }
 
 body {
-  color: white;
-  background-color: #0f0f0f;
+  color: #333333; /* Default text color */
   overflow-x: hidden;
+  background-color: #f1faee; /* Soft off-white background */
 }
 
 body::-webkit-scrollbar {
@@ -25,7 +25,7 @@ body::-webkit-scrollbar-corner {
 
 /* scrollbar */
 body::-webkit-scrollbar-track {
-  @apply bg-primary;
+  @apply bg-light-100;
 }
 
 body::-webkit-scrollbar-track-piece {
@@ -34,7 +34,7 @@ body::-webkit-scrollbar-track-piece {
 
 body::-webkit-scrollbar-thumb {
   @apply transition-all duration-500 
-  rounded-full bg-dark hover:bg-dark/60;
+  rounded-full bg-primary hover:bg-primary-100;
 }
 
 html.lenis {
@@ -69,6 +69,3 @@ input::-webkit-inner-spin-button {
 input[type="number"] {
   -moz-appearance: textfield;
 }
-
-
-

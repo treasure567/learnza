@@ -1,7 +1,6 @@
 export { default as AOS } from "./aos";
-export { default as AIO } from "./aio";
-export { default as Glow } from "./glow";
-export { default as Loader } from "./loader";
-export { default as Animation } from "./animation";
+export { default as Hero } from "./hero";
+export { default as Features } from "./features";
+export { default as CTA } from "./cta";
 
 // GLOBAL COMPONENTS export here

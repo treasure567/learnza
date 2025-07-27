@@ -9,7 +9,7 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        // if you are using variable and want to use more than one fonts for your webapp,you could define it here. like i did 
+        // if you are using variable and want to use more than one fonts for your webapp,you could define it here. like i did
         geistSans: ["var(--font-geist-sans)"],
       },
       keyframes: {
@@ -64,19 +64,38 @@ const config: Config = {
       },
       colors: {
         primary: {
-          DEFAULT: "#8066FF",
-          100: "#6248E1",
-          200: "#8066FF",
+          DEFAULT: "#2A9D8F", // Teal Green
+          100: "#1A7A6F",
+          200: "#2A9D8F",
+          300: "#3BB8A8",
+        },
+        secondary: {
+          DEFAULT: "#E9C46A", // Warm Yellow/Gold
+          100: "#D4B55A",
+          200: "#E9C46A",
+          300: "#F4D17A",
+        },
+        accent: {
+          DEFAULT: "#F4A261", // Soft Orange
+          100: "#E89451",
+          200: "#F4A261",
+          300: "#FFB071",
         },
         dark: {
-          DEFAULT: "#141517",
-          100: "#414141",
-          200: "#121212",
-          300: "#676B71",
+          DEFAULT: "#264653", // Deep Blue-Green
+          100: "#1A3741",
+          200: "#264653",
+          300: "#325565",
         },
-        main: {
-          DEFAULT: "#E1DEF0",
-          100: "#F3EFFD",
+        light: {
+          DEFAULT: "#F1FAEE", // Soft Off-White
+          100: "#E8F5E5",
+          200: "#F1FAEE",
+          300: "#FAFFFD",
+        },
+        text: {
+          DEFAULT: "#333333", // Default body text
+          secondary: "#555555", // Secondary text
         },
       },
     },

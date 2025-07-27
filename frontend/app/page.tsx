@@ -1,438 +1,785 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
-  Button,
-  Card,
-  Image,
-  Input,
-  Modal,
-  Otp,
-  Select,
-  Skeleton,
-  Tabs,
-  TextArea,
-  Toggle,
-} from "./components/ui";
-import { motion } from "framer-motion";
-import { EyeIcon } from "./components/svgs";
-import { toast } from "sonner";
-import { Animation, Glow, Loader } from "./components/global";
+  motion,
+  useScroll,
+  useTransform,
+  useSpring,
+  AnimatePresence,
+} from "framer-motion";
+import { Button } from "./components/ui";
 
-export default function Home() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [toggleState, setToggleState] = useState(false);
-  const [inputValue, setInputValue] = useState("");
-  const [textAreaValue, setTextAreaValue] = useState("");
+// Floating 3D Elements Component
+function FloatingElements() {
+  return (
+    <div className="fixed inset-0 pointer-events-none overflow-hidden">
+      {[...Array(20)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute w-4 h-4 bg-gradient-to-r from-primary via-secondary to-accent rounded-full opacity-20"
+          style={{
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+          }}
+          animate={{
+            y: [0, -100, 0],
+            x: [0, Math.random() * 100 - 50, 0],
+            scale: [1, 1.5, 1],
+            rotate: [0, 360],
+          }}
+          transition={{
+            duration: Math.random() * 10 + 10,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
 
-  const tabs = [
-    { label: "Overview", value: "overview" },
-    { label: "Components", value: "components" },
-    { label: "Settings", value: "settings" },
-  ];
+// Holographic Card Component
+function HolographicCard({
+  children,
+  className = "",
+  delay = 0,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  delay?: number;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 50, rotateX: 45 }}
+      whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
+      transition={{ duration: 0.8, delay }}
+      whileHover={{
+        scale: 1.05,
+        rotateY: 5,
+        boxShadow: "0 30px 60px rgba(42, 157, 143, 0.3)",
+      }}
+      className={`relative bg-gradient-to-br from-light/10 to-light/5 backdrop-blur-xl border border-primary/20 rounded-3xl p-8 
+        before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/20 before:via-secondary/20 before:to-accent/20 
+        before:opacity-0 before:transition-opacity before:duration-500 before:rounded-3xl
+        hover:before:opacity-100 overflow-hidden ${className}`}
+      style={{
+        background:
+          "linear-gradient(135deg, rgba(241, 250, 238, 0.1) 0%, rgba(42, 157, 143, 0.05) 100%)",
+        boxShadow:
+          "0 8px 32px rgba(42, 157, 143, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.1)",
+      }}
+    >
+      {/* Holographic shine effect */}
+      <div
+        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent 
+        transform -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"
+      />
+      {children}
+    </motion.div>
+  );
+}
 
-  const selectOptions = [
-    { label: "Option 1", value: "1" },
-    { label: "Option 2", value: "2" },
-    { label: "Option 3", value: "3" },
+// Neural Network Background
+function NeuralNetwork() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const nodes = Array.from({ length: 50 }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      vx: (Math.random() - 0.5) * 0.5,
+      vy: (Math.random() - 0.5) * 0.5,
+    }));
+
+    function animate() {
+      ctx?.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Update and draw nodes
+      nodes.forEach((node, i) => {
+        node.x += node.vx;
+        node.y += node.vy;
+
+        if (node.x < 0 || node.x >= canvas.width) node.vx *= -1;
+        if (node.y < 0 || node.y >= canvas.height) node.vy *= -1;
+
+        // Draw connections
+        nodes.slice(i + 1).forEach((otherNode) => {
+          const dx = node.x - otherNode.x;
+          const dy = node.y - otherNode.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+
+          if (distance < 150) {
+            ctx?.strokeStyle = `rgba(42, 157, 143, ${0.3 - distance / 500})`;
+            ctx?.lineWidth = 1;
+            ctx?.beginPath();
+            ctx?.moveTo(node.x, node.y);
+            ctx?.lineTo(otherNode.x, otherNode.y);
+            ctx?.stroke();
+          }
+        });
+
+        // Draw node
+        ctx?.fillStyle = "rgba(42, 157, 143, 0.6)";
+        ctx?.beginPath();
+        ctx?.arc(node.x, node.y, 2, 0, Math.PI * 2);
+        ctx?.fill();
+      });
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+
+    const handleResize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="fixed inset-0 pointer-events-none opacity-30"
+    />
+  );
+}
+
+// Hero Section with 3D Effects
+function HeroSection() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end start"],
+  });
+
+  const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
+  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+  const scale = useTransform(scrollYProgress, [0, 0.5], [1, 0.8]);
+
+  return (
+    <motion.section
+      ref={containerRef}
+      style={{ y, opacity, scale }}
+      className="relative min-h-screen flex items-center justify-center overflow-hidden"
+    >
+      {/* Dynamic background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-dark via-primary/20 to-secondary/30" />
+
+      {/* Animated geometric shapes */}
+      <div className="absolute inset-0">
+        {[...Array(15)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              width: `${Math.random() * 200 + 50}px`,
+              height: `${Math.random() * 200 + 50}px`,
+            }}
+            animate={{
+              rotate: [0, 360],
+              scale: [1, 1.2, 1],
+              opacity: [0.1, 0.3, 0.1],
+            }}
+            transition={{
+              duration: Math.random() * 20 + 10,
+              repeat: Infinity,
+              ease: "linear",
+            }}
+          >
+            <div className="w-full h-full bg-gradient-to-r from-primary/20 to-accent/20 rounded-full blur-sm" />
+          </motion.div>
+        ))}
+      </div>
+
+      <div className="container mx-auto px-4 relative z-10">
+        <div className="text-center space-y-8">
+          <motion.div
+            initial={{ opacity: 0, y: 100 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.5 }}
+            className="space-y-6"
+          >
+            <h1 className="text-6xl md:text-8xl lg:text-9xl font-black leading-none">
+              <span
+                className="block bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent
+                drop-shadow-2xl animate-pulse"
+              >
+                IILCB
+              </span>
+              <span className="block text-4xl md:text-6xl lg:text-7xl text-light mt-4 font-light tracking-wider">
+                The Future of Learning
+              </span>
+            </h1>
+
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.2 }}
+              className="text-xl md:text-2xl text-light/80 max-w-4xl mx-auto leading-relaxed"
+            >
+              Experience revolutionary{" "}
+              <span className="text-accent font-semibold">
+                blockchain-powered education
+              </span>{" "}
+              with
+              <span className="text-secondary font-semibold">
+                {" "}
+                AI-driven accessibility
+              </span>
+              ,
+              <span className="text-primary font-semibold">
+                {" "}
+                cultural inclusion
+              </span>
+              , and
+              <span className="text-accent font-semibold">
+                {" "}
+                learn-to-earn rewards
+              </span>
+            </motion.p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 1.8, duration: 0.8 }}
+            className="flex flex-wrap justify-center gap-6"
+          >
+            <Button
+              variant="primary"
+              size="lg"
+              className="text-xl px-12 py-6 bg-gradient-to-r from-primary to-accent hover:from-accent hover:to-primary
+                transform hover:scale-110 transition-all duration-300 shadow-2xl hover:shadow-accent/50"
+            >
+              🚀 Start Learning Now
+            </Button>
+            <Button
+              variant="secondary"
+              size="lg"
+              className="text-xl px-12 py-6 bg-gradient-to-r from-secondary/90 to-secondary hover:from-secondary hover:to-secondary/80
+                transform hover:scale-110 transition-all duration-300 shadow-2xl hover:shadow-secondary/50"
+            >
+              🎓 Explore Courses
+            </Button>
+          </motion.div>
+
+          {/* Stats with glow effects */}
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 2.2 }}
+            className="grid grid-cols-1 md:grid-cols-4 gap-8 mt-16 max-w-6xl mx-auto"
+          >
+            {[
+              { number: "50K+", label: "Active Learners", icon: "👥" },
+              { number: "200+", label: "Courses", icon: "📚" },
+              { number: "100%", label: "Accessible", icon: "♿" },
+              { number: "24/7", label: "AI Support", icon: "🤖" },
+            ].map((stat, i) => (
+              <motion.div
+                key={i}
+                whileHover={{ scale: 1.1, rotateY: 10 }}
+                className="text-center group"
+              >
+                <div className="text-4xl mb-2">{stat.icon}</div>
+                <div
+                  className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent
+                  group-hover:drop-shadow-glow transition-all duration-300"
+                >
+                  {stat.number}
+                </div>
+                <div className="text-light/70 text-lg">{stat.label}</div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </div>
+    </motion.section>
+  );
+}
+
+// Features with Impossible Layouts
+function FeaturesSection() {
+  const features = [
+    {
+      title: "🎯 AI-Powered Accessibility",
+      description:
+        "Revolutionary computer vision and NLP that adapts to hearing, visual, and cognitive differences",
+      icon: "🤖",
+      color: "from-primary to-primary-300",
+    },
+    {
+      title: "🔗 Blockchain Credentials",
+      description:
+        "Tamper-proof certificates stored on-chain with instant employer verification",
+      icon: "⛓️",
+      color: "from-accent to-accent-300",
+    },
+    {
+      title: "💰 Learn-to-Earn Economy",
+      description:
+        "Earn cryptocurrency for completing modules, maintaining streaks, and community participation",
+      icon: "💎",
+      color: "from-secondary to-secondary-300",
+    },
+    {
+      title: "🌍 Cultural Inclusion",
+      description:
+        "Native support for Yoruba, Igbo, Hausa, sign language, and cultural learning contexts",
+      icon: "🗣️",
+      color: "from-primary-300 to-accent-200",
+    },
+    {
+      title: "🎮 Gamified Learning",
+      description:
+        "Interactive 3D modules with voice, animation, and gesture-based learning experiences",
+      icon: "🎯",
+      color: "from-accent-200 to-secondary-200",
+    },
+    {
+      title: "📊 Progress Analytics",
+      description:
+        "AI-driven insights for learners, sponsors, and educators with automated micro-grants",
+      icon: "📈",
+      color: "from-secondary-300 to-primary-200",
+    },
   ];
 
   return (
-    <Animation>
-      <div className="min-h-screen bg-[#0f0f0f] p-8">
-        <div className="max-w-6xl mx-auto space-y-12">
-          {/* Header */}
+    <section className="py-32 relative overflow-hidden">
+      {/* Background with moving gradients */}
+      <div className="absolute inset-0 bg-gradient-to-b from-light via-light-200 to-light-100" />
 
-          <div className="text-center space-y-6 mb-16">
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.5 }}
-            >
-              <h1 className="text-5xl font-bold text-white font-geistSans">
-                UI Components
-              </h1>
-              <p className="text-[#FFFFFF80] mt-4 max-w-2xl mx-auto">
-                A modern, accessible, and fully-featured component library built
-                with Next.js, Tailwind CSS, and TypeScript
-              </p>
-            </motion.div>
-
-            <div className="flex gap-4 justify-center">
-              <Button
-                variant="primary"
-                onClick={() => toast.success("Copied to clipboard!")}
-              >
-                Get Started
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={() =>
-                  window.open(
-                    "https://github.com/victorola-coder/next-template"
-                  )
-                }
-              >
-                View on GitHub
-              </Button>
-            </div>
-          </div>
-
-          {/* Tabs Navigation */}
-          <Tabs
-            tabs={tabs}
-            defaultValue="components"
-            className="justify-center"
-          />
-
-          {/* Components Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Buttons Section */}
-            <Glow className="p-6 space-y-4">
-              <h2 className="text-xl font-semibold text-white mb-4">Buttons</h2>
-              <div className="flex flex-row flex-wrap gap-4">
-                <Button variant="default">Default Button</Button>
-                <Button variant="primary">Primary Button</Button>
-                <Button variant="secondary">Secondary Button</Button>
-                <Button variant="danger">Danger Button</Button>
-                <Button variant="google">Google Button</Button>
-                <Button loading>Loading Button</Button>
-              </div>
-            </Glow>
-            {/* Loading States */}
-            <Glow className="p-6 space-y-4">
-              <h2 className="text-xl font-semibold text-white mb-4">Loaders</h2>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="flex flex-col items-center gap-2">
-                  <Loader size="small" />
-                  <span className="text-sm text-[#FFFFFF80]">Small</span>
-                </div>
-                <div className="flex flex-col items-center gap-2">
-                  <Loader size="medium" />
-                  <span className="text-sm text-[#FFFFFF80]">Medium</span>
-                </div>
-                <div className="flex flex-col items-center gap-2">
-                  <Loader size="large" />
-                  <span className="text-sm text-[#FFFFFF80]">Large</span>
-                </div>
-              </div>
-            </Glow>
-
-            {/* Icons & SVGs */}
-            <Glow className="p-6 space-y-4">
-              <h2 className="text-xl font-semibold text-white mb-4">
-                Icons & SVGs
-              </h2>
-              <div className="grid grid-cols-4 gap-4">
-                <div className="flex flex-col items-center gap-2">
-                  <EyeIcon className="w-6 h-6" fill="white" />
-                  <span className="text-sm text-[#FFFFFF80]">Eye</span>
-                </div>
-                {/* Add more icons here */}
-              </div>
-            </Glow>
-            {/* Form Inputs Section */}
-            <Glow className="p-6 space-y-4">
-              <h2 className="text-xl font-semibold text-white mb-4">Inputs</h2>
-              <Input
-                placeholder="Regular Input"
-                value={inputValue}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setInputValue(e.target.value)
-                }
-              />
-              <Input
-                type="password"
-                placeholder="Password Input"
-                value={inputValue}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setInputValue(e.target.value)
-                }
-              />
-              <TextArea
-                name="textarea"
-                value={textAreaValue}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setTextAreaValue(e.target.value)
-                }
-                placeholder="Text Area Input"
-              />
-            </Glow>
-
-            {/* Form Validation */}
-            <Glow className="p-6 space-y-4">
-              <h2 className="text-xl font-semibold text-white mb-4">
-                Form Validation
-              </h2>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  toast.success("Form submitted!");
-                }}
-                className="space-y-4"
-              >
-                <Input
-                  placeholder="Email"
-                  type="email"
-                  error="Please enter a valid email"
-                />
-                <Input
-                  placeholder="Password"
-                  type="password"
-                  error="Password is required"
-                />
-                <Button type="submit" className="w-full">
-                  Submit
-                </Button>
-              </form>
-            </Glow>
-
-            {/* Toggle & Select Section */}
-            <Glow className="p-6 space-y-4">
-              <h2 className="text-xl font-semibold text-white mb-4">
-                Interactive Components
-              </h2>
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <span className="text-white">Toggle Component</span>
-                  <Toggle checked={toggleState} onChange={setToggleState} />
-                </div>
-                <Select
-                  options={selectOptions}
-                  placeholder="Select an option"
-                  onChange={(value) => console.log(value)}
-                />
-              </div>
-            </Glow>
-            {/* Animations */}
-            <Glow className="p-6 space-y-4">
-              <h2 className="text-xl font-semibold text-white mb-4">
-                Animations
-              </h2>
-              <div className="space-y-4">
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="bg-[#283142] p-4 rounded-lg text-white text-center"
-                >
-                  Hover & Tap Animation
-                </motion.div>
-                <motion.div
-                  animate={{
-                    y: [0, -10, 0],
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                  }}
-                  className="bg-[#283142] p-4 rounded-lg text-white text-center"
-                >
-                  Floating Animation
-                </motion.div>
-              </div>
-            </Glow>
-            {/* Color Palette */}
-            <Glow className="p-6 space-y-4">
-              <h2 className="text-xl font-semibold text-white mb-4">
-                Color Palette
-              </h2>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <div className="h-12 rounded-lg bg-primary" />
-                  <span className="text-sm text-[#FFFFFF80]">Primary</span>
-                </div>
-                <div className="space-y-2">
-                  <div className="h-12 rounded-lg bg-[#283142]" />
-                  <span className="text-sm text-[#FFFFFF80]">Secondary</span>
-                </div>
-                <div className="space-y-2">
-                  <div className="h-12 rounded-lg bg-[#6366F1]" />
-                  <span className="text-sm text-[#FFFFFF80]">Accent</span>
-                </div>
-                <div className="space-y-2">
-                  <div className="h-12 rounded-lg bg-[#DC2626]" />
-                  <span className="text-sm text-[#FFFFFF80]">Danger</span>
-                </div>
-              </div>
-            </Glow>
-
-            {/* Card & Image Section */}
-            <Glow className="p-6 space-y-4">
-              <h2 className="text-xl font-semibold text-white mb-4">
-                Display Components
-              </h2>
-              <Card>
-                <div className="bg-[#283142] p-4 rounded-lg">
-                  <Image
-                    src="/images/logo.svg"
-                    alt="Placeholder"
-                    width={300}
-                    height={200}
-                    className="rounded-lg"
-                  />
-                </div>
-              </Card>
-            </Glow>
-
-            {/* Loading States Section */}
-            <Glow className="p-6 space-y-4">
-              <h2 className="text-xl font-semibold text-white mb-4">
-                Loading States
-              </h2>
-              <div className="space-y-4">
-                <Skeleton className="h-12 w-full" />
-                <Skeleton className="h-12 w-3/4" />
-                <Skeleton className="h-12 w-1/2" />
-              </div>
-            </Glow>
-
-            {/* Modal & OTP Section */}
-            <Glow className="p-6 space-y-4">
-              <h2 className="text-xl font-semibold text-white mb-4">
-                Advanced Components
-              </h2>
-              <div className="space-y-4">
-                <Button onClick={() => setIsModalOpen(true)}>Open Modal</Button>
-                <div className="mt-8">
-                  <h3 className="text-white mb-4">OTP Input</h3>
-                  <Otp />
-                </div>
-              </div>
-            </Glow>
-
-            {/* Toast Notifications */}
-            <Glow className="p-6 space-y-4">
-              <h2 className="text-xl font-semibold text-white mb-4">
-                Toast Notifications
-              </h2>
-              <div className="grid grid-cols-2 gap-4">
-                <Button
-                  variant="default"
-                  onClick={() => toast.success("Success message")}
-                >
-                  Success Toast
-                </Button>
-                <Button
-                  variant="danger"
-                  onClick={() => toast.error("Error message")}
-                >
-                  Error Toast
-                </Button>
-                <Button
-                  variant="primary"
-                  onClick={() => toast.info("Info message")}
-                >
-                  Info Toast
-                </Button>
-                <Button
-                  variant="secondary"
-                  onClick={() => toast.warning("Warning message")}
-                >
-                  Warning Toast
-                </Button>
-              </div>
-            </Glow>
-
-            {/* Typography */}
-            <Glow className="p-6 space-y-4">
-              <h2 className="text-xl font-semibold text-white mb-4">
-                Typography
-              </h2>
-              <div className="space-y-6">
-                <div>
-                  <h1 className="text-4xl font-geistSans font-bold text-white">
-                    Heading 1
-                  </h1>
-                  <p className="text-[#FFFFFF80] text-sm">
-                    Font: Geist Sans Bold - 36px
-                  </p>
-                </div>
-                <div>
-                  <h2 className="text-3xl font-geistSans font-semibold text-white">
-                    Heading 2
-                  </h2>
-                  <p className="text-[#FFFFFF80] text-sm">
-                    Font: Geist Sans Semibold - 30px
-                  </p>
-                </div>
-                <div>
-                  <p className="text-base font-geistSans text-white">
-                    Regular paragraph text with Geist Sans
-                  </p>
-                  <p className="text-[#FFFFFF80] text-sm">
-                    Font: Geist Sans Regular - 16px
-                  </p>
-                </div>
-                <div>
-                  <p className="font-geistMono text-white">
-                    Monospace text with Geist Mono
-                  </p>
-                  <p className="text-[#FFFFFF80] text-sm">
-                    Font: Geist Mono - 16px
-                  </p>
-                </div>
-              </div>
-            </Glow>
-
-            {/* Gradients */}
-            <Glow className="p-6 space-y-4">
-              <h2 className="text-xl font-semibold text-white mb-4">
-                Gradients
-              </h2>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <div className="h-20 rounded-lg bg-gradient-to-r from-primary to-[#6366F1]" />
-                  <span className="text-sm text-[#FFFFFF80]">
-                    Primary Gradient
-                  </span>
-                </div>
-                <div className="space-y-2">
-                  <div className="h-20 rounded-lg bg-gradient-to-r from-[#DC2626] to-[#EA580C]" />
-                  <span className="text-sm text-[#FFFFFF80]">
-                    Danger Gradient
-                  </span>
-                </div>
-                <div className="space-y-2">
-                  <div className="h-20 rounded-lg bg-gradient-to-r from-[#283142] to-[#1A202B]" />
-                  <span className="text-sm text-[#FFFFFF80]">
-                    Background Gradient
-                  </span>
-                </div>
-                <div className="space-y-2">
-                  <div className="h-20 rounded-lg bg-gradient-to-r from-[#059669] to-[#10B981]" />
-                  <span className="text-sm text-[#FFFFFF80]">
-                    Success Gradient
-                  </span>
-                </div>
-              </div>
-            </Glow>
-          </div>
-        </div>
-
-        {/* Modal */}
-        <Modal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          title="Modal Example"
+      <div className="container mx-auto px-4 relative z-10">
+        <motion.div
+          initial={{ opacity: 0, y: 100 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1 }}
+          className="text-center mb-20"
         >
-          <div className="space-y-4">
-            <p className="text-white">
-              This is an example modal that showcases the Modal component.
-            </p>
+          <h2 className="text-5xl md:text-7xl font-black mb-8">
+            <span className="bg-gradient-to-r from-dark via-primary to-accent bg-clip-text text-transparent">
+              Impossible Features
+            </span>
+          </h2>
+          <p className="text-2xl text-text-secondary max-w-4xl mx-auto leading-relaxed">
+            Pushing the boundaries of what's possible in educational technology
+          </p>
+        </motion.div>
+
+        {/* Asymmetric grid layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 max-w-7xl mx-auto">
+          {features.map((feature, index) => {
+            const layouts = [
+              "lg:col-span-8", // Large card
+              "lg:col-span-4", // Small card
+              "lg:col-span-6", // Medium card
+              "lg:col-span-6", // Medium card
+              "lg:col-span-4", // Small card
+              "lg:col-span-8", // Large card
+            ];
+
+            return (
+              <HolographicCard
+                key={index}
+                delay={index * 0.2}
+                className={`${layouts[index]} ${
+                  index % 2 === 0 ? "lg:row-span-2" : ""
+                } group`}
+              >
+                <div className="space-y-6">
+                  <div
+                    className={`text-6xl ${
+                      index === 0 ? "md:text-8xl" : "md:text-7xl"
+                    }`}
+                  >
+                    {feature.icon}
+                  </div>
+
+                  <h3
+                    className={`font-bold text-text ${
+                      index === 0
+                        ? "text-3xl md:text-4xl"
+                        : "text-xl md:text-2xl"
+                    }`}
+                  >
+                    {feature.title}
+                  </h3>
+
+                  <p
+                    className={`text-text-secondary leading-relaxed ${
+                      index === 0 ? "text-lg md:text-xl" : "text-base"
+                    }`}
+                  >
+                    {feature.description}
+                  </p>
+
+                  {/* Glowing button for larger cards */}
+                  {(index === 0 || index === 5) && (
+                    <Button
+                      variant="primary"
+                      className="bg-gradient-to-r from-primary to-accent hover:from-accent hover:to-primary
+                        transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-primary/50"
+                    >
+                      Learn More →
+                    </Button>
+                  )}
+                </div>
+
+                {/* Dynamic background elements */}
+                <div
+                  className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-5 rounded-3xl 
+                  group-hover:opacity-10 transition-opacity duration-500`}
+                />
+              </HolographicCard>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// Interactive Demo Section
+function DemoSection() {
+  const [activeDemo, setActiveDemo] = useState(0);
+
+  const demos = [
+    {
+      title: "🎤 Voice Learning Interface",
+      description:
+        "Experience hands-free learning with advanced speech recognition",
+      visual: "🎵",
+    },
+    {
+      title: "👋 Sign Language Recognition",
+      description:
+        "AI-powered camera that understands and responds to sign language",
+      visual: "👋",
+    },
+    {
+      title: "🏆 Blockchain Certificates",
+      description: "Watch your achievements get minted as NFTs in real-time",
+      visual: "🏆",
+    },
+    {
+      title: "💰 Token Rewards",
+      description:
+        "Earn cryptocurrency for every completed lesson and milestone",
+      visual: "💰",
+    },
+  ];
+
+  return (
+    <section className="py-32 relative">
+      <div className="absolute inset-0 bg-gradient-to-r from-dark via-dark-200 to-dark" />
+
+      <div className="container mx-auto px-4 relative z-10">
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          className="text-center mb-20"
+        >
+          <h2 className="text-5xl md:text-7xl font-black text-light mb-8">
+            Interactive <span className="text-accent">Demo</span>
+          </h2>
+          <p className="text-xl text-light/80 max-w-3xl mx-auto">
+            Experience the future of inclusive learning technology
+          </p>
+        </motion.div>
+
+        <div className="grid lg:grid-cols-2 gap-16 items-center max-w-7xl mx-auto">
+          {/* Demo Controls */}
+          <div className="space-y-6">
+            {demos.map((demo, index) => (
+              <motion.button
+                key={index}
+                onClick={() => setActiveDemo(index)}
+                whileHover={{ scale: 1.02, x: 10 }}
+                whileTap={{ scale: 0.98 }}
+                className={`w-full text-left p-6 rounded-2xl border transition-all duration-300 ${
+                  activeDemo === index
+                    ? "bg-gradient-to-r from-primary/20 to-accent/20 border-primary shadow-lg shadow-primary/20"
+                    : "bg-light/5 border-light/20 hover:border-primary/50"
+                }`}
+              >
+                <h3 className="text-xl font-bold text-light mb-2">
+                  {demo.title}
+                </h3>
+                <p className="text-light/70">{demo.description}</p>
+              </motion.button>
+            ))}
+          </div>
+
+          {/* Demo Visual */}
+          <motion.div
+            key={activeDemo}
+            initial={{ opacity: 0, scale: 0.8, rotateY: 90 }}
+            animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+            transition={{ duration: 0.8 }}
+            className="relative aspect-square max-w-md mx-auto"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-accent/30 rounded-3xl blur-xl" />
+            <div
+              className="relative bg-gradient-to-br from-light/10 to-light/5 backdrop-blur-xl 
+              border border-primary/30 rounded-3xl p-12 flex items-center justify-center
+              shadow-2xl shadow-primary/20"
+            >
+              <div className="text-9xl animate-bounce">
+                {demos[activeDemo].visual}
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// Stats with Floating Elements
+function StatsSection() {
+  const stats = [
+    {
+      number: "1M+",
+      label: "Lines of Code",
+      subtext: "AI-powered accessibility engine",
+    },
+    {
+      number: "99.9%",
+      label: "Uptime",
+      subtext: "Blockchain infrastructure reliability",
+    },
+    {
+      number: "150+",
+      label: "Countries",
+      subtext: "Global accessibility reach",
+    },
+    {
+      number: "$2M+",
+      label: "Earned",
+      subtext: "Total learner rewards distributed",
+    },
+  ];
+
+  return (
+    <section className="py-32 relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-b from-light-100 to-light" />
+
+      <div className="container mx-auto px-4 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
+          {stats.map((stat, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 100, rotateX: 90 }}
+              whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
+              transition={{ duration: 0.8, delay: index * 0.2 }}
+              whileHover={{
+                scale: 1.05,
+                rotateY: 10,
+                boxShadow: "0 20px 40px rgba(42, 157, 143, 0.2)",
+              }}
+              className="text-center group cursor-pointer"
+            >
+              <div
+                className="relative bg-gradient-to-br from-light to-light-200 rounded-3xl p-8 
+                border border-primary/10 hover:border-primary/30 transition-all duration-500
+                shadow-lg hover:shadow-2xl hover:shadow-primary/10"
+              >
+                {/* Floating icon */}
+                <motion.div
+                  animate={{ y: [0, -10, 0] }}
+                  transition={{ duration: 3, repeat: Infinity }}
+                  className="text-4xl mb-4"
+                >
+                  {index === 0 && "⚡"}
+                  {index === 1 && "🛡️"}
+                  {index === 2 && "🌍"}
+                  {index === 3 && "💎"}
+                </motion.div>
+
+                <div
+                  className="text-4xl md:text-5xl font-black bg-gradient-to-r from-primary to-accent 
+                  bg-clip-text text-transparent mb-2 group-hover:scale-110 transition-transform duration-300"
+                >
+                  {stat.number}
+                </div>
+
+                <div className="text-xl font-semibold text-text mb-2">
+                  {stat.label}
+                </div>
+
+                <div className="text-sm text-text-secondary">
+                  {stat.subtext}
+                </div>
+
+                {/* Glowing background */}
+                <div
+                  className="absolute inset-0 bg-gradient-to-r from-primary/5 to-accent/5 rounded-3xl 
+                  opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                />
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// Call to Action with Futuristic Elements
+function CTASection() {
+  return (
+    <section className="py-32 relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-dark via-primary/30 to-accent/20" />
+
+      {/* Animated particles */}
+      <div className="absolute inset-0">
+        {[...Array(100)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1 h-1 bg-light rounded-full"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
+            animate={{
+              opacity: [0, 1, 0],
+              scale: [0, 1, 0],
+            }}
+            transition={{
+              duration: Math.random() * 3 + 2,
+              repeat: Infinity,
+              delay: Math.random() * 2,
+            }}
+          />
+        ))}
+      </div>
+
+      <div className="container mx-auto px-4 relative z-10">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1 }}
+          className="text-center max-w-5xl mx-auto"
+        >
+          <h2 className="text-5xl md:text-7xl lg:text-8xl font-black text-light mb-8 leading-none">
+            Ready to Change
+            <span className="block bg-gradient-to-r from-secondary via-primary to-accent bg-clip-text text-transparent">
+              Everything?
+            </span>
+          </h2>
+
+          <p className="text-xl md:text-2xl text-light/80 mb-12 leading-relaxed">
+            Join the revolution in inclusive education. Start learning, earning,
+            and building your future today.
+          </p>
+
+          <div className="flex flex-wrap justify-center gap-6 mb-16">
             <Button
               variant="primary"
-              onClick={() => setIsModalOpen(false)}
-              className="w-full"
+              size="lg"
+              className="text-xl px-16 py-8 bg-gradient-to-r from-secondary to-accent hover:from-accent hover:to-secondary
+                transform hover:scale-110 transition-all duration-300 shadow-2xl hover:shadow-secondary/50
+                border border-secondary/50 hover:border-accent/50"
             >
-              Close Modal
+              🚀 Launch Your Journey
+            </Button>
+            <Button
+              variant="secondary"
+              size="lg"
+              className="text-xl px-16 py-8 bg-light/10 hover:bg-light/20 text-light border border-light/30
+                transform hover:scale-110 transition-all duration-300 shadow-2xl hover:shadow-light/20"
+            >
+              📚 Browse Courses
             </Button>
           </div>
-        </Modal>
+
+          {/* Final stats row */}
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="grid grid-cols-1 md:grid-cols-3 gap-8 text-light"
+          >
+            <div>
+              <div className="text-3xl font-bold text-secondary mb-2">
+                🎓 Learn
+              </div>
+              <div className="text-light/70">Accessible for everyone</div>
+            </div>
+            <div>
+              <div className="text-3xl font-bold text-primary mb-2">
+                💰 Earn
+              </div>
+              <div className="text-light/70">Cryptocurrency rewards</div>
+            </div>
+            <div>
+              <div className="text-3xl font-bold text-accent mb-2">
+                🔐 Secure
+              </div>
+              <div className="text-light/70">Blockchain credentials</div>
+            </div>
+          </motion.div>
+        </motion.div>
       </div>
-      <footer className="mt-16 text-center text-[#FFFFFF80]">
-        <p>Built with Next.js, Tailwind CSS, and TypeScript</p>
-        <p className="mt-2">© {new Date().getFullYear()} Victorola</p>
-      </footer>
-    </Animation>
+    </section>
+  );
+}
+
+// Main Page Component
+export default function Page() {
+  return (
+    <main className="relative min-h-screen overflow-x-hidden">
+      {/* Background Effects */}
+      <NeuralNetwork />
+      <FloatingElements />
+
+      {/* Sections */}
+      <HeroSection />
+      <FeaturesSection />
+      <DemoSection />
+      <StatsSection />
+      <CTASection />
+
+      {/* Custom styles for glow effects */}
+      <style jsx global>{`
+        .drop-shadow-glow {
+          filter: drop-shadow(0 0 20px rgba(42, 157, 143, 0.8));
+        }
+
+        @keyframes float {
+          0%,
+          100% {
+            transform: translateY(0px);
+          }
+          50% {
+            transform: translateY(-20px);
+          }
+        }
+
+        .animate-float {
+          animation: float 6s ease-in-out infinite;
+        }
+
+        .animate-float:nth-child(even) {
+          animation-delay: 3s;
+        }
+      `}</style>
+    </main>
   );
 }

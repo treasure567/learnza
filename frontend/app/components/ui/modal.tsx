@@ -17,7 +17,7 @@ export default function Modal({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-40"
+            className="fixed inset-0 bg-dark/50 z-40"
             onClick={onClose}
           />
 
@@ -26,17 +26,17 @@ export default function Modal({
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className={`bg-[#1A202B] rounded-[32px] border border-[#FFFFFF1A] p-6 
+              className={`bg-dark rounded-[32px] border border-light/20 p-6 
                 w-full max-w-[500px] max-h-[90vh] flex flex-col ${className}`}
             >
               {title && (
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-[18px] font-semibold font-aloeSemBold text-white">
+                  <h3 className="text-[18px] font-semibold font-aloeSemBold text-light">
                     {title}
                   </h3>
                   <button
                     onClick={onClose}
-                    className="text-white hover:opacity-80"
+                    className="text-light hover:opacity-80"
                   >
                     <X size={24} />
                   </button>
@@ -45,7 +45,7 @@ export default function Modal({
               {close && (
                 <button
                   onClick={onClose}
-                  className="text-white hover:opacity-80"
+                  className="text-light hover:opacity-80"
                 >
                   <X size={24} />
                 </button>

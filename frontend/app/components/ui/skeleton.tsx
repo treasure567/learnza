@@ -6,7 +6,7 @@ export default function Skeleton({
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={clsx("animate-pulse rounded-md bg-[#242C3B]", className)}
+      className={clsx("animate-pulse rounded-md bg-dark-100", className)}
       {...props}
     />
   );

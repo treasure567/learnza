@@ -24,7 +24,7 @@ export default function Input({
             {...(props as React.TextareaHTMLAttributes<HTMLTextAreaElement>)}
             placeholder={placeholder}
             className={clsx(
-              "w-full bg-[#283142] p-4 rounded-[12px] text-white placeholder:text-[#FFFFFF80] font-aloe text-base leading-[22.4px] focus:outline-none focus:ring-0",
+              "w-full bg-dark p-4 rounded-[12px] text-light placeholder:text-light/60 font-aloe text-base leading-[22.4px] focus:outline-none focus:ring-0 focus:ring-primary/20 focus:bg-dark-100",
               error && "border-1 border-red-500"
             )}
           />
@@ -35,7 +35,7 @@ export default function Input({
             placeholder={placeholder}
             autoComplete="off"
             className={clsx(
-              "w-full bg-[#283142] h-full p-4 rounded-[12px] text-white placeholder:text-[#FFFFFF80] font-aloe text-base leading-[22.4px] focus:outline-none focus:ring-0",
+              "w-full bg-dark h-full p-4 rounded-[12px] text-light placeholder:text-light/60 font-aloe text-base leading-[22.4px] focus:outline-none focus:ring-0 focus:ring-primary/20 focus:bg-dark-100",
               error && "border-1 border-red-500",
               type === "password" && "pr-12"
             )}
@@ -44,9 +44,9 @@ export default function Input({
         {type === "password" && (
           <span
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-[#FFFFFF80] hover:text-white transition-colors"
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-light/60 hover:text-light transition-colors"
           >
-            <EyeIcon fill={showPassword ? "white" : "#FFFFFF80"} />
+            <EyeIcon fill={showPassword ? "#F1FAEE" : "#F1FAEE80"} />
           </span>
         )}
       </div>

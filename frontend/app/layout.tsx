@@ -24,21 +24,38 @@ const montserrat = Montserrat({
 
 export const viewport: Viewport = {
   maximumScale: 1,
+  themeColor: "#2A9D8F",
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://nextapptemplate.xyz"),
+  metadataBase: new URL("https://learnza.xyz"),
   icons: {
-    icon: "/icon.png",
+    icon: "/images/logo.svg",
   },
-  title: "nextjs template",
+  title: "IILCB - Inclusive Interactive Learning & Credential Blockchain",
   description:
-    "I fell in love with next.js, im trying to make a template for it also",
-  applicationName: "next Web Application",
-  authors: [{ name: "nextapp template", url: "https://domainname.host" }],
-  keywords: ["NextJs", "reactjs", "template", "typescript"],
-  creator: "VickyJay",
-  publisher: "VickyJay",
+    "An accessible learning platform for everyone, powered by blockchain technology. Learn, earn, and store your credentials securely on-chain.",
+  applicationName: "IILCB Platform",
+  authors: [{ name: "Learnza Team", url: "https://learnza.xyz" }],
+  keywords: [
+    "Blockchain Education",
+    "Accessible Learning",
+    "Interactive Learning",
+    "Blockchain Credentials",
+    "Learn to Earn",
+    "Sign Language",
+    "Voice Learning",
+    "Inclusive Education",
+    "Nigerian Languages",
+    "Yoruba",
+    "Igbo",
+    "Hausa",
+    "Educational Technology",
+    "Web3",
+    "Blockchain",
+  ],
+  creator: "Learnza Team",
+  publisher: "Learnza",
   generator: "Next.js",
   referrer: "origin",
   robots: {
@@ -47,41 +64,40 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    url: "https://domainname.host",
-    title: "Nextjs template",
-    siteName: "nextapp template",
-    locale: "en_US",
+    url: "https://learnza.xyz",
+    title: "IILCB - Inclusive Interactive Learning & Credential Blockchain",
+    siteName: "IILCB Platform",
+    locale: "en_NG",
     images: [
       {
-        url: "linktoopengraphimage.cdn",
+        url: "/images/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "next OG Image",
+        alt: "IILCB Platform - Inclusive Learning for All",
       },
     ],
   },
   twitter: {
-    site: "nextapp",
-    creator: "socialmediahandle",
-    title:
-      "nextapp template - I fell in love with next.js, im trying to make a template for it tooo",
+    site: "@learnza",
+    creator: "@learnza",
+    title: "IILCB - Inclusive Interactive Learning & Credential Blockchain",
     description:
-      "I fell in love with next.js, im trying to make a template for it too",
+      "An accessible learning platform for everyone, powered by blockchain technology. Learn, earn, and store your credentials securely on-chain.",
     card: "summary_large_image",
-    images: ["linktoopengraph.com"],
+    images: ["/images/twitter-card.jpg"],
   },
   appleWebApp: {
     capable: true,
-    title: "nextapp template",
+    title: "IILCB Platform",
     statusBarStyle: "black-translucent",
   },
   formatDetection: {
-    telephone: false,
+    telephone: true,
   },
   abstract:
-    "I fell in love with next.js, im trying to make a template for it tooo",
-  category: "Social",
-  classification: "Social",
+    "IILCB is a revolutionary learning platform that combines accessibility, blockchain technology, and cultural inclusivity to make education accessible to everyone.",
+  category: "Education",
+  classification: "Education Technology",
 };
 
 export default function RootLayout({
