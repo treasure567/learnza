@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { useState, useEffect } from "react";
 import { Button } from "@/app/components/ui";
 import { useRouter } from "next/navigation";
 
@@ -126,7 +126,7 @@ export default function VerifyEmailPage() {
                 inputMode="numeric"
                 pattern="[0-9]*"
                 maxLength={1}
-                className="w-12 h-12 text-center text-lg font-medium bg-dark text-light rounded-lg border border-text/10 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                className="w-12 h-12 text-center text-lg font-medium bg-white text-dark rounded-lg border border-text/10 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
                 value={digit}
                 onChange={(e) => handleCodeChange(index, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(index, e)}

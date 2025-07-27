@@ -4,6 +4,7 @@ import localFont from "next/font/local";
 import { AOS } from "./components/global";
 import { Montserrat } from "next/font/google";
 import type { Metadata, Viewport } from "next";
+import { ThemeProvider } from "./components/theme-provider";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -102,13 +103,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${montserrat.className} ${geistMono.variable} antialiased bg-light text-text`}
+        className={`${geistSans.variable} ${montserrat.className} ${geistMono.variable} antialiased bg-light text-text dark:bg-dark dark:text-light`}
       >
-        <Toaster richColors />
-        <AOS />
-        {children}
+        <ThemeProvider defaultTheme="system">
+          <Toaster richColors />
+          <AOS />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );
