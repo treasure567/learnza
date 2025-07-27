@@ -12,6 +12,20 @@ export class ValidationService {
     }
 
     validate(): boolean {
+        if (this.rules._keys) {
+            const [ruleName, ruleValue] = this.rules._keys.split(':');
+            const validatorMethod = `validate${this.capitalize(ruleName)}` as keyof ValidationService;
+
+            if (this[validatorMethod] && typeof this[validatorMethod] === 'function') {
+                const keys = Object.keys(this.data);
+                for (const key of keys) {
+                    const isValid = (this[validatorMethod] as Function).call(this, '_keys', key, ruleValue);
+                    if (!isValid) break;
+                }
+            }
+            delete this.rules._keys;
+        }
+
         for (const field in this.rules) {
             const value = this.data[field];
             const rules = this.rules[field].split('|');
@@ -110,6 +124,25 @@ export class ValidationService {
         const alphaNumericRegex = /^[a-zA-Z0-9]+$/;
         if (!alphaNumericRegex.test(value)) {
             this.addError(field, `${field} must contain only letters and numbers`);
+            return false;
+        }
+        return true;
+    }
+
+    private validateBoolean(field: string, value: any): boolean {
+        if (!value) return true;
+        if (typeof value !== 'boolean') {
+            this.addError(field, `${field} must be a boolean`);
+            return false;
+        }
+        return true;
+    }
+
+    private validateIn(field: string, value: any, allowedValues: string): boolean {
+        if (!value) return true;
+        const allowed = allowedValues.split(',');
+        if (!allowed.includes(value.toString())) {
+            this.addError(field, `${field} must be one of: ${allowedValues}`);
             return false;
         }
         return true;
