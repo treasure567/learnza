@@ -85,3 +85,28 @@ type TextareaProps = {
 type OTPState = {
   [key: string]: string;
 };
+
+// Types for accessibility and language settings
+
+type User = {
+  id: string;
+  email: string;
+  name: string;
+  isEmailApproved: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type AccessibilitySettings = {
+  settings: Record<string, any>;
+};
+
+type LanguageSettings = {
+  language: string;
+};
+
+type ApiResponse<T> = {
+  status: boolean;
+  message: string;
+  data?: T;
+};
