@@ -5,6 +5,7 @@ import { RateLimitUtils } from '@utils/RateLimitUtils';
 import { IUser, UserResponse } from '@/types/user';
 import { CustomError } from '@middleware/errorHandler';
 import crypto from 'crypto';
+import { UserUtils } from '@/utils/UserUtils';
 
 export class AuthService {
     private static generateVerificationCode(): string {
@@ -36,7 +37,7 @@ export class AuthService {
         console.log(`Verification code ${verificationCode} would be sent to ${email}`);
 
         const token = JwtUtils.generateToken({ userId: user._id as string });
-        return { user, token };
+        return { user: await UserUtils.populateUser(user), token };
     }
 
     static async login(email: string, password: string): Promise<UserResponse> {
@@ -51,7 +52,7 @@ export class AuthService {
         }
 
         const token = JwtUtils.generateToken({ userId: user._id as string });
-        return { user, token };
+        return { user: await UserUtils.populateUser(user), token };
     }
 
     static async verifyEmail(userId: string, code: string): Promise<IUser> {
