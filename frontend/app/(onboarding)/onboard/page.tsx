@@ -51,8 +51,8 @@ const AccessibilityIcon = ({ selected }: { selected: boolean }) => (
     whileTap={{ scale: 0.95 }}
     className={`relative w-6 h-6 rounded-lg border-2 transition-all duration-300 ${
       selected
-        ? "bg-gradient-to-br from-primary via-primary-100 to-primary-200 border-primary shadow-lg shadow-primary/25"
-        : "border-light-border dark:border-dark-border bg-light dark:bg-dark-surface hover:border-primary/50 dark:hover:border-primary-dark/50"
+        ? "bg-gradient-to-br from-primary to-primary-dark border-primary shadow-lg shadow-primary/20"
+        : "border-gray-200 dark:border-dark-border bg-white dark:bg-dark-surface hover:border-primary/50 dark:hover:border-primary-dark/50"
     }`}
   >
     <AnimatePresence>
@@ -92,14 +92,14 @@ const StepIndicator = ({
         <motion.div
           animate={{
             backgroundColor: step <= currentStep ? "#2A9D8F" : "transparent",
-            borderColor: step <= currentStep ? "#2A9D8F" : "#E5E7EB",
+            borderColor: step <= currentStep ? "#2A9D8F" : "#E2E8F0",
             scale: step === currentStep ? 1.1 : 1,
           }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
           className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
             step <= currentStep
               ? "text-white shadow-lg"
-              : "text-text-muted dark:text-text-light/70 border-light-border dark:border-dark-border"
+              : "text-gray-400 dark:text-text-light/70"
           }`}
         >
           <motion.span
@@ -112,7 +112,7 @@ const StepIndicator = ({
         {step < totalSteps && (
           <motion.div
             animate={{
-              backgroundColor: step < currentStep ? "#2A9D8F" : "#E5E7EB",
+              backgroundColor: step < currentStep ? "#2A9D8F" : "#E2E8F0",
             }}
             transition={{ duration: 0.3, delay: 0.1 }}
             className="w-16 h-1 mx-2 rounded-full"
@@ -255,7 +255,7 @@ export default function OnboardPage() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary via-primary-100 to-primary-200 shadow-xl shadow-primary/25"
+            className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary-dark shadow-xl shadow-primary/20"
           >
             <svg
               className="w-8 h-8 text-white"
@@ -276,7 +276,7 @@ export default function OnboardPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent dark:from-primary-dark dark:via-secondary-dark dark:to-accent-dark"
+            className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-primary-dark to-accent bg-clip-text text-transparent"
           >
             Welcome to Learnza
           </motion.h1>
@@ -285,7 +285,7 @@ export default function OnboardPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
-            className="text-lg text-text-muted dark:text-text-light/70 max-w-md mx-auto"
+            className="text-lg text-gray-600 dark:text-text-light/70 max-w-md mx-auto"
           >
             Let's personalize your learning experience with a few quick
             questions
@@ -296,7 +296,7 @@ export default function OnboardPage() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
             onClick={handleSkip}
-            className="text-text-muted dark:text-text-light/70 hover:text-primary dark:hover:text-primary-dark transition-colors"
+            className="text-gray-500 hover:text-primary dark:text-text-light/70 dark:hover:text-primary-dark transition-colors"
           >
             Skip for now
           </motion.button>
@@ -308,7 +308,7 @@ export default function OnboardPage() {
         {/* Main Card */}
         <motion.div
           layout
-          className="relative bg-gradient-to-br from-light-surface via-light-surface to-light-100 dark:from-dark-surface dark:via-dark-surface dark:to-dark-100 backdrop-blur-xl border border-light-border/50 dark:border-dark-border/50 rounded-3xl p-8 shadow-2xl"
+          className="relative bg-white dark:bg-dark-surface backdrop-blur-xl border border-gray-100 dark:border-dark-border/50 rounded-3xl p-8 shadow-xl"
         >
           {/* Background decoration */}
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 dark:from-primary-dark/5 dark:to-accent-dark/5 rounded-3xl" />
@@ -325,10 +325,10 @@ export default function OnboardPage() {
                   className="space-y-6"
                 >
                   <div className="space-y-3">
-                    <h2 className="text-2xl md:text-3xl font-bold text-dark dark:text-light">
+                    <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-light">
                       Choose your language
                     </h2>
-                    <p className="text-text-muted dark:text-text-light/70 text-lg">
+                    <p className="text-gray-600 dark:text-text-light/70 text-lg">
                       Select your preferred language for the best learning
                       experience
                     </p>
@@ -354,15 +354,15 @@ export default function OnboardPage() {
                   className="space-y-6"
                 >
                   <div className="space-y-3">
-                    <h2 className="text-2xl md:text-3xl font-bold text-dark dark:text-light">
+                    <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-light">
                       Accessibility preferences
                     </h2>
-                    <p className="text-text-muted dark:text-text-light/70 text-lg">
+                    <p className="text-gray-600 dark:text-text-light/70 text-lg">
                       Help us make learning accessible for you
                     </p>
                   </div>
 
-                  <div className="grid gap-4 max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
+                  <div className="grid gap-4 max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-primary/20 scrollbar-track-transparent">
                     {accessibilities.map((acc, index) => (
                       <motion.button
                         key={acc.value}
@@ -377,8 +377,8 @@ export default function OnboardPage() {
                         onClick={() => handleAccessibilityToggle(acc.value)}
                         className={`group p-5 rounded-2xl border-2 text-left transition-all duration-300 ${
                           accessibilityIds.includes(acc.value)
-                            ? "border-primary bg-gradient-to-br from-primary/5 to-primary/10 shadow-lg shadow-primary/10 dark:border-primary-dark dark:from-primary-dark/5 dark:to-primary-dark/10"
-                            : "border-light-border dark:border-dark-border bg-light-surface/50 dark:bg-dark-surface/50 hover:border-primary/30 dark:hover:border-primary-dark/30 hover:shadow-lg"
+                            ? "border-primary bg-primary/5 shadow-lg shadow-primary/10 dark:border-primary-dark dark:bg-primary-dark/5"
+                            : "border-gray-100 dark:border-dark-border bg-white dark:bg-dark-surface hover:border-primary/30 dark:hover:border-primary-dark/30 hover:shadow-lg"
                         }`}
                       >
                         <div className="flex items-start gap-4">
@@ -386,10 +386,10 @@ export default function OnboardPage() {
                             selected={accessibilityIds.includes(acc.value)}
                           />
                           <div className="flex-1 space-y-1">
-                            <h3 className="font-semibold text-lg text-dark dark:text-light group-hover:text-primary dark:group-hover:text-primary-dark transition-colors">
+                            <h3 className="font-semibold text-lg text-gray-900 dark:text-light group-hover:text-primary dark:group-hover:text-primary-dark transition-colors">
                               {acc.name}
                             </h3>
-                            <p className="text-text-muted dark:text-text-light/70 leading-relaxed">
+                            <p className="text-gray-600 dark:text-text-light/70 leading-relaxed">
                               {acc.description}
                             </p>
                           </div>
@@ -404,7 +404,7 @@ export default function OnboardPage() {
                     transition={{ delay: 0.5 }}
                     className="text-center p-4 rounded-xl bg-gradient-to-r from-primary/5 to-accent/5 dark:from-primary-dark/5 dark:to-accent-dark/5 border border-primary/10 dark:border-primary-dark/10"
                   >
-                    <p className="text-text-muted dark:text-text-light/70 font-medium">
+                    <p className="text-gray-600 dark:text-text-light/70 font-medium">
                       {accessibilityIds.length === 0 ? (
                         "No accessibility features selected"
                       ) : (
@@ -425,7 +425,7 @@ export default function OnboardPage() {
             {/* Action Buttons */}
             <motion.div
               layout
-              className="flex gap-4 pt-8 mt-8 border-t border-light-border/50 dark:border-dark-border/50"
+              className="flex gap-4 pt-8 mt-8 border-t border-gray-100 dark:border-dark-border/50"
             >
               <AnimatePresence>
                 {step === 2 && (
@@ -436,7 +436,7 @@ export default function OnboardPage() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={handleBack}
-                    className="flex-1 px-6 py-4 rounded-2xl border-2 border-light-border dark:border-dark-border text-dark dark:text-light font-semibold hover:border-primary/30 dark:hover:border-primary-dark/30 hover:bg-light-100 dark:hover:bg-dark-100 transition-all duration-300"
+                    className="flex-1 px-6 py-4 rounded-2xl border-2 border-gray-100 dark:border-dark-border text-gray-700 dark:text-light font-semibold hover:border-primary/30 dark:hover:border-primary-dark/30 hover:bg-gray-50 dark:hover:bg-dark-100 transition-all duration-300"
                   >
                     Back
                   </motion.button>
@@ -461,8 +461,8 @@ export default function OnboardPage() {
                   savingLanguage ||
                   savingPreferences ||
                   (step === 1 && !language)
-                    ? "bg-gradient-to-r from-primary/50 to-primary-200/50 cursor-not-allowed text-white/70"
-                    : "bg-gradient-to-r from-primary via-primary-100 to-primary-200 hover:from-primary-200 hover:via-primary-100 hover:to-primary text-white shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30"
+                    ? "bg-gray-100 dark:bg-primary-dark/50 cursor-not-allowed text-gray-400 dark:text-white/70"
+                    : "bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary text-white shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30"
                 }`}
               >
                 {savingLanguage || savingPreferences ? (
