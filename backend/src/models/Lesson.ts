@@ -24,6 +24,10 @@ const lessonSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'User',
         required: true
+    },
+    userRequest: {
+        type: String,
+        required: true
     }
 }, { timestamps: true });
 
