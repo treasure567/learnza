@@ -20,6 +20,10 @@ const lessonContentSchema = new Schema({
         type: String,
         required: true
     },
+    generated: {
+        type: Boolean,
+        default: false
+    },
     sequenceNumber: {
         type: Number,
         required: true
