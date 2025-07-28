@@ -53,16 +53,19 @@ export async function apiFetch<T>(
   options: FetchOptions = {}
 ): Promise<ApiResponse<T>> {
   const API_URL =
-    process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
+    process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
   try {
+    // Get token from auth store
+    const token = useAuthStore.getState().getToken();
+
     const response = await fetch(`${API_URL}${endpoint}`, {
       ...options,
       headers: {
         "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...options.headers,
       },
-      // Include credentials to send cookies
       credentials: "include",
       body: options.body ? JSON.stringify(options.body) : undefined,
     });
@@ -72,7 +75,7 @@ export async function apiFetch<T>(
       useAuthStore.getState().logout();
       // Redirect to login if we're in the browser
       if (typeof window !== "undefined") {
-        window.location.href = "/signin";
+        window.location.href = "/signin?from=" + window.location.pathname;
       }
       throw new Error("Session expired. Please login again.");
     }

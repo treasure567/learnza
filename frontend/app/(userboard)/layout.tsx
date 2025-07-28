@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import ThemeToggle from "@/app/components/theme-toggle";
@@ -34,11 +34,6 @@ const sidebarLinks = [
     href: "/profile",
     icon: User,
   },
-  {
-    name: "Settings",
-    href: "/settings",
-    icon: Settings,
-  },
 ];
 
 export default function UserboardLayout({
@@ -49,7 +44,30 @@ export default function UserboardLayout({
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const pathname = usePathname();
-  const user = useAuthStore((state) => state.user);
+  const router = useRouter();
+  const { user, isAuthenticated, isLoading } = useAuthStore();
+
+  // Check authentication
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push(`/signin?from=${pathname}`);
+    }
+  }, [isAuthenticated, isLoading, router, pathname]);
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-light dark:bg-dark">
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
+      </div>
+    );
+  }
+
+  // Don't render anything if not authenticated
+  if (!isAuthenticated) {
+    return null;
+  }
+
   const logout = useAuthStore((state) => state.logout);
 
   return (
