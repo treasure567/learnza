@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
@@ -10,6 +11,19 @@ interface Lesson {
   userRequest: string;
   createdAt: string;
   updatedAt: string;
+}
+
+interface InteractionResponse {
+  status: boolean;
+  message: string;
+  data?: {
+    audioUrl?: string;
+  };
+}
+
+interface InteractionRequest {
+  message: string;
+  lessonId: string;
 }
 
 export const useLesson = (lessonId: string) => {
@@ -26,13 +40,29 @@ export const useLesson = (lessonId: string) => {
   });
 };
 
-export const useLessonInteract = (lessonId: string) => {
+export const useLessonInteraction = () => {
   return useMutation({
-    mutationFn: async (message: string) => {
-      const response = await apiFetch<{ audioUrl: string }>(`/lessons/interact`, {
-        method: "POST",
-        body: { message, lessonId },
-      });
+    mutationFn: async ({ message, lessonId }: InteractionRequest) => {
+      const response = await apiFetch<InteractionResponse>(
+        "/lessons/interact",
+        {
+          method: "POST",
+          body: { message, lessonId },
+        }
+      );
+      return response;
+    },
+    onSuccess: (data) => {
+      if (data.status) {
+        toast.success("Message sent successfully");
+      } else {
+        toast.error(data.message || "Failed to send message");
+      }
+    },
+    onError: (error: any) => {
+      const errorMessage =
+        error?.message || "Failed to send message. Please try again.";
+      toast.error(errorMessage);
     },
   });
 };

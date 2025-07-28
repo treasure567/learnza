@@ -1,10 +1,9 @@
 "use client";
 
-import { apiFetch } from "@/lib/api";
-import { useLesson } from "@/lib/hooks/useLesson";
-import Button from "@/app/components/ui/button";
-import { useParams, useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Button from "@/app/components/ui/button";
+import { useLesson, useLessonInteraction } from "@/lib/hooks/useLesson";
 import {
   ArrowLeft,
   BookOpen,
@@ -58,9 +57,11 @@ declare global {
 export default function LessonDetail() {
   const params = useParams();
   const router = useRouter();
-  const lessonId = params.id as string; // We can use this directly since it's read-only
+  const lessonId = params.id as string;
 
   const { data: lesson, isLoading, error } = useLesson(lessonId);
+  const lessonInteraction = useLessonInteraction();
+
   const [isInteracting, setIsInteracting] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -78,14 +79,34 @@ export default function LessonDetail() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
 
+  const formatTime = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hours}h ${minutes}m ${secs}s`;
+  };
+
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty.toLowerCase()) {
+      case "beginner":
+        return "text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800";
+      case "intermediate":
+        return "text-yellow-600 bg-yellow-100 dark:bg-yellow-900/30 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800";
+      case "advanced":
+        return "text-red-600 bg-red-100 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800";
+      default:
+        return "text-gray-600 bg-gray-100 dark:bg-gray-900/30 dark:text-gray-400 border-gray-200 dark:border-gray-800";
+    }
+  };
+
   // Initialize waveform
   useEffect(() => {
     if (waveformContainerRef.current && !waveformRef.current) {
       waveformRef.current = WaveSurfer.create({
         container: waveformContainerRef.current,
-        waveColor: "#4f46e5",
-        progressColor: "#818cf8",
-        cursorColor: "#312e81",
+        waveColor: "#2A9D8F",
+        progressColor: "#E9C46A",
+        cursorColor: "#F4A261",
         barWidth: 2,
         barGap: 3,
         height: 60,
@@ -102,92 +123,6 @@ export default function LessonDetail() {
       }
     };
   }, []);
-
-  // Initialize audio recording and visualization
-  const initializeAudioRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-      // Create MediaRecorder
-      mediaRecorderRef.current = new MediaRecorder(stream);
-      audioChunksRef.current = [];
-
-      // Handle audio data
-      mediaRecorderRef.current.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
-      };
-
-      // Create audio analyzer for visualization
-      const audioContext = new AudioContext();
-      const source = audioContext.createMediaStreamSource(stream);
-      const analyzer = audioContext.createAnalyser();
-      analyzer.fftSize = 256;
-      source.connect(analyzer);
-
-      // Update waveform
-      const dataArray = new Uint8Array(analyzer.frequencyBinCount);
-      const updateWaveform = () => {
-        if (isRecording && waveformRef.current) {
-          analyzer.getByteTimeDomainData(dataArray);
-          const normalizedData = Array.from(dataArray).map(
-            (value) => (value - 128) / 128
-          );
-          // @ts-ignore
-          waveformRef.current.loadDecodedBuffer({
-            getChannelData: () => normalizedData,
-          } as unknown as AudioBuffer);
-          requestAnimationFrame(updateWaveform);
-        }
-      };
-
-      mediaRecorderRef.current.onstart = () => {
-        updateWaveform();
-      };
-
-      mediaRecorderRef.current.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, {
-          type: "audio/wav",
-        });
-        if (waveformRef.current) {
-          const audioUrl = URL.createObjectURL(audioBlob);
-          waveformRef.current.load(audioUrl);
-        }
-        audioChunksRef.current = [];
-      };
-    } catch (error) {
-      console.error("Error accessing microphone:", error);
-      setErrorMessage("Failed to access microphone");
-    }
-  };
-
-  // Set lessonId from params
-  useEffect(() => {
-    if (params?.id) {
-      // setLessonId(params.id as string); // This line is removed as lessonId is now directly used
-    }
-  }, [params?.id]);
-
-  const formatTime = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    return `${hours}h ${minutes}m ${secs}s`;
-  };
-
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty.toLowerCase()) {
-      case "beginner":
-        return "text-green-500 bg-green-100 dark:bg-green-900/30 dark:text-green-400";
-      case "intermediate":
-        return "text-yellow-500 bg-yellow-100 dark:bg-yellow-900/30 dark:text-yellow-400";
-      case "advanced":
-        return "text-red-500 bg-red-100 dark:bg-red-900/30 dark:text-red-400";
-      default:
-        return "text-gray-500 bg-gray-100 dark:bg-gray-900/30 dark:text-gray-400";
-    }
-  };
 
   // Initialize speech recognition and audio player
   useEffect(() => {
@@ -278,73 +213,36 @@ export default function LessonDetail() {
   const handleSendMessage = async (message: string) => {
     try {
       setIsProcessing(true);
-      // Add user message to chat history
       setChatHistory((prev) => [...prev, { type: "user", message }]);
 
-      const API_URL =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
-      const token = localStorage.getItem("token"); // Get token from storage
-
-      const response = await fetch(`${API_URL}/lessons/interact`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
-          message,
-          lessonId,
-        }),
+      const result = await lessonInteraction.mutateAsync({
+        message,
+        lessonId,
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      // Check if response is audio (MP3)
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.includes("audio/")) {
-        // Handle audio response
-        const audioBlob = await response.blob();
-        const audioUrl = URL.createObjectURL(audioBlob);
-
-        // Add AI response to chat history
+      if (result.status) {
+        // Handle successful response
         setChatHistory((prev) => [
           ...prev,
           { type: "ai", message: "AI Response" },
         ]);
 
-        if (audioRef.current) {
-          audioRef.current.src = audioUrl;
-
-          if (waveformRef.current) {
-            waveformRef.current.load(audioUrl);
-          }
-
-          await audioRef.current.play();
-        }
-      } else {
-        // Try to parse as JSON (fallback)
-        const jsonResponse = await response.json();
-        if (jsonResponse.status && jsonResponse.data?.audioUrl) {
-          // Add AI response to chat history
-          setChatHistory((prev) => [
-            ...prev,
-            { type: "ai", message: "AI Response" },
-          ]);
-
+        // If there's audio URL in the response, play it
+        const responseData = result.data as { audioUrl?: string };
+        if (responseData?.audioUrl) {
           if (audioRef.current) {
-            audioRef.current.src = jsonResponse.data.audioUrl;
+            audioRef.current.src = responseData.audioUrl;
 
             if (waveformRef.current) {
-              waveformRef.current.load(jsonResponse.data.audioUrl);
+              waveformRef.current.load(responseData.audioUrl);
             }
 
             await audioRef.current.play();
           }
-        } else {
-          throw new Error("Invalid response format");
         }
+      } else {
+        // Handle backend error
+        setErrorMessage(result.message || "Failed to get AI response");
       }
     } catch (error) {
       console.error("Failed to send message:", error);
@@ -354,12 +252,69 @@ export default function LessonDetail() {
     }
   };
 
+  // Initialize audio recording and visualization
+  const initializeAudioRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      mediaRecorderRef.current = new MediaRecorder(stream);
+      audioChunksRef.current = [];
+
+      mediaRecorderRef.current.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      const audioContext = new AudioContext();
+      const source = audioContext.createMediaStreamSource(stream);
+      const analyzer = audioContext.createAnalyser();
+      analyzer.fftSize = 256;
+      source.connect(analyzer);
+
+      const dataArray = new Uint8Array(analyzer.frequencyBinCount);
+      const updateWaveform = () => {
+        if (isRecording && waveformRef.current) {
+          analyzer.getByteTimeDomainData(dataArray);
+          const normalizedData = Array.from(dataArray).map(
+            (value) => (value - 128) / 128
+          );
+          // @ts-ignore
+          waveformRef.current.loadDecodedBuffer({
+            getChannelData: () => normalizedData,
+          } as unknown as AudioBuffer);
+          requestAnimationFrame(updateWaveform);
+        }
+      };
+
+      mediaRecorderRef.current.onstart = () => {
+        updateWaveform();
+      };
+
+      mediaRecorderRef.current.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, {
+          type: "audio/wav",
+        });
+        if (waveformRef.current) {
+          const audioUrl = URL.createObjectURL(audioBlob);
+          waveformRef.current.load(audioUrl);
+        }
+        audioChunksRef.current = [];
+      };
+    } catch (error) {
+      console.error("Error accessing microphone:", error);
+      setErrorMessage("Failed to access microphone");
+    }
+  };
+
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-light dark:bg-dark flex items-center justify-center">
         <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto"></div>
-          <p className="text-lg font-medium text-gray-600 dark:text-gray-300">
+          <div className="w-16 h-16 mx-auto bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center">
+            <Loader2 className="w-8 h-8 text-white animate-spin" />
+          </div>
+          <p className="text-lg font-medium text-text dark:text-text-light">
             Loading lesson...
           </p>
         </div>
@@ -369,31 +324,34 @@ export default function LessonDetail() {
 
   if (error || !lesson) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4">
+      <div className="min-h-screen bg-light dark:bg-dark flex items-center justify-center px-4">
         <div className="text-center space-y-6 max-w-md">
           <div className="relative">
-            <div className="w-24 h-24 mx-auto bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+            <div className="w-24 h-24 mx-auto bg-gradient-to-br from-red-100 to-red-200 dark:from-red-900/30 dark:to-red-800/30 rounded-2xl flex items-center justify-center">
               <BookOpen className="w-12 h-12 text-red-500 dark:text-red-400" />
             </div>
           </div>
           <div className="space-y-2">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            <h1 className="text-2xl font-bold text-text dark:text-text-light">
               Lesson Not Found
             </h1>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-text-muted">
               {error?.message ||
                 "The lesson you are looking for does not exist or has been removed."}
             </p>
           </div>
           <div className="space-y-3">
-            <Button onClick={() => router.back()} className="w-full">
+            <Button
+              onClick={() => router.back()}
+              className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary-dark hover:to-secondary-dark text-white"
+            >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Go Back
             </Button>
             <Button
               variant="secondary"
               onClick={() => router.push("/lessons")}
-              className="w-full"
+              className="w-full border border-light-border dark:border-dark-border"
             >
               Browse All Lessons
             </Button>
@@ -404,41 +362,41 @@ export default function LessonDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="container mx-auto px-4 py-8 max-w-5xl">
+    <div className="min-h-screen bg-light dark:bg-dark">
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Header with Navigation */}
         <div className="mb-8 flex items-center space-x-4">
           <Button
             variant="secondary"
             onClick={() => router.back()}
-            className="hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="hover:bg-light-surface dark:hover:bg-dark-surface transition-colors border border-light-border dark:border-dark-border"
           >
             <ArrowLeft className="w-5 h-5 mr-2" />
             Back to Lessons
           </Button>
-          <div className="h-6 w-px bg-gray-200 dark:bg-gray-700" />
-          <h1 className="text-xl font-medium text-gray-600 dark:text-gray-400">
+          <div className="h-6 w-px bg-light-border dark:bg-dark-border" />
+          <h1 className="text-xl font-medium text-text-muted">
             Interactive Lesson
           </h1>
         </div>
 
         {/* Lesson Details Card */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 mb-8">
+        <div className="bg-light-surface dark:bg-dark-surface rounded-3xl shadow-lg border border-light-border dark:border-dark-border p-8 mb-8">
           <div className="flex items-start justify-between mb-6">
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+              <h1 className="text-3xl font-bold text-text dark:text-text-light mb-3">
                 {lesson.title}
               </h1>
               <div className="flex items-center gap-4 text-sm">
                 <span
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium ${getDifficultyColor(
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium border ${getDifficultyColor(
                     lesson.difficulty
                   )}`}
                 >
                   {lesson.difficulty.charAt(0).toUpperCase() +
                     lesson.difficulty.slice(1)}
                 </span>
-                <div className="flex items-center text-gray-500 dark:text-gray-400">
+                <div className="flex items-center text-text-muted">
                   <Clock className="w-4 h-4 mr-1.5" />
                   {formatTime(lesson.estimatedTime)}
                 </div>
@@ -446,17 +404,17 @@ export default function LessonDetail() {
             </div>
           </div>
 
-          <p className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed mb-6">
+          <p className="text-text dark:text-text-light text-lg leading-relaxed mb-6">
             {lesson.description}
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 dark:text-gray-400 border-t dark:border-gray-700 pt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-text-muted border-t border-light-border dark:border-dark-border pt-6">
             <div className="flex items-center">
-              <User className="w-4 h-4 mr-2 text-gray-400" />
+              <User className="w-4 h-4 mr-2 text-text-muted" />
               <span>Generated from: {lesson.userRequest}</span>
             </div>
             <div className="flex items-center">
-              <Calendar className="w-4 h-4 mr-2 text-gray-400" />
+              <Calendar className="w-4 h-4 mr-2 text-text-muted" />
               <span>
                 Created: {new Date(lesson.createdAt).toLocaleDateString()}
               </span>
@@ -465,20 +423,20 @@ export default function LessonDetail() {
         </div>
 
         {/* Voice Interaction Section */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="bg-light-surface dark:bg-dark-surface rounded-3xl shadow-lg border border-light-border dark:border-dark-border overflow-hidden">
           <div className="p-8">
-            <div className="text-center max-w-2xl mx-auto">
-              <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-3">
+            <div className="text-center max-w-3xl mx-auto">
+              <h2 className="text-2xl font-semibold text-text dark:text-text-light mb-3">
                 Voice Interaction
               </h2>
-              <p className="text-gray-600 dark:text-gray-400 mb-8">
+              <p className="text-text-muted mb-8">
                 Have a natural conversation with your AI tutor about this lesson
               </p>
 
               {!isInteracting ? (
                 <Button
                   onClick={() => setIsInteracting(true)}
-                  className="w-full max-w-md bg-indigo-600 hover:bg-indigo-700 text-white"
+                  className="w-full max-w-md bg-gradient-to-r from-primary to-secondary hover:from-primary-dark hover:to-secondary-dark text-white shadow-lg"
                   size="lg"
                 >
                   <Mic className="w-5 h-5 mr-2" />
@@ -487,10 +445,10 @@ export default function LessonDetail() {
               ) : (
                 <div className="space-y-6">
                   {/* Waveform and Recording Controls */}
-                  <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-6">
+                  <div className="bg-light dark:bg-dark rounded-2xl p-6 border border-light-border dark:border-dark-border">
                     <div
                       ref={waveformContainerRef}
-                      className="mb-4 bg-white dark:bg-gray-800 rounded-lg p-4"
+                      className="mb-4 bg-light-surface dark:bg-dark-surface rounded-xl p-4"
                     />
 
                     <Button
@@ -499,8 +457,8 @@ export default function LessonDetail() {
                       }
                       className={`w-full max-w-md transition-all duration-200 ${
                         isRecording
-                          ? "bg-red-500 hover:bg-red-600 animate-pulse"
-                          : "bg-indigo-600 hover:bg-indigo-700"
+                          ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 animate-pulse"
+                          : "bg-gradient-to-r from-primary to-secondary hover:from-primary-dark hover:to-secondary-dark"
                       }`}
                       size="lg"
                       disabled={isPlaying || isProcessing}
@@ -518,20 +476,20 @@ export default function LessonDetail() {
                       )}
                     </Button>
 
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-3">
+                    <p className="text-sm text-text-muted mt-3">
                       {isRecording ? (
                         <span className="text-red-500 dark:text-red-400 flex items-center justify-center">
                           <span className="w-2 h-2 bg-red-500 rounded-full animate-ping mr-2" />
                           Recording in progress...
                         </span>
                       ) : isProcessing ? (
-                        <span className="text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                        <span className="text-primary dark:text-primary-dark flex items-center justify-center">
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                           Processing your request...
                         </span>
                       ) : isPlaying ? (
-                        <span className="text-green-600 dark:text-green-400 flex items-center justify-center">
-                          <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-2" />
+                        <span className="text-accent dark:text-accent-dark flex items-center justify-center">
+                          <span className="w-2 h-2 bg-accent rounded-full animate-pulse mr-2" />
                           Playing response...
                         </span>
                       ) : (
@@ -542,27 +500,27 @@ export default function LessonDetail() {
 
                   {/* Chat History */}
                   {chatHistory.length > 0 && (
-                    <div className="border dark:border-gray-700 rounded-xl overflow-hidden">
-                      <div className="bg-gray-50 dark:bg-gray-700/50 px-4 py-3 border-b dark:border-gray-700">
-                        <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                    <div className="border border-light-border dark:border-dark-border rounded-2xl overflow-hidden bg-light-surface dark:bg-dark-surface">
+                      <div className="bg-light dark:bg-dark px-4 py-3 border-b border-light-border dark:border-dark-border">
+                        <h3 className="text-sm font-medium text-text dark:text-text-light">
                           Conversation History
                         </h3>
                       </div>
-                      <div className="divide-y dark:divide-gray-700">
+                      <div className="divide-y divide-light-border dark:divide-dark-border">
                         {chatHistory.map((chat, index) => (
                           <div
                             key={index}
                             className={`flex items-start p-4 ${
                               chat.type === "ai"
-                                ? "bg-gray-50 dark:bg-gray-700/30"
+                                ? "bg-light/50 dark:bg-dark/50"
                                 : ""
                             }`}
                           >
                             <div
                               className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
                                 chat.type === "ai"
-                                  ? "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
-                                  : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
+                                  ? "bg-gradient-to-br from-primary to-secondary text-white"
+                                  : "bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border"
                               }`}
                             >
                               {chat.type === "ai" ? (
@@ -572,7 +530,7 @@ export default function LessonDetail() {
                               )}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm text-gray-900 dark:text-gray-100">
+                              <p className="text-sm text-text dark:text-text-light">
                                 {chat.message}
                               </p>
                             </div>
@@ -583,7 +541,7 @@ export default function LessonDetail() {
                   )}
 
                   {errorMessage && (
-                    <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-xl p-4">
+                    <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-2xl p-4">
                       <p className="text-sm text-red-600 dark:text-red-400 flex items-center">
                         <span className="w-2 h-2 bg-red-500 rounded-full mr-2" />
                         {errorMessage}
