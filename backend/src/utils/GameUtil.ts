@@ -1,56 +1,57 @@
-import { Types } from 'mongoose'
-import User from '@/models/User'
-import Task from '@/models/Task'
+import { Types } from 'mongoose';
+import User from '@/models/User';
+import Task from '@/models/Task';
+import { CompletedTask } from '@/types/user';
 
 export class GameUtil {
-    private static readonly POINTS_PER_LEVEL = 1000
-    private static readonly MAX_STREAK_HOURS = 36
+    private static readonly POINTS_PER_LEVEL = 1000;
+    private static readonly MAX_STREAK_HOURS = 36;
 
     static calculateLevel(points: number): number {
-        return Math.floor(points / this.POINTS_PER_LEVEL) + 1
+        return Math.floor(points / this.POINTS_PER_LEVEL) + 1;
     }
 
     static async updateLoginStreak(userId: Types.ObjectId): Promise<number> {
-        const user = await User.findById(userId)
-        if (!user) throw new Error('User not found')
+        const user = await User.findById(userId);
+        if (!user) throw new Error('User not found');
 
-        const now = new Date()
-        const lastLogin = user.lastLoginDate
+        const now = new Date();
+        const lastLogin = user.lastLoginDate;
 
         if (!lastLogin) {
-            user.loginStreak = 1
+            user.loginStreak = 1;
         } else {
-            const hoursSinceLastLogin = (now.getTime() - lastLogin.getTime()) / (1000 * 60 * 60)
+            const hoursSinceLastLogin = (now.getTime() - lastLogin.getTime()) / (1000 * 60 * 60);
             
             if (hoursSinceLastLogin <= this.MAX_STREAK_HOURS) {
-                const isNextDay = now.getDate() !== lastLogin.getDate()
+                const isNextDay = now.getDate() !== lastLogin.getDate();
                 if (isNextDay) {
-                    user.loginStreak += 1
+                    user.loginStreak += 1;
                 }
             } else {
-                user.loginStreak = 1
+                user.loginStreak = 1;
             }
         }
 
-        user.lastLoginDate = now
-        await user.save()
-        return user.loginStreak
+        user.lastLoginDate = now;
+        await user.save();
+        return user.loginStreak;
     }
 
     static async checkTaskPrerequisites(userId: Types.ObjectId, taskId: Types.ObjectId): Promise<boolean> {
         const [user, task] = await Promise.all([
             User.findById(userId),
             Task.findById(taskId).populate('prerequisites')
-        ])
+        ]);
 
-        if (!user || !task) throw new Error('User or task not found')
+        if (!user || !task) throw new Error('User or task not found');
 
-        if (!task.prerequisites?.length) return true
+        if (!task.prerequisites?.length) return true;
 
-        const completedTaskIds = user.completedTasks.map(ct => ct.task.toString())
+        const completedTaskIds = user.completedTasks.map((ct: CompletedTask) => ct.task.toString());
         return task.prerequisites.every(prereq => 
             completedTaskIds.includes(prereq._id.toString())
-        )
+        );
     }
 
     static async updateTaskProgress(
@@ -61,61 +62,61 @@ export class GameUtil {
         const [user, task] = await Promise.all([
             User.findById(userId),
             Task.findById(taskId)
-        ])
+        ]);
 
-        if (!user || !task) throw new Error('User or task not found')
+        if (!user || !task) throw new Error('User or task not found');
 
-        const isPrerequisitesMet = await this.checkTaskPrerequisites(userId, taskId)
-        if (!isPrerequisitesMet) throw new Error('Task prerequisites not met')
+        const isPrerequisitesMet = await this.checkTaskPrerequisites(userId, taskId);
+        if (!isPrerequisitesMet) throw new Error('Task prerequisites not met');
 
-        let userTask = user.completedTasks.find(ct => ct.task.toString() === taskId.toString())
+        let userTask = user.completedTasks.find((ct: CompletedTask) => ct.task.toString() === taskId.toString());
 
         if (!userTask) {
             userTask = {
                 task: taskId,
                 count: 0,
                 completedAt: new Date()
-            }
-            user.completedTasks.push(userTask)
+            };
+            user.completedTasks.push(userTask);
         }
 
-        userTask.count += increment
+        userTask.count += increment;
         const isNewlyCompleted = userTask.count >= task.requiredCount && 
-            userTask.count - increment < task.requiredCount
+            userTask.count - increment < task.requiredCount;
 
         if (isNewlyCompleted) {
-            user.totalPoints += task.points
-            const newLevel = this.calculateLevel(user.totalPoints)
+            user.totalPoints += task.points;
+            const newLevel = this.calculateLevel(user.totalPoints);
             if (newLevel > user.level) {
-                user.level = newLevel
+                user.level = newLevel;
             }
-            userTask.completedAt = new Date()
+            userTask.completedAt = new Date();
         }
 
-        await user.save()
+        await user.save();
         return {
             completed: isNewlyCompleted,
             newPoints: user.totalPoints
-        }
+        };
     }
 
     static async getAvailableTasks(userId: Types.ObjectId): Promise<Types.ObjectId[]> {
-        const user = await User.findById(userId)
-        if (!user) throw new Error('User not found')
+        const user = await User.findById(userId);
+        if (!user) throw new Error('User not found');
 
         const completedTaskIds = user.completedTasks
-            .filter(ct => ct.count >= 1)
-            .map(ct => ct.task.toString())
+            .filter((ct: CompletedTask) => ct.count >= 1)
+            .map((ct: CompletedTask) => ct.task.toString());
 
         const tasks = await Task.find({
             $or: [
                 { prerequisites: { $size: 0 } },
                 { prerequisites: { $not: { $elemMatch: { $nin: completedTaskIds } } } }
             ]
-        }).sort({ level: 1, order: 1 })
+        }).sort({ level: 1, order: 1 });
 
-        return tasks.map(t => t._id)
+        return tasks.map(t => t._id);
     }
 }
 
-export default GameUtil 
+export default GameUtil; 
