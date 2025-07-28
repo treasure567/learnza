@@ -7,7 +7,11 @@
     "dev": "ts-node-dev -r tsconfig-paths/register --respawn --transpile-only src/server.ts",
     "build": "tsc",
     "clean": "rm -rf dist",
-    "prebuild": "npm run clean"
+    "prebuild": "npm run clean",
+    "seed": "ts-node -r tsconfig-paths/register src/seeders/index.ts all",
+    "seed:tasks": "ts-node -r tsconfig-paths/register src/seeders/index.ts tasks",
+    "seed:languages": "ts-node -r tsconfig-paths/register src/seeders/index.ts languages",
+    "seed:accessibilities": "ts-node -r tsconfig-paths/register src/seeders/index.ts accessibilities"
   },
   "keywords": [],
   "author": "",
