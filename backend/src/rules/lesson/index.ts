@@ -1,3 +1,2 @@
-import { generateLessonRules } from './generate';
-
-export { generateLessonRules };
+export { generateLessonRules } from './generate';
+export { interactRules } from './interact';
