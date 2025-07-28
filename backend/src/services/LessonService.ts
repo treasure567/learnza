@@ -1,8 +1,8 @@
 import { CustomError } from '@middleware/errorHandler';
 import { Types } from 'mongoose';
-import Lesson from '@models/Lesson';
-import LessonContent from '@models/LessonContent';
-import LessonChatHistory, { ChatAgent, ILessonChatHistory } from '@models/LessonChatHistory';
+import Lesson from '@/models/Lesson';
+import LessonContent from '@/models/LessonContent';
+import LessonChatHistory, { ChatAgent, ILessonChatHistory } from '@/models/LessonChatHistory';
 import { ILesson, ILessonContent, GenerateLessonRequest } from '@/types/lesson';
 import { PaginationUtils, PaginationOptions, PaginatedResponse } from '@/utils/PaginationUtils';
 import { MicroserviceUtils, MicroService } from '@/utils/MicroserviceUtils';
