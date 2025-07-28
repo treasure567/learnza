@@ -19,7 +19,7 @@ export class LessonGeneratorModule {
         if (jsonMatch) {
             return JSON.parse(jsonMatch[1]);
         }
-        
+
         // Try to find JSON in the response
         const jsonStart = response.indexOf('{');
         const jsonEnd = response.lastIndexOf('}');
@@ -27,7 +27,7 @@ export class LessonGeneratorModule {
             const jsonString = response.substring(jsonStart, jsonEnd + 1);
             return JSON.parse(jsonString);
         }
-        
+
         throw new Error('No valid JSON found in response');
     }
 
@@ -38,7 +38,7 @@ export class LessonGeneratorModule {
                        - "i want to learn about kanuch map" → "Karnaugh Map (K-Map)"
                        - "teach me react hooks" → "React Hooks Fundamentals"
                        - "javascript promises" → "JavaScript Promises and Async Programming"`;
-        
+
         const result = await this.model.generateContent(prompt);
         return result.response.text().trim();
     }
@@ -47,7 +47,7 @@ export class LessonGeneratorModule {
         const prompt = `Based on the user request: "${userRequest}" and the topic: "${topic}", 
                        generate a comprehensive educational title and brief description for a lesson.
                        Return only a JSON object with this exact format: {"title": "Your Title Here", "description": "Your description here"}`;
-        
+
         const result = await this.model.generateContent(prompt);
         const response = result.response.text();
         return this.extractJsonFromResponse(response);
@@ -58,7 +58,7 @@ export class LessonGeneratorModule {
                        create a detailed table of contents for this lesson.
                        Return only a JSON array of section titles like this: ["Section 1", "Section 2", "Section 3"].
                        Keep it between 3-7 sections, covering all important aspects the user wants to learn.`;
-        
+
         const result = await this.model.generateContent(prompt);
         const response = result.response.text();
         return this.extractJsonFromResponse(response);
@@ -69,7 +69,7 @@ export class LessonGeneratorModule {
                        generate detailed, educational content for the section "${sectionTitle}".
                        Focus on clarity, examples, and practical applications that directly address what the user wants to learn.
                        Keep it concise but informative. Return only the content text, no formatting.`;
-        
+
         const result = await this.model.generateContent(prompt);
         return result.response.text();
     }
@@ -85,11 +85,11 @@ export class LessonGeneratorModule {
                        
                        Return only a number representing seconds. No text, no JSON, just the number.
                        Example responses: 180, 240, 360`;
-        
+
         const result = await this.model.generateContent(prompt);
         const timeText = result.response.text().trim();
         const timeSeconds = parseInt(timeText.replace(/[^\d]/g, ''));
-        
+
         // Fallback calculation if AI doesn't return a valid number
         if (isNaN(timeSeconds) || timeSeconds <= 0) {
             // Rough estimate: 150 words per minute reading + 50% for explanation
@@ -97,7 +97,7 @@ export class LessonGeneratorModule {
             const readingTime = (wordCount / 150) * 60; // seconds
             return Math.round(readingTime * 1.5); // Add 50% for explanation
         }
-        
+
         return timeSeconds;
     }
 
@@ -106,24 +106,16 @@ export class LessonGeneratorModule {
         userId: string
     ): Promise<{ lesson: any, contents: ILessonContent[] }> {
         try {
-            // Step 1: Form a proper topic from user request
             const topic = await this.formTopicFromUserRequest(userRequest);
-            
-            // Step 2: Generate title and description
             const { title: lessonTitle, description } = await this.generateTitle(userRequest, topic);
-            
-            // Step 3: Generate outline
+
             const outline = await this.generateOutline(userRequest, topic, lessonTitle);
-            
-            // Step 4: Generate a unique lesson ID
-            const lessonId = new mongoose.Types.ObjectId();
-            
-            // Step 5: Generate content for each section with time estimation
+
             const contentData = await Promise.all(
                 outline.map(async (sectionTitle, index) => {
                     const content = await this.generateContent(userRequest, topic, sectionTitle);
                     const estimatedTime = await this.estimateContentTime(content);
-                    
+
                     return {
                         sectionTitle,
                         content,
@@ -132,33 +124,24 @@ export class LessonGeneratorModule {
                     };
                 })
             );
-            
-            // Step 6: Calculate total estimated time by summing all content times
+
             const totalEstimatedTime = contentData.reduce((total, item) => total + item.estimatedTime, 0);
-            
-            // Step 7: Create and save the lesson record
+
             const lesson = new Lesson({
                 title: lessonTitle,
                 description: description,
-                difficulty: 'beginner', // You can make this dynamic based on content analysis
+                difficulty: 'beginner',
                 estimatedTime: totalEstimatedTime,
                 userId: new mongoose.Types.ObjectId(userId),
-                userRequest: userRequest,
-                contents: contentData.map(item => ({
-                    title: item.sectionTitle,
-                    content: item.content,
-                    estimatedTime: item.estimatedTime,
-                    sequenceNumber: item.index + 1
-                }))
+                userRequest: userRequest
             });
-            
+
             const savedLesson = await lesson.save();
-            
-            // Step 8: Create and save individual lesson content records
+
             const lessonContents = await Promise.all(
                 contentData.map(async (item) => {
                     const lessonContent = new LessonContent({
-                        lessonId: lessonId,
+                        lessonId: lesson._id,
                         userId: new mongoose.Types.ObjectId(userId),
                         title: item.sectionTitle,
                         description: item.index === 0 ? description : `Section ${item.index + 1} of ${lessonTitle}`,
@@ -168,7 +151,6 @@ export class LessonGeneratorModule {
                         currentProgress: 0,
                         lastAccessedAt: null
                     });
-
                     return lessonContent.save();
                 })
             );
