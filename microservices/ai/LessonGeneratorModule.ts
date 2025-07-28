@@ -7,6 +7,7 @@ import Lesson from './models/Lesson';
 export class LessonGeneratorModule {
     private genAI: GoogleGenerativeAI;
     private model: any;
+    private readonly MAX_RETRIES = 3;
 
     constructor(apiKey: string) {
         this.genAI = new GoogleGenerativeAI(apiKey);
@@ -14,24 +15,47 @@ export class LessonGeneratorModule {
     }
 
     private extractJsonFromResponse(response: string): any {
-        // Remove markdown formatting if present
-        const jsonMatch = response.match(/```json\s*([\s\S]*?)\s*```/);
-        if (jsonMatch) {
-            return JSON.parse(jsonMatch[1]);
+        try {
+            return JSON.parse(response.trim());
+        } catch {
+            const jsonMatch = response.match(/```json\s*([\s\S]*?)\s*```/);
+            if (jsonMatch) {
+                return JSON.parse(jsonMatch[1].trim());
+            }
+            throw new Error('No valid JSON found in response');
+        }
+    }
+
+    private async retryOperation<T>(
+        operation: () => Promise<T>,
+        context: string,
+        maxRetries: number = this.MAX_RETRIES
+    ): Promise<T> {
+        let lastError: Error | null = null;
+
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                return await operation();
+            } catch (error) {
+                lastError = error as Error;
+                console.error(`Attempt ${attempt}/${maxRetries} failed for ${context}:`, error);
+
+                if (attempt === maxRetries) {
+                    console.error(`All ${maxRetries} attempts failed for ${context}`);
+                    throw lastError;
+                }
+
+                // Wait before retrying (exponential backoff)
+                const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
         }
 
-        // Try to find JSON in the response
-        const jsonStart = response.indexOf('{');
-        const jsonEnd = response.lastIndexOf('}');
-        if (jsonStart !== -1 && jsonEnd !== -1) {
-            const jsonString = response.substring(jsonStart, jsonEnd + 1);
-            return JSON.parse(jsonString);
-        }
-
-        throw new Error('No valid JSON found in response');
+        throw lastError || new Error('Unexpected error in retry logic');
     }
 
     async formTopicFromUserRequest(userRequest: string): Promise<string> {
+        console.log("Forming topic from user request");
         const prompt = `Based on this user request: "${userRequest}", create a concise, educational topic title.
                        Return only the topic title as a string, no JSON formatting.
                        Examples:
@@ -44,123 +68,188 @@ export class LessonGeneratorModule {
     }
 
     async generateTitle(userRequest: string, topic: string): Promise<{ title: string; description: string }> {
-        const prompt = `Based on the user request: "${userRequest}" and the topic: "${topic}", 
-                       generate a comprehensive educational title and brief description for a lesson.
-                       Return only a JSON object with this exact format: {"title": "Your Title Here", "description": "Your description here"}`;
+        console.log("Generating title");
+        const prompt = {
+            task: "generate_lesson_title",
+            context: {
+                userRequest,
+                topic,
+                requirements: {
+                    title: "Should be comprehensive and educational",
+                    description: "Should be brief but informative"
+                }
+            },
+            output_format: {
+                type: "json",
+                fields: {
+                    title: "string",
+                    description: "string"
+                }
+            },
+            example_response: {
+                title: "Understanding React Hooks: A Comprehensive Guide",
+                description: "A deep dive into React Hooks, covering their purpose, common use cases, and best practices for modern React development."
+            }
+        };
 
-        const result = await this.model.generateContent(prompt);
-        const response = result.response.text();
-        return this.extractJsonFromResponse(response);
+        const result = await this.model.generateContent(JSON.stringify(prompt));
+        return this.extractJsonFromResponse(result.response.text());
     }
 
-    async generateOutline(userRequest: string, topic: string, title: string): Promise<Array<string>> {
-        const prompt = `Based on the user request: "${userRequest}", topic: "${topic}", and title: "${title}",
-                       create a detailed table of contents for this lesson.
-                       Return only a JSON array of section titles like this: ["Section 1", "Section 2", "Section 3"].
-                       Keep it between 3-7 sections, covering all important aspects the user wants to learn.`;
+    async generateOutline(userRequest: string, topic: string, title: string): Promise<Array<{ sequenceNumber: number; title: string }>> {
+        console.log("Generating outline");
+        const prompt = {
+            task: "generate_lesson_outline",
+            context: {
+                userRequest,
+                topic,
+                title,
+                requirements: {
+                    sectionCount: "Between 3-7 sections",
+                    coverage: "All important aspects from user request",
+                    structure: "Logical progression from basics to advanced",
+                    sequencing: "Each section must have a sequence number indicating its order"
+                }
+            },
+            output_format: {
+                type: "json",
+                structure: "array of objects with sequenceNumber and title",
+                example: [
+                    { sequenceNumber: 1, title: "Introduction to React Hooks" },
+                    { sequenceNumber: 2, title: "Understanding useState" },
+                    { sequenceNumber: 3, title: "Effect Hook Deep Dive" }
+                ]
+            }
+        };
 
-        const result = await this.model.generateContent(prompt);
-        const response = result.response.text();
-        return this.extractJsonFromResponse(response);
+        const result = await this.model.generateContent(JSON.stringify(prompt));
+        return this.extractJsonFromResponse(result.response.text());
     }
 
-    async generateContent(userRequest: string, topic: string, sectionTitle: string): Promise<string> {
-        const prompt = `Based on the user request: "${userRequest}" and topic: "${topic}",
-                       generate detailed, educational content for the section "${sectionTitle}".
-                       Focus on clarity, examples, and practical applications that directly address what the user wants to learn.
-                       Keep it concise but informative. Return only the content text, no formatting.`;
+    async generateContent(userRequest: string, topic: string, sectionTitle: string): Promise<{ content: string; estimatedTime: number }> {
+        return this.retryOperation(async () => {
+            console.log(`Generating content for: ${sectionTitle}`);
+            const prompt = {
+                task: "generate_section_content_with_time",
+                context: {
+                    userRequest,
+                    topic,
+                    sectionTitle,
+                    requirements: {
+                        content: {
+                            style: "Educational and clear",
+                            elements: ["Explanations", "Examples", "Practical applications"],
+                            focus: "Direct answers to user's learning goals"
+                        },
+                        timeEstimation: {
+                            factors: {
+                                reading: "Base reading time",
+                                explanation: "Time for concept explanation",
+                                examples: "Time for working through examples",
+                                discussion: "Interactive elements"
+                            }
+                        }
+                    }
+                },
+                output_format: {
+                    type: "json",
+                    fields: {
+                        content: "string with markdown formatting",
+                        estimatedSeconds: "number - time in seconds to cover this content"
+                    }
+                }
+            };
 
-        const result = await this.model.generateContent(prompt);
-        return result.response.text();
-    }
+            const result = await this.model.generateContent(JSON.stringify(prompt));
+            const response = this.extractJsonFromResponse(result.response.text());
 
-    async estimateContentTime(content: string): Promise<number> {
-        const prompt = `Based on this educational content: "${content}",
-                       estimate how many seconds it would take for an AI to explain this content to a student.
-                       Consider:
-                       - Reading time for the content
-                       - Time to explain concepts
-                       - Time for examples and clarifications
-                       - Interactive discussion time
-                       
-                       Return only a number representing seconds. No text, no JSON, just the number.
-                       Example responses: 180, 240, 360`;
+            if (typeof response.estimatedSeconds !== 'number' || response.estimatedSeconds <= 0) {
+                const wordCount = response.content.split(/\s+/).length;
+                response.estimatedSeconds = Math.round((wordCount / 150) * 90);
+            }
 
-        const result = await this.model.generateContent(prompt);
-        const timeText = result.response.text().trim();
-        const timeSeconds = parseInt(timeText.replace(/[^\d]/g, ''));
-
-        // Fallback calculation if AI doesn't return a valid number
-        if (isNaN(timeSeconds) || timeSeconds <= 0) {
-            // Rough estimate: 150 words per minute reading + 50% for explanation
-            const wordCount = content.split(/\s+/).length;
-            const readingTime = (wordCount / 150) * 60; // seconds
-            return Math.round(readingTime * 1.5); // Add 50% for explanation
-        }
-
-        return timeSeconds;
+            return {
+                content: response.content,
+                estimatedTime: response.estimatedSeconds
+            };
+        }, `content generation for section: ${sectionTitle}`);
     }
 
     async generateAndStoreLessonContent(
         userRequest: string,
         userId: string
     ): Promise<{ lesson: any, contents: ILessonContent[] }> {
+        console.log("Starting lesson generation process");
         try {
-            const topic = await this.formTopicFromUserRequest(userRequest);
-            const { title: lessonTitle, description } = await this.generateTitle(userRequest, topic);
-
-            const outline = await this.generateOutline(userRequest, topic, lessonTitle);
-
-            const contentData = await Promise.all(
-                outline.map(async (sectionTitle, index) => {
-                    const content = await this.generateContent(userRequest, topic, sectionTitle);
-                    const estimatedTime = await this.estimateContentTime(content);
-
-                    return {
-                        sectionTitle,
-                        content,
-                        estimatedTime,
-                        index
-                    };
-                })
+            // Step 1: Generate initial data
+            const topic = await this.retryOperation(
+                () => this.formTopicFromUserRequest(userRequest),
+                'topic generation'
             );
 
-            const totalEstimatedTime = contentData.reduce((total, item) => total + item.estimatedTime, 0);
+            const titleData = await this.retryOperation(
+                () => this.generateTitle(userRequest, topic),
+                'title generation'
+            );
 
+            // Step 2: Create lesson first
             const lesson = new Lesson({
-                title: lessonTitle,
-                description: description,
+                title: titleData.title,
+                description: titleData.description,
                 difficulty: 'beginner',
-                estimatedTime: totalEstimatedTime,
+                estimatedTime: 0,
                 userId: new mongoose.Types.ObjectId(userId),
-                userRequest: userRequest
+                userRequest
+            });
+            const savedLesson = await lesson.save();
+            console.log("Lesson created:", savedLesson._id);
+
+            // Step 3: Generate outline
+            const outline = await this.retryOperation(
+                () => this.generateOutline(userRequest, topic, titleData.title),
+                'outline generation'
+            );
+            console.log("Outline generated with", outline.length, "sections");
+
+            // Step 4: Generate and store content sections in parallel
+            const contentPromises = outline.map(async section => {
+                const contentResult = await this.generateContent(userRequest, topic, section.title);
+
+                const lessonContent = new LessonContent({
+                    lessonId: savedLesson._id,
+                    userId: new mongoose.Types.ObjectId(userId),
+                    title: section.title,
+                    description: section.sequenceNumber === 1 ? titleData.description : `Section ${section.sequenceNumber} of ${titleData.title}`,
+                    sequenceNumber: section.sequenceNumber,
+                    content: contentResult.content,
+                    completionStatus: 'not_started',
+                    currentProgress: 0,
+                    lastAccessedAt: null
+                });
+
+                return lessonContent.save();
             });
 
-            const savedLesson = await lesson.save();
+            // Step 5: Wait for all content to be generated and saved
+            const savedContents = await Promise.all(contentPromises);
+            console.log("All content sections saved:", savedContents.length);
 
-            const lessonContents = await Promise.all(
-                contentData.map(item => {
-                    const lessonContent = new LessonContent({
-                        lessonId: savedLesson._id,
-                        userId: new mongoose.Types.ObjectId(userId),
-                        title: item.sectionTitle,
-                        description: item.index === 0 ? description : `Section ${item.index + 1} of ${lessonTitle}`,
-                        sequenceNumber: item.index + 1,
-                        content: item.content,
-                        completionStatus: 'not_started',
-                        currentProgress: 0,
-                        lastAccessedAt: null
-                    });
-                    return lessonContent.save();
-                })
-            );
+            // Step 6: Update lesson with total estimated time
+            const totalEstimatedTime = savedContents.reduce((total, content) => {
+                const wordCount = content.content.split(/\s+/).length;
+                return total + Math.round((wordCount / 150) * 90);
+            }, 0);
+
+            savedLesson.estimatedTime = totalEstimatedTime;
+            await savedLesson.save();
+            console.log("Lesson updated with total time:", totalEstimatedTime);
 
             return {
-                lesson: savedLesson.toObject(), // Convert to plain object to ensure 'contents' is included
-                contents: lessonContents
+                lesson: savedLesson.toObject(),
+                contents: savedContents
             };
         } catch (error) {
-            console.error('Error generating lesson content:', error);
+            console.error('Error in lesson generation process:', error);
             throw error;
         }
     }
