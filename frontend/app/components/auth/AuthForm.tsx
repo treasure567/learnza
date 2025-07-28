@@ -1,51 +1,115 @@
 "use client";
 
-import * as z from "zod";
-import Link from "next/link";
-import { toast } from "sonner";
 import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button, Input } from "@/app/components/ui";
-import { useLogin, useRegister } from "@/lib/hooks/useAuth";
-import { useOnlineStatus } from "../../../lib/hooks/useOnlineStatus";
+import { toast } from "sonner";
+import { useMutation } from "@tanstack/react-query";
+import { authApi } from "@/lib/api";
+import type { ApiResponse, UserPreferences } from "@/lib/api";
+import { useOnlineStatus } from "@/lib/hooks/useOnlineStatus";
+import { z } from "zod";
 
-const signupSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  name: z.string().min(3, "Name must be at least 3 characters"),
+type LoginCredentials = {
+  email: string;
+  password: string;
+};
+
+type RegisterCredentials = LoginCredentials & {
+  name: string;
+};
+
+const loginSchema = z.object({
+  email: z.string().email("Please enter a valid email"),
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
+const registerSchema = loginSchema.extend({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+});
+
+type AuthFormProps = {
+  route: "register" | "login";
+};
+
 export default function AuthForm({ route }: AuthFormProps) {
-  // Form state
-  const [formData, setFormData] = useState<
-    LoginCredentials | RegisterCredentials
-  >({
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const isOnline = useOnlineStatus();
+
+  const [formData, setFormData] = useState({
     email: "",
     password: "",
-    ...(route === "register" ? { name: "" } : {}),
+    name: "",
   });
-  const [errors, setErrors] = useState<Partial<RegisterCredentials>>({});
 
-  // Hooks
-  const isOnline = useOnlineStatus();
-  const { mutate: loginMutate, isPending: isLoginPending } = useLogin();
-  const { mutate: registerMutate, isPending: isRegisterPending } =
-    useRegister();
+  const [errors, setErrors] = useState<{
+    email?: string;
+    password?: string;
+    name?: string;
+  }>({});
+
+  const { mutate: login, isPending: isLoggingIn } = useMutation({
+    mutationFn: (credentials: LoginCredentials) => authApi.login(credentials),
+    onSuccess: (
+      response: ApiResponse<{ user: UserPreferences; token: string }>
+    ) => {
+      if (response.status) {
+        toast.success(response.message);
+        // Get the redirect URL from searchParams or default to dashboard
+        const redirectTo = searchParams.get("from") || "/dashboard";
+        router.push(redirectTo);
+        router.refresh(); // Refresh to update navigation state
+      } else {
+        toast.error(response.message);
+      }
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const { mutate: register, isPending: isRegistering } = useMutation({
+    mutationFn: (credentials: RegisterCredentials) =>
+      authApi.register(credentials),
+    onSuccess: (
+      response: ApiResponse<{ user: UserPreferences; token: string }>
+    ) => {
+      if (response.status) {
+        toast.success(response.message);
+        if (!response.data?.user?.emailVerifiedAt) {
+          router.push("/verify");
+        } else {
+          router.push("/dashboard");
+        }
+      } else {
+        toast.error(response.message);
+      }
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
 
   const validateForm = () => {
-    if (route !== "register") return true;
-
     try {
-      signupSchema.parse(formData);
+      if (route === "login") {
+        loginSchema.parse(formData);
+      } else {
+        registerSchema.parse(formData);
+      }
       setErrors({});
       return true;
-    } catch (err) {
-      if (err instanceof z.ZodError) {
-        const fieldErrors: Partial<RegisterCredentials> = {};
-        err.errors.forEach((error) => {
-          const field = error.path[0] as keyof RegisterCredentials;
-          fieldErrors[field] = error.message;
-        });
-        setErrors(fieldErrors);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const newErrors = error.errors.reduce(
+          (acc, err) => ({
+            ...acc,
+            [err.path[0]]: err.message,
+          }),
+          {}
+        );
+        setErrors(newErrors);
       }
       return false;
     }
@@ -53,62 +117,55 @@ export default function AuthForm({ route }: AuthFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!isOnline) {
       toast.error("Please check your internet connection and try again");
       return;
     }
-
     if (!validateForm()) {
       toast.error("Please fix the form errors");
       return;
     }
 
     if (route === "login") {
-      loginMutate(formData as LoginCredentials);
+      login({
+        email: formData.email,
+        password: formData.password,
+      });
     } else {
-      registerMutate(formData as RegisterCredentials);
+      register({
+        email: formData.email,
+        password: formData.password,
+        name: formData.name,
+      });
     }
   };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-
-  const isDisabled =
-    route === "login"
-      ? !formData.email || !formData.password
-      : !formData.email ||
-        !formData.password ||
-        !(formData as RegisterCredentials).name;
 
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <h2 className="text-2xl font-bold tracking-tight text-dark dark:text-light">
+        <h2 className="text-2xl font-bold tracking-tight text-text dark:text-text-light">
           {route === "register" ? "Create an account" : "Welcome back"}
         </h2>
-        <p className="text-text-muted dark:text-text-light/70">
+        <p className="text-text-muted">
           {route === "register" ? (
             <>
               Already have an account?{" "}
-              <Link
+              <a
                 href="/signin"
-                className="text-primary dark:text-primary-dark hover:text-primary-100 dark:hover:text-primary-300 font-medium"
+                className="text-primary dark:text-primary-dark hover:underline"
               >
                 Sign in
-              </Link>
+              </a>
             </>
           ) : (
             <>
               Don't have an account?{" "}
-              <Link
+              <a
                 href="/signup"
-                className="text-primary dark:text-primary-dark hover:text-primary-100 dark:hover:text-primary-300 font-medium"
+                className="text-primary dark:text-primary-dark hover:underline"
               >
-                Create account
-              </Link>
+                Sign up
+              </a>
             </>
           )}
         </p>
@@ -118,57 +175,55 @@ export default function AuthForm({ route }: AuthFormProps) {
         {route === "register" && (
           <div>
             <Input
-              type="text"
-              id="name"
-              name="name"
-              autoComplete="name"
-              onChange={handleChange}
-              placeholder="Full Name"
+              placeholder="Name"
+              value={formData.name}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setFormData((prev) => ({ ...prev, name: e.target.value }))
+              }
               error={errors.name}
-              value={(formData as RegisterCredentials).name}
             />
           </div>
         )}
-
         <div>
           <Input
-            id="email"
-            name="email"
             type="email"
-            error={errors.email}
-            onChange={handleChange}
+            placeholder="Email"
             value={formData.email}
-            placeholder="Email Address"
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setFormData((prev) => ({ ...prev, email: e.target.value }))
+            }
+            error={errors.email}
           />
         </div>
-
         <div>
           <Input
-            id="password"
-            name="password"
             type="password"
             placeholder="Password"
-            onChange={handleChange}
             value={formData.password}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setFormData((prev) => ({ ...prev, password: e.target.value }))
+            }
             error={errors.password}
           />
         </div>
-
         {route === "login" && (
           <div className="flex justify-end">
-            <Link
+            <a
               href="/reset"
-              className="text-sm text-primary dark:text-primary-dark hover:text-primary-100 dark:hover:text-primary-300 font-medium"
+              className="text-sm text-primary dark:text-primary-dark hover:underline"
             >
               Forgot password?
-            </Link>
+            </a>
           </div>
         )}
-
         <Button
           type="submit"
-          loading={isLoginPending || isRegisterPending}
-          disabled={isDisabled}
+          loading={isLoggingIn || isRegistering}
+          disabled={
+            !formData.email ||
+            !formData.password ||
+            (route === "register" && !formData.name)
+          }
           className="w-full"
         >
           {route === "register" ? "Create Account" : "Sign In"}
@@ -180,7 +235,7 @@ export default function AuthForm({ route }: AuthFormProps) {
           <div className="w-full border-t border-light-border dark:border-dark-border" />
         </div>
         <div className="relative flex justify-center text-sm">
-          <span className="px-2 bg-light-surface dark:bg-dark-surface text-text-muted dark:text-text-light/70">
+          <span className="px-2 bg-light-surface dark:bg-dark-surface text-text-muted">
             Or continue with
           </span>
         </div>
@@ -188,31 +243,29 @@ export default function AuthForm({ route }: AuthFormProps) {
 
       <Button
         variant="secondary"
-        onClick={() => {
-          toast.info("Google Sign In coming soon!");
-        }}
-        className="w-full bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border hover:bg-light-100 dark:hover:bg-dark-100 text-dark dark:text-light"
+        onClick={() => toast.info("Google Sign In coming soon!")}
+        className="w-full"
       >
         <svg
-          className="w-5 h-5 mr-2 text-dark dark:text-light"
+          className="w-5 h-5 mr-2"
           viewBox="0 0 24 24"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
         >
           <path
-            d="M23.766 12.2764c0-.9175-.07-1.7967-.2135-2.6451H12.24v4.9933h6.4558c-.2781 1.4976-1.1376 2.7745-2.4217 3.6222v3.0087h3.9197c2.2955-2.1137 3.6213-5.2167 3.6213-8.9791Z"
+            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
             fill="#4285F4"
           />
           <path
-            d="M12.2401 24c3.2807 0 6.0255-1.0859 8.0321-2.9293l-3.9197-3.0087c-1.0858.7276-2.4748 1.1578-4.1124 1.1578-3.1617 0-5.8385-2.1345-6.7942-5.0019H1.3282v3.1052C3.3375 21.2443 7.4934 24 12.2401 24Z"
+            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
             fill="#34A853"
           />
           <path
-            d="M5.4459 14.2178c-.2427-.7276-.3819-1.5034-.3819-2.3011s.1392-1.5735.3819-2.3011V6.5104H1.3282C.4781 8.2377 0 10.1591 0 12.1167c0 1.9577.4781 3.879 1.3282 5.6063l4.1177-3.5052Z"
+            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
             fill="#FBBC05"
           />
           <path
-            d="M12.2401 4.8304c1.7858 0 3.3861.6123 4.6419 1.8145l3.4743-3.4743C18.2584 1.2287 15.5136 0 12.2401 0 7.4934 0 3.3375 2.7557 1.3282 6.5104l4.1177 3.1052c.9557-2.8674 3.6325-5.0019 6.7942-5.0019Z"
+            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
             fill="#EA4335"
           />
         </svg>
