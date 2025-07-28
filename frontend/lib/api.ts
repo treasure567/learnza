@@ -55,60 +55,39 @@ export async function apiFetch<T>(
   endpoint: string,
   options: FetchOptions = {}
 ): Promise<ApiResponse<T>> {
-  const { params, body, headers: customHeaders, ...rest } = options;
-
-  // Build URL with query params
-  const url = new URL(`${API_URL}${endpoint}`);
-  if (params) {
-    Object.entries(params).forEach(([key, value]) => {
-      url.searchParams.append(key, value);
-    });
-  }
-
-  // Get auth token from store
-  const token = useAuthStore.getState().token;
-
-  // Prepare headers
-  const headers = new Headers({
-    "Content-Type": "application/json",
-    "x-api-key": API_KEY,
-    ...customHeaders,
-  });
-
-  if (token) {
-    headers.append("Authorization", `Bearer ${token}`);
-  }
+  const API_URL =
+    process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
   try {
-    // Make the request
-    const response = await fetch(url, {
-      ...rest,
-      headers,
-      body: body ? JSON.stringify(body) : undefined,
+    const response = await fetch(`${API_URL}${endpoint}`, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+      // Include credentials to send cookies
+      credentials: "include",
+      body: options.body ? JSON.stringify(options.body) : undefined,
     });
 
-    // Parse the response
-    const data = await response.json();
-
-    // Handle errors
-    if (!response.ok) {
-      // Handle 401 unauthorized
-      if (response.status === 401) {
-        // Clear auth state
-        useAuthStore.getState().logout();
-        if (typeof window !== "undefined") {
-          window.location.href = "/signin";
-        }
+    // Handle 401 Unauthorized
+    if (response.status === 401) {
+      useAuthStore.getState().logout();
+      // Redirect to login if we're in the browser
+      if (typeof window !== "undefined") {
+        window.location.href = "/signin";
       }
-      throw new ApiError(response.status, data.message || "An error occurred");
+      throw new Error("Session expired. Please login again.");
     }
 
+    const data = await response.json();
     return data;
-  } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
+  } catch (error: any) {
+    // Handle network errors
+    if (!error.message) {
+      error.message = "Network error. Please check your connection.";
     }
-    throw new ApiError(500, "Network error occurred");
+    throw error;
   }
 }
 

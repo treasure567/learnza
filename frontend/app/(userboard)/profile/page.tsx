@@ -1,13 +1,13 @@
 "use client";
 
+import { z } from "zod";
+import { toast } from "sonner";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Button, Input, Select } from "@/app/components/ui";
-import { toast } from "sonner";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { miscApi, userApi } from "@/lib/api";
+import { Button, Input, Select } from "@/app/components/ui";
 import type { ApiResponse, UserPreferences } from "@/lib/api";
-import { z } from "zod";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 const passwordSchema = z
   .object({

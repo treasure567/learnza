@@ -1,62 +1,74 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import Cookies from "js-cookie";
 
 export type User = {
-  id: string;
   email: string;
   name: string;
-  isEmailApproved: boolean;
-  createdAt: string;
-  updatedAt: string;
+  emailVerifiedAt: string;
+  language: {
+    code: string;
+    name: string;
+    nativeName: string;
+    region: string;
+  };
+  accessibilityNeeds: {
+    value: string;
+    description: string;
+    name: string;
+  }[];
+  preferences: {
+    emailNotification: boolean;
+    pushNotification: boolean;
+    theme: "light" | "dark";
+  };
 };
 
 type AuthState = {
-  token: string | null;
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  // Actions
-  setToken: (token: string | null) => void;
   setUser: (user: User | null) => void;
   login: (token: string, user: User) => void;
   logout: () => void;
 };
 
+// Cookie configuration
+const COOKIE_NAME = "auth_token";
+const COOKIE_OPTIONS = {
+  expires: 7, // 7 days
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "strict" as const,
+  path: "/",
+};
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
-      token: null,
       user: null,
       isAuthenticated: false,
       isLoading: true,
 
-      setToken: (token) => set({ token, isAuthenticated: !!token }),
-
       setUser: (user) => set({ user }),
 
-      login: (token, user) =>
-        set({
-          token,
-          user,
-          isAuthenticated: true,
-          isLoading: false,
-        }),
+      login: (token, user) => {
+        // Set token in HTTP-only cookie
+        Cookies.set(COOKIE_NAME, token, COOKIE_OPTIONS);
+        // Update store with user data
+        set({ user, isAuthenticated: true, isLoading: false });
+      },
 
-      logout: () =>
-        set({
-          token: null,
-          user: null,
-          isAuthenticated: false,
-          isLoading: false,
-        }),
+      logout: () => {
+        // Remove token cookie
+        Cookies.remove(COOKIE_NAME, { path: "/" });
+        // Clear store
+        set({ user: null, isAuthenticated: false, isLoading: false });
+      },
     }),
     {
       name: "auth-storage",
-      // Only persist these fields
-      partialize: (state) => ({
-        token: state.token,
-        user: state.user,
-      }),
+      // Only persist user data, not the token
+      partialize: (state) => ({ user: state.user }),
     }
   )
 );

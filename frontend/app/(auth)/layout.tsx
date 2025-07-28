@@ -1,10 +1,10 @@
 "use client";
 
-import { ThemeProvider } from "../components/theme-provider";
-import ThemeToggle from "../components/theme-toggle";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useState } from "react";
+import ThemeToggle from "../components/theme-toggle";
+import { ThemeProvider } from "../components/theme-provider";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 export default function AuthLayout({
   children,

@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Select } from "@/app/components/ui";
-import { useOnboardingStore } from "@/lib/store/onboarding";
-import { miscApi, userApi } from "@/lib/api";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import { miscApi, userApi } from "@/lib/api";
+import { Select } from "@/app/components/ui";
+import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useOnboardingStore } from "@/lib/store/onboarding";
 
 type Language = {
   code: string;

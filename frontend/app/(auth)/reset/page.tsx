@@ -1,9 +1,9 @@
 "use client";
 
+import { z } from "zod";
 import { useState } from "react";
 import { Button, Input } from "@/app/components/ui";
 import { useForgotPassword } from "@/lib/hooks/useAuth";
-import { z } from "zod";
 
 const schema = z.object({
   email: z.string().email("Please enter a valid email address"),
