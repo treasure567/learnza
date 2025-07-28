@@ -16,7 +16,7 @@ export default function OnboardingLayout({
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 60 * 1000, // 1 minute
+            staleTime: 60 * 1000,
             retry: 1,
             refetchOnWindowFocus: false,
           },
@@ -41,17 +41,23 @@ export default function OnboardingLayout({
           </div>
 
           {/* Animated Glow */}
-          <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <div className="absolute top-1/4 left-1/4 w-[300px] h-[300px] bg-primary/10 dark:bg-primary-dark/10 rounded-full blur-3xl animate-pulse" />
             <div className="absolute bottom-1/4 right-1/4 w-[250px] h-[250px] bg-secondary/10 dark:bg-secondary-dark/10 rounded-full blur-3xl animate-pulse delay-300" />
           </div>
 
           {/* Theme Toggle */}
-          <ThemeToggle className="fixed top-4 right-4 z-50" />
+          <div className="fixed top-4 right-4 z-50">
+            <ThemeToggle />
+          </div>
 
           {/* Content */}
-          <div className="relative z-10 flex items-center justify-center min-h-screen p-4">
-            {children}
+          <div className="relative z-10 flex items-center justify-center min-h-screen p-4 sm:p-6 md:p-8">
+            <div className="w-full max-w-[600px] mx-auto">
+              <div className="bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-2xl p-6 sm:p-8 backdrop-blur-sm shadow-xl">
+                {children}
+              </div>
+            </div>
           </div>
         </div>
       </ThemeProvider>
