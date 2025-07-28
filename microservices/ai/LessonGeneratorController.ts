@@ -12,7 +12,6 @@ export class LessonGeneratorController {
         try {
             const { userRequest, userId } = req.body;
 
-            // Validate required fields
             if (!userRequest || !userId) {
                 return res.status(400).json({
                     success: false,
@@ -20,7 +19,6 @@ export class LessonGeneratorController {
                 });
             }
 
-            // Generate and store complete lesson with calculated estimated time
             const result = await lessonGenerator.generateAndStoreLessonContent(
                 userRequest,
                 userId
@@ -32,26 +30,7 @@ export class LessonGeneratorController {
                 data: {
                     lesson: {
                         id: result.lesson._id,
-                        title: result.lesson.title,
-                        description: result.lesson.description,
-                        difficulty: result.lesson.difficulty,
-                        estimatedTime: result.lesson.estimatedTime,
-                        userId: result.lesson.userId,
-                        userRequest: result.lesson.userRequest,
-                        createdAt: result.lesson.createdAt
-                    },
-                    contents: (result.contents || []).map(content => ({ // Defensive check
-                        id: content._id,
-                        title: content.title,
-                        description: content.description,
-                        sequenceNumber: content.sequenceNumber,
-                        content: content.content
-                    })),
-                    totalSections: result.contents?.length || 0, // Defensive check
-                    contentEstimatedTimes: (result.lesson.contents || []).map((content: any) => ({ // Defensive check
-                        title: content.title,
-                        estimatedTime: content.estimatedTime
-                    }))
+                    }
                 }
             });
 
