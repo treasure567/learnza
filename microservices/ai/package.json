@@ -9,9 +9,11 @@
     "build": "tsc"
   },
   "dependencies": {
+    "@elevenlabs/elevenlabs-js": "^2.7.0",
     "@google/generative-ai": "^0.2.1",
+    "axios": "^1.11.0",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.1",
+    "dotenv": "^16.6.1",
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.1.1"
