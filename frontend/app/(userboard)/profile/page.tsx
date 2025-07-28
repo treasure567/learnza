@@ -171,7 +171,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-light dark:bg-dark p-6">
+    <div className="p-6">
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Header */}
         <div className="text-center space-y-4">

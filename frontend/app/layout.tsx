@@ -1,16 +1,15 @@
 import "./global.css";
-import { Toaster } from "sonner";
+import Providers from "./providers";
 import localFont from "next/font/local";
-import { AOS } from "./components/global";
 import { Montserrat } from "next/font/google";
 import type { Metadata, Viewport } from "next";
-import { ThemeProvider } from "./components/global/theme-provider";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
   weight: "100 900",
 });
+
 const geistMono = localFont({
   src: "./fonts/GeistMonoVF.woff",
   variable: "--font-geist-mono",
@@ -30,9 +29,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://learnza.xyz"),
-  icons: {
-    icon: "/images/logo.svg",
-  },
+  icons: { icon: "/images/logo.svg" },
   title: "IILCB - Inclusive Interactive Learning & Credential Blockchain",
   description:
     "An accessible learning platform for everyone, powered by blockchain technology. Learn, earn, and verify credentials on-chain.",
@@ -107,11 +104,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${montserrat.className} ${geistMono.variable} antialiased bg-light text-text dark:bg-dark dark:text-light`}
       >
-        <ThemeProvider defaultTheme="system">
-          <Toaster richColors />
-          <AOS />
-          {children}
-        </ThemeProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
