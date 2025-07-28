@@ -1,203 +1,220 @@
-import mongoose from 'mongoose'
-import Task from '@/models/Task'
+import mongoose from 'mongoose';
+import Task from '@/models/Task';
 
-const tasks = [
-    {
-        title: 'Create your first lesson',
-        description: 'Generate your very first lesson using our AI-powered system',
-        points: 50,
-        requiredCount: 1,
-        category: 'LESSON',
-        level: 1,
-        order: 1
-    },
-    {
-        title: 'Complete your first content',
-        description: 'Complete your first lesson content',
-        points: 50,
-        requiredCount: 1,
-        category: 'CONTENT',
-        level: 1,
-        order: 2
-    },
-    {
-        title: 'Login streak - 3 days',
-        description: 'Login for 3 consecutive days',
-        points: 30,
-        requiredCount: 3,
-        category: 'STREAK',
-        level: 1,
-        order: 3
-    },
-    {
-        title: 'Generate 5 lessons',
-        description: 'Create a total of 5 lessons',
-        points: 100,
-        requiredCount: 5,
-        category: 'LESSON',
-        level: 2,
-        order: 4
-    },
-    {
-        title: 'Complete 5 contents',
-        description: 'Complete 5 lesson contents',
-        points: 100,
-        requiredCount: 5,
-        category: 'CONTENT',
-        level: 2,
-        order: 5
-    },
-    {
-        title: 'Login streak - 7 days',
-        description: 'Login for 7 consecutive days',
-        points: 100,
-        requiredCount: 7,
-        category: 'STREAK',
-        level: 2,
-        order: 6
-    },
-    {
-        title: 'Generate 10 lessons',
-        description: 'Create a total of 10 lessons',
-        points: 200,
-        requiredCount: 10,
-        category: 'LESSON',
-        level: 3,
-        order: 7
-    },
-    {
-        title: 'Complete 15 contents',
-        description: 'Complete 15 lesson contents',
-        points: 300,
-        requiredCount: 15,
-        category: 'CONTENT',
-        level: 3,
-        order: 8
-    },
-    {
-        title: 'Login streak - 14 days',
-        description: 'Login for 14 consecutive days',
-        points: 200,
-        requiredCount: 14,
-        category: 'STREAK',
-        level: 3,
-        order: 9
-    },
-    {
-        title: 'Generate 25 lessons',
-        description: 'Create a total of 25 lessons',
-        points: 500,
-        requiredCount: 25,
-        category: 'LESSON',
-        level: 4,
-        order: 10
-    }
-]
+interface TaskConfig {
+    category: string;
+    titleTemplate: string;
+    descriptionTemplate: string;
+    getRequiredCount: (level: number) => number;
+    getPoints: (level: number) => number;
+}
 
-const generateMoreTasks = () => {
-    let order = tasks.length + 1
-    let currentLevel = 4
+export class TaskSeeder {
+    private readonly levelNames = [
+        'Newbie', 'Explorer', 'Apprentice', 'Learner', 'Rising Scholar', 'Curious Mind', 'Student', 'Dedicated Learner',
+        'Knowledge Seeker', 'Active Scholar', 'Persistent Student', 'Growth Starter', 'Knowledge Adventurer', 'Smart Thinker',
+        'Idea Hunter', 'Mind Opener', 'Focus Achiever', 'Bright Mind', 'Skill Builder', 'Skill Sharer', 'Topic Master',
+        'Insight Collector', 'Advanced Learner', 'Wisdom Collector', 'Diligent Mind', 'Goal Getter', 'Focused Explorer',
+        'Learning Guide', 'Subject Sprinter', 'Level Climber', 'Intellect Driver', 'Critical Thinker', 'Learning Champion',
+        'Mastermind', 'Fast Mover', 'Learning Hero', 'Topic Crusher', 'Learning Guru', 'Subject Specialist', 'Knowledge Knight',
+        'Topic Wizard', 'Topic Captain', 'Education Builder', 'Education Warrior', 'Wisdom Rider', 'Topic Hero', 'Subject General',
+        'Mind Shifter', 'Learning Shifter', 'Skill Maker', 'Knowledge Maker', 'Learning Machine', 'Growth Pioneer', 'Learning Pioneer',
+        'Wisdom Pioneer', 'Knowledge Creator', 'Mind Master', 'Subject Master', 'Subject Hero', 'Master Scholar', 'Topic Commander',
+        'Grand Scholar', 'Learning Commander', 'Intellect Commander', 'Wisdom Commander', 'Subject Giant', 'Knowledge Giant',
+        'Learning Giant', 'Education King', 'Wisdom King', 'Knowledge King', 'Learning King', 'Learning Emperor', 'Wisdom Emperor',
+        'Knowledge Emperor', 'Education Emperor', 'Master Guru', 'Grand Guru', 'Mega Guru', 'Learning Sage', 'Wisdom Sage',
+        'Education Sage', 'Knowledge Sage', 'Learning Oracle', 'Wisdom Oracle', 'Knowledge Oracle', 'Learning Legend', 'Wisdom Legend',
+        'Knowledge Legend', 'Education Legend', 'Ultimate Scholar', 'Ultimate Master', 'Ultimate Guru', 'Ultimate Sage',
+        'Grandmaster Scholar', 'Grandmaster Sage', 'Grandmaster Guru', 'Grandmaster Legend'
+    ];
 
-    const lessonCounts = [50, 75, 100, 150, 200, 300, 400, 500]
-    const contentCounts = [30, 50, 75, 100, 150, 200, 300, 400]
-    const streakDays = [30, 60, 90, 120, 180, 240, 300, 365]
-    const achievementTitles = [
-        'Content Creator',
-        'Learning Machine',
-        'Dedication Master',
-        'Knowledge Seeker',
-        'Education Pioneer',
-        'Learning Legend',
-        'Wisdom Keeper',
-        'Grand Master'
-    ]
-
-    for (let i = 0; i < lessonCounts.length; i++) {
-        currentLevel++
-        const basePoints = 1000 + (i * 500)
-
-        tasks.push({
-            title: `Generate ${lessonCounts[i]} lessons`,
-            description: `Create a total of ${lessonCounts[i]} lessons`,
-            points: basePoints,
-            requiredCount: lessonCounts[i],
+    private readonly taskConfigs: TaskConfig[] = [
+        {
             category: 'LESSON',
-            level: currentLevel,
-            order: order++
-        })
-
-        tasks.push({
-            title: `Complete ${contentCounts[i]} contents`,
-            description: `Complete ${contentCounts[i]} lesson contents`,
-            points: basePoints + 200,
-            requiredCount: contentCounts[i],
+            titleTemplate: 'Generate {count} lessons',
+            descriptionTemplate: 'Create a total of {count} lessons',
+            getRequiredCount: (level) => Math.floor(level * 1.5) + 3,
+            getPoints: (level) => Math.floor(level * 50) + 50
+        },
+        {
             category: 'CONTENT',
-            level: currentLevel,
-            order: order++
-        })
-
-        tasks.push({
-            title: `Login streak - ${streakDays[i]} days`,
-            description: `Login for ${streakDays[i]} consecutive days`,
-            points: basePoints - 200,
-            requiredCount: streakDays[i],
+            titleTemplate: 'Complete {count} contents',
+            descriptionTemplate: 'Complete {count} lesson contents',
+            getRequiredCount: (level) => Math.floor(level * 1.2) + 2,
+            getPoints: (level) => Math.floor(level * 60) + 60
+        },
+        {
             category: 'STREAK',
-            level: currentLevel,
-            order: order++
-        })
-
-        tasks.push({
-            title: achievementTitles[i],
-            description: `Reach level ${currentLevel} and unlock the ${achievementTitles[i]} achievement`,
-            points: basePoints + 500,
-            requiredCount: 1,
+            titleTemplate: 'Login streak - {count} days',
+            descriptionTemplate: 'Login for {count} consecutive days',
+            getRequiredCount: (level) => Math.floor(level * 0.8) + 2,
+            getPoints: (level) => Math.floor(level * 40) + 40
+        },
+        {
             category: 'ACHIEVEMENT',
-            level: currentLevel,
-            order: order++
-        })
+            titleTemplate: '{levelName}',
+            descriptionTemplate: 'Reach level {level} and become a {levelName}',
+            getRequiredCount: () => 1,
+            getPoints: (level) => Math.floor(level * 100) + 100
+        }
+    ];
+
+    private generateTask(
+        config: TaskConfig,
+        level: number,
+        order: number,
+        levelName: string
+    ) {
+        const count = config.getRequiredCount(level);
+        const points = config.getPoints(level);
+
+        const title = config.category === 'STREAK' 
+            ? `Level ${level} - ${config.titleTemplate.replace('{count}', count.toString())}`
+            : config.titleTemplate.replace('{count}', count.toString()).replace('{levelName}', levelName);
+
+        return {
+            title,
+            description: config.descriptionTemplate
+                .replace('{count}', count.toString())
+                .replace('{level}', level.toString())
+                .replace('{levelName}', levelName),
+            points,
+            requiredCount: count,
+            category: config.category,
+            level,
+            order
+        };
     }
-}
 
-const addPrerequisites = async () => {
-    const dbTasks = await Task.find().sort({ order: 1 })
-    
-    for (let i = 0; i < dbTasks.length; i++) {
-        const task = dbTasks[i]
-        const prerequisites = []
+    private async checkExisting(task: any): Promise<boolean> {
+        const exists = await Task.findOne({
+            $or: [
+                { title: task.title },
+                {
+                    category: task.category,
+                    level: task.level,
+                    requiredCount: task.requiredCount,
+                    order: task.order
+                }
+            ]
+        });
+        return !!exists;
+    }
 
-        if (i >= 3) {
-            const prevLevelTasks = dbTasks
-                .filter(t => t.level < task.level && t.category === task.category)
-                .slice(-1)
-            prerequisites.push(...prevLevelTasks.map(t => t._id))
+    private generateTasks() {
+        const tasks: any[] = [];
+        let order = 1;
+
+        for (let level = 1; level <= 100; level++) {
+            const levelName = this.levelNames[level - 1];
+            this.taskConfigs.forEach(config => {
+                tasks.push(this.generateTask(config, level, order++, levelName));
+            });
         }
 
-        if (prerequisites.length > 0) {
-            await Task.findByIdAndUpdate(task._id, { prerequisites })
+        return tasks;
+    }
+
+    private async addPrerequisites() {
+        const dbTasks = await Task.find().sort({ order: 1 });
+        
+        for (let i = 0; i < dbTasks.length; i++) {
+            const task = dbTasks[i];
+            const prerequisites = [];
+
+            if (task.level > 1) {
+                const prevLevelTasks = dbTasks
+                    .filter(t => 
+                        t.level === task.level - 1 && 
+                        t.category === task.category
+                    );
+                prerequisites.push(...prevLevelTasks.map(t => t._id));
+            }
+
+            if (prerequisites.length > 0) {
+                await Task.findByIdAndUpdate(task._id, { prerequisites });
+            }
         }
     }
-}
 
-export const seedTasks = async () => {
-    try {
-        await mongoose.connect(process.env.MONGODB_URI!)
+    private async logStatistics() {
+        const stats = await Task.aggregate([
+            {
+                $group: {
+                    _id: '$category',
+                    count: { $sum: 1 },
+                    totalPoints: { $sum: '$points' },
+                    avgPointsPerTask: { $avg: '$points' }
+                }
+            }
+        ]);
         
-        await Task.deleteMany({})
-        
-        generateMoreTasks()
-        
-        await Task.insertMany(tasks)
-        
-        await addPrerequisites()
-        
-        console.log('Tasks seeded successfully')
-    } catch (error) {
-        console.error('Error seeding tasks:', error)
-    } finally {
-        await mongoose.disconnect()
+        console.log('\nTask Statistics:');
+        stats.forEach(stat => {
+            console.log(`${stat._id}:`);
+            console.log(`  Count: ${stat.count}`);
+            console.log(`  Total Points: ${stat.totalPoints}`);
+            console.log(`  Avg Points/Task: ${Math.round(stat.avgPointsPerTask)}`);
+        });
+    }
+
+    public async seed() {
+        try {
+            console.log('Checking existing tasks...');
+            const tasks = this.generateTasks();
+            let skipped = 0;
+            let updated = 0;
+            let created = 0;
+
+            for (const task of tasks) {
+                try {
+                    const exists = await this.checkExisting(task);
+                    if (exists) {
+                        console.log(`Skipping existing task: ${task.title} (Level ${task.level}, ${task.category})`);
+                        skipped++;
+                        continue;
+                    }
+
+                    await Task.updateOne(
+                        { title: task.title },
+                        task,
+                        { upsert: true }
+                    );
+
+                    if (await this.checkExisting(task)) {
+                        updated++;
+                    } else {
+                        created++;
+                    }
+                } catch (error: any) {
+                    if (error.code === 11000) {
+                        console.log(`Skipping duplicate task: ${task.title}`);
+                        skipped++;
+                        continue;
+                    }
+                    throw error;
+                }
+            }
+
+            console.log('\nTasks seeding completed:');
+            console.log(`  Created: ${created}`);
+            console.log(`  Updated: ${updated}`);
+            console.log(`  Skipped: ${skipped}`);
+
+            if (created > 0 || updated > 0) {
+                console.log('\nUpdating prerequisites...');
+                await this.addPrerequisites();
+            }
+
+            await this.logStatistics();
+        } catch (error) {
+            console.error('Error seeding tasks:', error);
+            throw error;
+        }
     }
 }
 
 if (require.main === module) {
-    seedTasks()
+    const seeder = new TaskSeeder();
+    seeder.seed();
 } 
