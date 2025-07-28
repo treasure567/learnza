@@ -1,22 +1,24 @@
 import { Document, Types } from 'mongoose';
 
 export interface ILesson extends Document {
-    _id: Types.ObjectId;
     title: string;
     description: string;
     difficulty: 'beginner' | 'intermediate' | 'advanced';
     estimatedTime: number;
+    lastAccessedAt: Date | null;
     userId: Types.ObjectId;
+    userRequest: string;
+    contents: ILessonContent[];
     createdAt: Date;
     updatedAt: Date;
 }
 
 export interface ILessonContent extends Document {
-    _id: Types.ObjectId;
-    lessonId: Types.ObjectId;
-    userId: Types.ObjectId;
-    sequenceNumber: number;
+    lessonId: Types.ObjectId | ILesson;
+    title: string;
+    description: string;
     content: string;
+    sequenceNumber: number;
     completionStatus: 'not_started' | 'in_progress' | 'completed';
     currentProgress: number;
     lastAccessedAt: Date | null;
