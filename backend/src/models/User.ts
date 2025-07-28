@@ -58,6 +58,41 @@ const userSchema = new Schema({
     accessibilityNeeds: [{
         type: Schema.Types.ObjectId,
         ref: 'Accessibility'
+    }],
+    level: {
+        type: Number,
+        default: 1,
+        min: 1
+    },
+    totalPoints: {
+        type: Number,
+        default: 0,
+        min: 0
+    },
+    loginStreak: {
+        type: Number,
+        default: 0,
+        min: 0
+    },
+    lastLoginDate: {
+        type: Date,
+        default: null
+    },
+    completedTasks: [{
+        task: {
+            type: Schema.Types.ObjectId,
+            ref: 'Task',
+            required: true
+        },
+        count: {
+            type: Number,
+            default: 0,
+            min: 0
+        },
+        completedAt: {
+            type: Date,
+            default: Date.now
+        }
     }]
 }, { 
     timestamps: true,
@@ -78,5 +113,9 @@ const userSchema = new Schema({
         }
     }
 });
+
+userSchema.index({ level: 1 })
+userSchema.index({ totalPoints: -1 })
+userSchema.index({ loginStreak: -1 })
 
 export default mongoose.model<IUser>('User', userSchema); 
