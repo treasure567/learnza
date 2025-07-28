@@ -14,7 +14,7 @@ interface GenerateLessonResponse {
 export class LessonService {
     static async generateLesson(userId: string, data: GenerateLessonRequest): Promise<boolean> {
         try {
-            const response = await MicroserviceUtils.post<GenerateLessonResponse>(
+            MicroserviceUtils.post<GenerateLessonResponse>(
                 MicroService.AI,
                 '/generate',
                 {
@@ -22,14 +22,14 @@ export class LessonService {
                     userId
                 }
             );
-            return response.success;
+            return true;
         } catch (error) {
             throw new CustomError('Failed to generate lesson', 500);
         }
     }
 
     static async getLessons(userId: string, options?: PaginationOptions): Promise<PaginatedResponse<ILesson>> {
-        const query = Lesson.find({ userId: new Types.ObjectId(userId) }).populate('userId');
+        const query = Lesson.find({ userId: new Types.ObjectId(userId) });
         return PaginationUtils.paginate(query, options);
     }
 
