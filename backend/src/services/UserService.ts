@@ -1,6 +1,6 @@
-import User from '@models/User';
-import Language from '@models/Language';
-import Accessibility from '@models/Accessibility';
+import User from '@/models/User';
+import Language from '@/models/Language';
+import Accessibility from '@/models/Accessibility';
 import { HashUtils } from '@utils/HashUtils';
 import { CustomError } from '@middleware/errorHandler';
 import { IUser } from '@/types/user';
