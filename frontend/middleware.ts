@@ -8,9 +8,6 @@ const PROTECTED_PATHS = [
   // Add other protected paths here
 ];
 
-// Paths that are only accessible to non-authenticated users
-const AUTH_PATHS = ["/signin", "/signup", "/reset", "/verify"];
-
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -18,18 +15,12 @@ export function middleware(request: NextRequest) {
   const isProtectedPath = PROTECTED_PATHS.some((path) =>
     pathname.startsWith(path)
   );
-  const isAuthPath = AUTH_PATHS.some((path) => pathname.startsWith(path));
 
   // Get the token from cookies
   const token = request.cookies.get("auth_token");
   const isAuthenticated = !!token;
 
-  // Redirect authenticated users away from auth pages
-  if (isAuthenticated && isAuthPath) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
-  }
-
-  // Redirect unauthenticated users to login
+  // Only redirect unauthenticated users from protected paths
   if (!isAuthenticated && isProtectedPath) {
     const redirectUrl = new URL("/signin", request.url);
     redirectUrl.searchParams.set("from", pathname);
