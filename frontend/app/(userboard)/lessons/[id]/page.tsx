@@ -13,6 +13,8 @@ import {
   Calendar,
   Mic,
   StopCircle,
+  Loader2,
+  Brain,
 } from "lucide-react";
 import WaveSurfer from "wavesurfer.js";
 
@@ -64,6 +66,10 @@ export default function LessonDetail() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [chatHistory, setChatHistory] = useState<
+    Array<{ type: "user" | "ai"; message: string }>
+  >([]);
 
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -271,32 +277,80 @@ export default function LessonDetail() {
 
   const handleSendMessage = async (message: string) => {
     try {
-      const response = await apiFetch<{ audioUrl: string }>(
-        "/lessons/interact",
-        {
-          method: "POST",
-          body: {
-            message,
-            lessonId, // Using the ID directly from params
-          },
-        }
-      );
+      setIsProcessing(true);
+      // Add user message to chat history
+      setChatHistory((prev) => [...prev, { type: "user", message }]);
 
-      if (response.status && response.data?.audioUrl) {
+      const API_URL =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+      const token = localStorage.getItem("token"); // Get token from storage
+
+      const response = await fetch(`${API_URL}/lessons/interact`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          message,
+          lessonId,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Check if response is audio (MP3)
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("audio/")) {
+        // Handle audio response
+        const audioBlob = await response.blob();
+        const audioUrl = URL.createObjectURL(audioBlob);
+
+        // Add AI response to chat history
+        setChatHistory((prev) => [
+          ...prev,
+          { type: "ai", message: "AI Response" },
+        ]);
+
         if (audioRef.current) {
-          audioRef.current.src = response.data.audioUrl;
+          audioRef.current.src = audioUrl;
 
-          // Load response audio into waveform
           if (waveformRef.current) {
-            waveformRef.current.load(response.data.audioUrl);
+            waveformRef.current.load(audioUrl);
           }
 
           await audioRef.current.play();
+        }
+      } else {
+        // Try to parse as JSON (fallback)
+        const jsonResponse = await response.json();
+        if (jsonResponse.status && jsonResponse.data?.audioUrl) {
+          // Add AI response to chat history
+          setChatHistory((prev) => [
+            ...prev,
+            { type: "ai", message: "AI Response" },
+          ]);
+
+          if (audioRef.current) {
+            audioRef.current.src = jsonResponse.data.audioUrl;
+
+            if (waveformRef.current) {
+              waveformRef.current.load(jsonResponse.data.audioUrl);
+            }
+
+            await audioRef.current.play();
+          }
+        } else {
+          throw new Error("Invalid response format");
         }
       }
     } catch (error) {
       console.error("Failed to send message:", error);
       setErrorMessage("Failed to get AI response");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -351,137 +405,194 @@ export default function LessonDetail() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
+      <div className="container mx-auto px-4 py-8 max-w-5xl">
+        {/* Header with Navigation */}
+        <div className="mb-8 flex items-center space-x-4">
           <Button
             variant="secondary"
             onClick={() => router.back()}
-            className="mb-4"
+            className="hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
+            <ArrowLeft className="w-5 h-5 mr-2" />
             Back to Lessons
           </Button>
+          <div className="h-6 w-px bg-gray-200 dark:bg-gray-700" />
+          <h1 className="text-xl font-medium text-gray-600 dark:text-gray-400">
+            Interactive Lesson
+          </h1>
+        </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex-1">
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-                  {lesson.title}
-                </h1>
-                <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-medium ${getDifficultyColor(
-                      lesson.difficulty
-                    )}`}
-                  >
-                    {lesson.difficulty.charAt(0).toUpperCase() +
-                      lesson.difficulty.slice(1)}
-                  </span>
-                  <div className="flex items-center">
-                    <Clock className="w-4 h-4 mr-1" />
-                    {formatTime(lesson.estimatedTime)}
-                  </div>
+        {/* Lesson Details Card */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 mb-8">
+          <div className="flex items-start justify-between mb-6">
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+                {lesson.title}
+              </h1>
+              <div className="flex items-center gap-4 text-sm">
+                <span
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium ${getDifficultyColor(
+                    lesson.difficulty
+                  )}`}
+                >
+                  {lesson.difficulty.charAt(0).toUpperCase() +
+                    lesson.difficulty.slice(1)}
+                </span>
+                <div className="flex items-center text-gray-500 dark:text-gray-400">
+                  <Clock className="w-4 h-4 mr-1.5" />
+                  {formatTime(lesson.estimatedTime)}
                 </div>
               </div>
             </div>
+          </div>
 
-            <p className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed mb-6">
-              {lesson.description}
-            </p>
+          <p className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed mb-6">
+            {lesson.description}
+          </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 dark:text-gray-400">
-              <div className="flex items-center">
-                <User className="w-4 h-4 mr-2" />
-                <span>Generated from: {lesson.userRequest}</span>
-              </div>
-              <div className="flex items-center">
-                <Calendar className="w-4 h-4 mr-2" />
-                <span>
-                  Created: {new Date(lesson.createdAt).toLocaleDateString()}
-                </span>
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 dark:text-gray-400 border-t dark:border-gray-700 pt-6">
+            <div className="flex items-center">
+              <User className="w-4 h-4 mr-2 text-gray-400" />
+              <span>Generated from: {lesson.userRequest}</span>
+            </div>
+            <div className="flex items-center">
+              <Calendar className="w-4 h-4 mr-2 text-gray-400" />
+              <span>
+                Created: {new Date(lesson.createdAt).toLocaleDateString()}
+              </span>
             </div>
           </div>
         </div>
 
-        {/* Voice Interaction */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <div className="text-center space-y-6">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+        {/* Voice Interaction Section */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="p-8">
+            <div className="text-center max-w-2xl mx-auto">
+              <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-3">
                 Voice Interaction
               </h2>
-              <p className="text-gray-600 dark:text-gray-400">
-                Start a conversation with your lesson using voice commands
+              <p className="text-gray-600 dark:text-gray-400 mb-8">
+                Have a natural conversation with your AI tutor about this lesson
               </p>
-            </div>
 
-            {!isInteracting ? (
-              <Button
-                onClick={() => setIsInteracting(true)}
-                className="w-full max-w-md"
-                size="lg"
-              >
-                Start Voice Interaction
-              </Button>
-            ) : (
-              <div className="space-y-4">
-                <div className="max-w-2xl mx-auto bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                  <div ref={waveformContainerRef} className="mb-4" />
+              {!isInteracting ? (
+                <Button
+                  onClick={() => setIsInteracting(true)}
+                  className="w-full max-w-md bg-indigo-600 hover:bg-indigo-700 text-white"
+                  size="lg"
+                >
+                  <Mic className="w-5 h-5 mr-2" />
+                  Start Voice Interaction
+                </Button>
+              ) : (
+                <div className="space-y-6">
+                  {/* Waveform and Recording Controls */}
+                  <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-6">
+                    <div
+                      ref={waveformContainerRef}
+                      className="mb-4 bg-white dark:bg-gray-800 rounded-lg p-4"
+                    />
 
-                  <Button
-                    onClick={
-                      isRecording ? handleStopRecording : handleStartRecording
-                    }
-                    className={`w-full ${
-                      isRecording ? "bg-red-500 hover:bg-red-600" : ""
-                    }`}
-                    size="lg"
-                    disabled={isPlaying}
-                  >
-                    {isRecording ? (
-                      <>
-                        <StopCircle className="w-5 h-5 mr-2" />
-                        Stop Recording
-                      </>
-                    ) : (
-                      <>
-                        <Mic className="w-5 h-5 mr-2" />
-                        Start Recording
-                      </>
-                    )}
-                  </Button>
+                    <Button
+                      onClick={
+                        isRecording ? handleStopRecording : handleStartRecording
+                      }
+                      className={`w-full max-w-md transition-all duration-200 ${
+                        isRecording
+                          ? "bg-red-500 hover:bg-red-600 animate-pulse"
+                          : "bg-indigo-600 hover:bg-indigo-700"
+                      }`}
+                      size="lg"
+                      disabled={isPlaying || isProcessing}
+                    >
+                      {isRecording ? (
+                        <>
+                          <StopCircle className="w-5 h-5 mr-2" />
+                          Stop Recording
+                        </>
+                      ) : (
+                        <>
+                          <Mic className="w-5 h-5 mr-2" />
+                          Start Recording
+                        </>
+                      )}
+                    </Button>
+
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-3">
+                      {isRecording ? (
+                        <span className="text-red-500 dark:text-red-400 flex items-center justify-center">
+                          <span className="w-2 h-2 bg-red-500 rounded-full animate-ping mr-2" />
+                          Recording in progress...
+                        </span>
+                      ) : isProcessing ? (
+                        <span className="text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Processing your request...
+                        </span>
+                      ) : isPlaying ? (
+                        <span className="text-green-600 dark:text-green-400 flex items-center justify-center">
+                          <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-2" />
+                          Playing response...
+                        </span>
+                      ) : (
+                        "Click to start speaking"
+                      )}
+                    </p>
+                  </div>
+
+                  {/* Chat History */}
+                  {chatHistory.length > 0 && (
+                    <div className="border dark:border-gray-700 rounded-xl overflow-hidden">
+                      <div className="bg-gray-50 dark:bg-gray-700/50 px-4 py-3 border-b dark:border-gray-700">
+                        <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          Conversation History
+                        </h3>
+                      </div>
+                      <div className="divide-y dark:divide-gray-700">
+                        {chatHistory.map((chat, index) => (
+                          <div
+                            key={index}
+                            className={`flex items-start p-4 ${
+                              chat.type === "ai"
+                                ? "bg-gray-50 dark:bg-gray-700/30"
+                                : ""
+                            }`}
+                          >
+                            <div
+                              className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
+                                chat.type === "ai"
+                                  ? "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
+                                  : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
+                              }`}
+                            >
+                              {chat.type === "ai" ? (
+                                <Brain className="w-4 h-4" />
+                              ) : (
+                                <User className="w-4 h-4" />
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm text-gray-900 dark:text-gray-100">
+                                {chat.message}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {errorMessage && (
+                    <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-xl p-4">
+                      <p className="text-sm text-red-600 dark:text-red-400 flex items-center">
+                        <span className="w-2 h-2 bg-red-500 rounded-full mr-2" />
+                        {errorMessage}
+                      </p>
+                    </div>
+                  )}
                 </div>
-
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {isRecording
-                    ? "Listening..."
-                    : isPlaying
-                    ? "Playing response..."
-                    : "Click to start speaking"}
-                </p>
-
-                {transcript && (
-                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
-                      Last message:
-                    </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {transcript}
-                    </p>
-                  </div>
-                )}
-
-                {errorMessage && (
-                  <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                    <p className="text-sm text-red-600 dark:text-red-400">
-                      {errorMessage}
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>

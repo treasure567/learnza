@@ -15,6 +15,7 @@ import {
   BookOpenCheck,
 } from "lucide-react";
 import type { ApiResponse } from "@/lib/api";
+import GenerateLessonModal from "@/app/components/lesson/GenerateLessonModal";
 
 // Types
 type Lesson = {
@@ -55,10 +56,13 @@ type PaginatedResponse<T> = {
 export default function LessonsPage() {
   const router = useRouter();
   const [currentPage, setCurrentPage] = useState(1);
+  const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
+
   const {
     data: response,
     isLoading,
     error,
+    refetch,
   } = useQuery<ApiResponse<PaginatedResponse<Lesson>>>({
     queryKey: ["lessons", currentPage],
     queryFn: () => lessonsApi.getLessons(currentPage),
@@ -169,6 +173,11 @@ export default function LessonsPage() {
     router.push(`/lessons/${lessonId}`);
   };
 
+  const handleGenerateSuccess = () => {
+    // Refetch lessons to show the newly generated lesson
+    refetch();
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -176,7 +185,13 @@ export default function LessonsPage() {
         <h1 className="text-2xl font-bold text-text dark:text-text-light">
           Lessons
         </h1>
-        <Button>Start New Lesson</Button>
+        <Button
+          onClick={() => setIsGenerateModalOpen(true)}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Generate New Lesson
+        </Button>
       </div>
 
       {/* Lessons Grid */}
@@ -269,6 +284,13 @@ export default function LessonsPage() {
           </div>
         </div>
       )}
+
+      {/* Generate Lesson Modal */}
+      <GenerateLessonModal
+        isOpen={isGenerateModalOpen}
+        onClose={() => setIsGenerateModalOpen(false)}
+        onSuccess={handleGenerateSuccess}
+      />
     </div>
   );
 }
