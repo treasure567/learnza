@@ -1,5 +1,11 @@
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 import { Language } from './misc';
+
+export interface CompletedTask {
+    task: Types.ObjectId;
+    count: number;
+    completedAt: Date;
+}
 
 export interface IUser extends Document {
     email: string;
@@ -13,9 +19,14 @@ export interface IUser extends Document {
     lastResetRequest: Date | null;
     language: string | null;
     accessibilityNeeds: string[];
+    preferences: Map<string, any>;
+    level: number;
+    totalPoints: number;
+    loginStreak: number;
+    lastLoginDate: Date | null;
+    completedTasks: CompletedTask[];
     createdAt: Date;
     updatedAt: Date;
-    preferences: Map<string, any>;
 }
 
 export interface UserResponse {
