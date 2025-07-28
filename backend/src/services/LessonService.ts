@@ -5,10 +5,15 @@ import LessonContent from '@models/LessonContent';
 import { ILesson, ILessonContent, GenerateLessonRequest } from '@/types/lesson';
 import { PaginationUtils, PaginationOptions, PaginatedResponse } from '@/utils/PaginationUtils';
 import { MicroserviceUtils, MicroService } from '@/utils/MicroserviceUtils';
+import { OpenAIUtils } from '@/utils/OpenAIUtils';
 
 interface GenerateLessonResponse {
     success: boolean;
     lessonPlan: string;
+}
+
+interface InteractResponse {
+    text: string;
 }
 
 export class LessonService {
@@ -42,5 +47,26 @@ export class LessonService {
             throw new CustomError('Lesson not found', 404);
         }
         return lesson;
+    }
+
+    static async interact(userId: string, message: string): Promise<string> {
+        try {
+            const response = await MicroserviceUtils.post<InteractResponse>(
+                MicroService.AI,
+                '/interact',
+                {
+                    userId,
+                    message
+                }
+            );
+            if (!response.success) {
+                throw new CustomError('Failed to process interaction', 500);
+            }
+
+            const fileName = await OpenAIUtils.generateAudio(response.data.text);
+            return fileName;
+        } catch (error) {
+            throw new CustomError('Failed to process interaction', 500);
+        }
     }
 } 
