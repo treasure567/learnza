@@ -40,10 +40,19 @@ export class LessonController {
         }
     }
 
+    static async getChatHistory(req: AuthRequest, res: Response): Promise<void> {
+        try {
+            const history = await LessonService.getChatHistory(req.user._id, req.params.contentId);
+            ResponseUtils.success(res, history, 'Chat history retrieved successfully');
+        } catch (error) {
+            ResponseUtils.error(res, (error as Error).message);
+        }
+    }
+
     static async interact(req: AuthRequest, res: Response): Promise<void> {
         try {
-            const { message } = req.body;
-            const fileName = await LessonService.interact(req.user._id, message);
+            const { message, lessonId } = req.body;
+            const fileName = await LessonService.interact(req.user._id, message, lessonId);
             const filePath = path.join(__dirname, '..', '..', 'audio', fileName);
 
             res.setHeader('Content-Type', 'audio/mpeg');
@@ -51,7 +60,7 @@ export class LessonController {
 
             const stream = fs.createReadStream(filePath);
             stream.pipe(res);
-
+            
             stream.on('end', () => {
                 fs.unlink(filePath, (err) => {
                     if (err) console.error('Error deleting file:', err);
