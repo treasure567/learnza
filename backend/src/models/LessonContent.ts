@@ -51,7 +51,27 @@ const lessonContentSchema = new Schema({
         type: Date,
         default: null
     }
-}, { timestamps: true });
+}, { timestamps: true,
+    toJSON: {
+        transform: function(_doc: any, ret: Record<string, any>) {
+            const transformed = { ...ret };
+            delete transformed.userId;
+            delete transformed.lessonId;
+            delete transformed.userRequest;
+            delete transformed.generated;
+            delete transformed.completionStatus;
+            delete transformed.content;
+            delete transformed.sequenceNumber;
+            delete transformed.currentProgress;
+            delete transformed.estimatedTime;
+            delete transformed.lastAccessedAt;
+            delete transformed.__v;
+            delete transformed.createdAt;
+            delete transformed.updatedAt;
+            return transformed;
+        }
+    }
+ });
 
 lessonContentSchema.index({ lessonId: 1, sequenceNumber: 1 }, { unique: true });
 lessonContentSchema.index({ userId: 1, lessonId: 1 });
