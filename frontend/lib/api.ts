@@ -1,8 +1,5 @@
 import { useAuthStore } from "./store/auth";
 
-const API_KEY = process.env.NEXT_PUBLIC_API_KEY || "";
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
-
 // Types
 export type Language = {
   code: string;
@@ -56,7 +53,7 @@ export async function apiFetch<T>(
   options: FetchOptions = {}
 ): Promise<ApiResponse<T>> {
   const API_URL =
-    process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+    process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
 
   try {
     const response = await fetch(`${API_URL}${endpoint}`, {
@@ -203,4 +200,9 @@ export const miscApi = {
     apiFetch<{ accessibilities: AccessibilityOption[] }>(
       "/misc/accessibilities"
     ),
+};
+
+export const lessonsApi = {
+  getLessons: (page = 1, limit = 10) =>
+    apiFetch<PaginatedResponse<Lesson>>(`/lessons?page=${page}&limit=${limit}`),
 };
