@@ -2,6 +2,7 @@ import { CustomError } from '@middleware/errorHandler';
 import { Types } from 'mongoose';
 import Lesson from '@models/Lesson';
 import LessonContent from '@models/LessonContent';
+import LessonChatHistory, { ChatAgent, ILessonChatHistory } from '@models/LessonChatHistory';
 import { ILesson, ILessonContent, GenerateLessonRequest } from '@/types/lesson';
 import { PaginationUtils, PaginationOptions, PaginatedResponse } from '@/utils/PaginationUtils';
 import { MicroserviceUtils, MicroService } from '@/utils/MicroserviceUtils';
@@ -13,7 +14,12 @@ interface GenerateLessonResponse {
 }
 
 interface InteractResponse {
-    text: string;
+    success: boolean;
+    message: string;
+    aiResponse: string;
+    userId: string;
+    contentId: string;
+    userQuestion: string;
 }
 
 export class LessonService {
@@ -49,23 +55,77 @@ export class LessonService {
         return lesson;
     }
 
-    static async interact(userId: string, message: string): Promise<string> {
+    static async getChatHistory(userId: string, contentId: string): Promise<ILessonChatHistory[]> {
+        const content = await LessonContent.findOne({ _id: contentId });
+        if (!content) {
+            throw new CustomError('Lesson content not found', 404);
+        }
+
+        return LessonChatHistory.find({
+            lessonId: content.lessonId,
+            userId: new Types.ObjectId(userId),
+            contentId
+        }).sort({ createdAt: 1 });
+    }
+
+    private static async getCurrentOrNextContent(lessonId: string): Promise<ILessonContent> {
+        const contents = await LessonContent.find({ lessonId: new Types.ObjectId(lessonId) })
+            .sort({ sequenceNumber: 1 });
+
+        if (!contents.length) {
+            throw new CustomError('No content found for this lesson', 404);
+        }
+
+        const currentContent = contents.find(content => 
+            content.completionStatus !== 'completed'
+        ) || contents[contents.length - 1];
+
+        return currentContent;
+    }
+
+    static async interact(userId: string, message: string, lessonId: string): Promise<string> {
         try {
+            const lesson = await Lesson.findOne({ _id: lessonId, userId: new Types.ObjectId(userId) });
+            if (!lesson) {
+                throw new CustomError('Lesson not found', 404);
+            }
+
+            const currentContent = await this.getCurrentOrNextContent(lessonId);
+
             const response = await MicroserviceUtils.post<InteractResponse>(
-                MicroService.AI,
+                MicroService.INTERACT,
                 '/interact',
                 {
                     userId,
-                    message
+                    userChat: message,
+                    contentId: currentContent._id.toString()
                 }
             );
+
             if (!response.success) {
                 throw new CustomError('Failed to process interaction', 500);
             }
 
-            const fileName = await OpenAIUtils.generateAudio(response.data.text);
+            await LessonChatHistory.create({
+                lessonId: new Types.ObjectId(lessonId),
+                userId: new Types.ObjectId(userId),
+                contentId: currentContent._id.toString(),
+                agent: ChatAgent.USER,
+                content: message
+            });
+
+            await LessonChatHistory.create({
+                lessonId: new Types.ObjectId(lessonId),
+                userId: new Types.ObjectId(userId),
+                contentId: currentContent._id.toString(),
+                agent: ChatAgent.AI,
+                content: response.data.aiResponse
+            });
+
+            const fileName = await OpenAIUtils.generateAudio(response.data.aiResponse);
             return fileName;
         } catch (error) {
+            console.error('Interaction error:', error);
             throw new CustomError('Failed to process interaction', 500);
         }
     }
