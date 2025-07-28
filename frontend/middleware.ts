@@ -2,11 +2,10 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 // Paths that require authentication
-const PROTECTED_PATHS = [
-  "/profile",
-  "/dashboard",
-  // Add other protected paths here
-];
+const PROTECTED_PATHS = ["/profile", "/dashboard", "/lessons"];
+
+// Auth-related paths
+const AUTH_PATHS = ["/signin", "/signup", "/reset", "/verify"];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -15,12 +14,18 @@ export function middleware(request: NextRequest) {
   const isProtectedPath = PROTECTED_PATHS.some((path) =>
     pathname.startsWith(path)
   );
+  const isAuthPath = AUTH_PATHS.some((path) => pathname.startsWith(path));
 
   // Get the token from cookies
   const token = request.cookies.get("auth_token");
   const isAuthenticated = !!token;
 
-  // Only redirect unauthenticated users from protected paths
+  // Redirect authenticated users away from auth pages
+  if (isAuthenticated && isAuthPath) {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
+  // Redirect unauthenticated users from protected paths
   if (!isAuthenticated && isProtectedPath) {
     const redirectUrl = new URL("/signin", request.url);
     redirectUrl.searchParams.set("from", pathname);
