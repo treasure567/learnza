@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button, Input, Select } from "@/app/components/ui";
 import { toast } from "sonner";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { miscApi, userApi } from "@/lib/api";
 import type { ApiResponse, UserPreferences } from "@/lib/api";
 import { z } from "zod";
@@ -31,6 +31,9 @@ export default function ProfilePage() {
     newPassword?: string;
   }>({});
 
+  // Get queryClient for cache updates
+  const queryClient = useQueryClient();
+
   // Fetch data
   const { data: profile, isLoading } = useQuery({
     queryKey: ["profile"],
@@ -48,33 +51,59 @@ export default function ProfilePage() {
   });
 
   // Mutations
-  const { mutate: updateLanguage, isPending: isUpdatingLanguage } = useMutation(
-    {
-      mutationFn: userApi.updateLanguage,
-      onSuccess: (response) => {
-        toast.success(response.message);
-      },
-      onError: (error) => toast.error(error.message),
-    }
-  );
+  const { mutate: updateLanguage } = useMutation({
+    mutationFn: userApi.updateLanguage,
+    onSuccess: (response) => {
+      toast.success(response.message);
+      // Invalidate profile to get fresh data
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+    },
+    onError: (error) => toast.error(error.message),
+  });
 
-  const { mutate: updateAccessibility, isPending: isUpdatingAccessibility } =
-    useMutation({
-      mutationFn: userApi.updateAccessibility,
-      onSuccess: (response) => {
-        toast.success(response.message);
-      },
-      onError: (error) => toast.error(error.message),
-    });
+  const { mutate: updateAccessibility } = useMutation({
+    mutationFn: userApi.updateAccessibility,
+    onSuccess: (response: ApiResponse<UserPreferences>) => {
+      toast.success(response.message);
+      // Update profile data immediately
+      queryClient.setQueryData(
+        ["profile"],
+        (old: ApiResponse<UserPreferences> | undefined) => {
+          if (!old?.data || !response.data?.accessibilityNeeds) return old;
+          return {
+            ...old,
+            data: {
+              ...old.data,
+              accessibilityNeeds: response.data.accessibilityNeeds,
+            },
+          };
+        }
+      );
+    },
+    onError: (error) => toast.error(error.message),
+  });
 
-  const { mutate: updatePreferences, isPending: isUpdatingPreferences } =
-    useMutation({
-      mutationFn: userApi.updatePreferences,
-      onSuccess: (response) => {
-        toast.success(response.message);
-      },
-      onError: (error) => toast.error(error.message),
-    });
+  const { mutate: updatePreferences } = useMutation({
+    mutationFn: userApi.updatePreferences,
+    onSuccess: (response: ApiResponse<UserPreferences>) => {
+      toast.success(response.message);
+      // Update profile data immediately
+      queryClient.setQueryData(
+        ["profile"],
+        (old: ApiResponse<UserPreferences> | undefined) => {
+          if (!old?.data || !response.data?.preferences) return old;
+          return {
+            ...old,
+            data: {
+              ...old.data,
+              preferences: response.data.preferences,
+            },
+          };
+        }
+      );
+    },
+    onError: (error) => toast.error(error.message),
+  });
 
   const { mutate: changePassword, isPending: isChangingPassword } = useMutation(
     {
