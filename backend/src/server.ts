@@ -6,6 +6,7 @@ import authRoutes from "@/routes/authRoutes";
 import userRoutes from "@/routes/userRoutes";
 import miscRoutes from "@/routes/miscRoutes";
 import lessonRoutes from "@/routes/lessonRoutes";
+import gameRoutes from '@/routes/gameRoutes';
 import { errorHandler, notFoundHandler } from "@middleware/errorHandler";
 
 dotenv.config();
@@ -23,6 +24,7 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/misc", miscRoutes);
+app.use("/api/game", gameRoutes);
 app.use("/api/lessons", lessonRoutes);
 
 app.use(notFoundHandler);
