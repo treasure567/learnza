@@ -14,7 +14,7 @@ const port = process.env.INTERACT_SERVICE_PORT || 4001;
 app.use(cors());
 app.use(bodyParser.json());
 
-app.use('/api/interact', interactRoutes);
+app.use('/interact', interactRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
