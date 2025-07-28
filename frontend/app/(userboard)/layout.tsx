@@ -1,15 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { usePathname, useRouter } from "next/navigation";
-import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
-import ThemeToggle from "@/app/components/theme-toggle";
-import { useAuthStore } from "@/lib/store/auth";
 import {
   Home,
   User,
-  Settings,
   LogOut,
   Menu,
   X,
@@ -17,6 +10,14 @@ import {
   Search,
   BookOpen,
 } from "lucide-react";
+import Link from "next/link";
+import { toast } from "sonner";
+import { useState } from "react";
+import { useAuthStore } from "@/lib/store/auth";
+import { Modal, Button } from "@/app/components/ui";
+import { motion, AnimatePresence } from "framer-motion";
+import ThemeToggle from "@/app/components/theme-toggle";
+import { usePathname, useRouter } from "next/navigation";
 
 const sidebarLinks = [
   {
@@ -43,18 +44,21 @@ export default function UserboardLayout({
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const { user, isAuthenticated, isLoading } = useAuthStore();
+  const logout = useAuthStore((state) => state.logout);
 
-  // Check authentication
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push(`/signin?from=${pathname}`);
-    }
-  }, [isAuthenticated, isLoading, router, pathname]);
+  // Handle logout
+  const handleLogout = () => {
+    logout();
+    toast.success("Logged out successfully");
+    router.push("/signin");
+    setShowLogoutModal(false);
+  };
 
-  // Show loading state
+  // Always render loading state if loading
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-light dark:bg-dark">
@@ -63,15 +67,34 @@ export default function UserboardLayout({
     );
   }
 
-  // Don't render anything if not authenticated
-  if (!isAuthenticated) {
-    return null;
-  }
-
-  const logout = useAuthStore((state) => state.logout);
-
+  // Always render layout, let middleware handle redirect
   return (
     <div className="min-h-screen bg-light dark:bg-dark">
+      {/* Logout Confirmation Modal */}
+      <Modal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        title="Confirm Logout"
+      >
+        <div className="space-y-4">
+          <p className="text-text dark:text-text-light">
+            Are you sure you want to log out? You'll need to sign in again to
+            access your account.
+          </p>
+          <div className="flex justify-end space-x-3">
+            <Button
+              variant="secondary"
+              onClick={() => setShowLogoutModal(false)}
+            >
+              Cancel
+            </Button>
+            <Button variant="danger" onClick={handleLogout}>
+              Logout
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
       {/* Sidebar */}
       <aside
         className={`fixed top-0 left-0 z-40 h-screen transition-transform ${
@@ -119,7 +142,7 @@ export default function UserboardLayout({
           {/* Bottom Section */}
           <div className="p-4 border-t border-light-border dark:border-dark-border">
             <button
-              onClick={() => logout()}
+              onClick={() => setShowLogoutModal(true)}
               className="flex items-center w-full px-3 py-2 text-text dark:text-text-light hover:bg-light-100 dark:hover:bg-dark-100 rounded-lg transition-colors"
             >
               <LogOut className="w-5 h-5 mr-3" />
@@ -181,19 +204,21 @@ export default function UserboardLayout({
               <ThemeToggle />
 
               {/* User Menu */}
-              <div className="flex items-center space-x-3">
-                <div className="hidden md:block">
-                  <p className="text-sm font-medium text-text dark:text-text-light">
-                    {user?.name}
-                  </p>
-                  <p className="text-xs text-text-muted">{user?.email}</p>
+              {user && (
+                <div className="flex items-center space-x-3">
+                  <div className="hidden md:block">
+                    <p className="text-sm font-medium text-text dark:text-text-light">
+                      {user.name}
+                    </p>
+                    <p className="text-xs text-text-muted">{user.email}</p>
+                  </div>
+                  <div className="w-8 h-8 rounded-full bg-primary/10 dark:bg-primary-dark/10 flex items-center justify-center">
+                    <span className="text-sm font-medium text-primary dark:text-primary-dark">
+                      {user.name[0].toUpperCase()}
+                    </span>
+                  </div>
                 </div>
-                <div className="w-8 h-8 rounded-full bg-primary/10 dark:bg-primary-dark/10 flex items-center justify-center">
-                  <span className="text-sm font-medium text-primary dark:text-primary-dark">
-                    {user?.name?.[0]?.toUpperCase()}
-                  </span>
-                </div>
-              </div>
+              )}
             </div>
           </div>
 
