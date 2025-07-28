@@ -2,6 +2,8 @@ import { Response } from 'express';
 import { AuthRequest } from '@middleware/authMiddleware';
 import { ResponseUtils } from '@utils/ResponseUtils';
 import { LessonService } from '@services/LessonService';
+import fs from 'fs';
+import path from 'path';
 
 export class LessonController {
     static async getLessons(req: AuthRequest, res: Response): Promise<void> {
@@ -33,6 +35,28 @@ export class LessonController {
         try {
             LessonService.generateLesson(req.user._id, req.body);
             ResponseUtils.success(res, {}, "Lesson is being generated");
+        } catch (error) {
+            ResponseUtils.error(res, (error as Error).message);
+        }
+    }
+
+    static async interact(req: AuthRequest, res: Response): Promise<void> {
+        try {
+            const { message } = req.body;
+            const fileName = await LessonService.interact(req.user._id, message);
+            const filePath = path.join(__dirname, '..', '..', 'audio', fileName);
+
+            res.setHeader('Content-Type', 'audio/mpeg');
+            res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+
+            const stream = fs.createReadStream(filePath);
+            stream.pipe(res);
+
+            stream.on('end', () => {
+                fs.unlink(filePath, (err) => {
+                    if (err) console.error('Error deleting file:', err);
+                });
+            });
         } catch (error) {
             ResponseUtils.error(res, (error as Error).message);
         }
