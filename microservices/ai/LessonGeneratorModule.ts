@@ -131,6 +131,7 @@ export class LessonGeneratorModule {
                 title: lessonTitle,
                 description: description,
                 difficulty: 'beginner',
+                difficulty: 'beginner',
                 estimatedTime: totalEstimatedTime,
                 userId: new mongoose.Types.ObjectId(userId),
                 userRequest: userRequest
@@ -139,7 +140,7 @@ export class LessonGeneratorModule {
             const savedLesson = await lesson.save();
 
             const lessonContents = await Promise.all(
-                contentData.map(async (item) => {
+                contentData.map(item => {
                     const lessonContent = new LessonContent({
                         lessonId: lesson._id,
                         userId: new mongoose.Types.ObjectId(userId),
@@ -156,7 +157,7 @@ export class LessonGeneratorModule {
             );
 
             return {
-                lesson: savedLesson,
+                lesson: savedLesson.toObject(), // Convert to plain object to ensure 'contents' is included
                 contents: lessonContents
             };
         } catch (error) {

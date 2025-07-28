@@ -40,15 +40,15 @@ export class LessonGeneratorController {
                         userRequest: result.lesson.userRequest,
                         createdAt: result.lesson.createdAt
                     },
-                    contents: result.contents.map(content => ({
+                    contents: (result.contents || []).map(content => ({ // Defensive check
                         id: content._id,
                         title: content.title,
                         description: content.description,
                         sequenceNumber: content.sequenceNumber,
                         content: content.content
                     })),
-                    totalSections: result.contents.length,
-                    contentEstimatedTimes: result.lesson.contents.map((content: any) => ({
+                    totalSections: result.contents?.length || 0, // Defensive check
+                    contentEstimatedTimes: (result.lesson.contents || []).map((content: any) => ({ // Defensive check
                         title: content.title,
                         estimatedTime: content.estimatedTime
                     }))
