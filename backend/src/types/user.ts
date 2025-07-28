@@ -5,6 +5,8 @@ export interface CompletedTask {
     task: Types.ObjectId;
     count: number;
     completedAt: Date;
+    requiredCount: number;
+    points: number;
 }
 
 export interface IUser extends Document {
