@@ -18,4 +18,4 @@ export class HashUtils {
     static async compareVerificationCode(code: string, hashedCode: string): Promise<boolean> {
         return bcrypt.compare(code, hashedCode);
     }
-} 
+}
