@@ -100,10 +100,7 @@ export class InteractService {
             sequenceNumber: content.sequenceNumber + 1
         }).lean();
 
-        const user = await User.findById(userId)
-            .populate('accessibilityNeeds')
-            .populate('language')
-            .lean();
+        const user = await User.findById(userId).lean();
 
         if (!user) {
             throw new Error('User not found');
@@ -156,15 +153,15 @@ export class InteractService {
             const isCompletionRequest = this.checkForCompletionRequest(request.userChat);
 
             const requirements: PromptRequirements = {
-                responseStyle: "Warm, friendly, and conversational - feel free to use emojis, laugh (using 😄 or 😊), and be encouraging",
-                focus: "Stay strictly within the current content scope, using examples that relate directly to the current topic",
-                progression: "Track student understanding and adjust explanations accordingly, maintaining an upbeat and supportive tone"
+                responseStyle: "Warm, friendly, and conversational - use emojis, laugh (using 😄 or 😊), and be encouraging. Keep sentences short and clear.",
+                focus: "Teach one small concept at a time! Use short, clear sentences. Break down concepts into digestible pieces. Maximum response length is 2000 characters.",
+                progression: "Adapt teaching style based on current progress and understanding. Teach in small, manageable chunks."
             };
 
             if (isCompletionRequest) {
                 requirements.completionCheck = context.nextContent ? 
-                    "Assess understanding through friendly conversation. If user shows clear understanding, set completion to 100 and smoothly introduce the next exciting topic!" :
-                    "If user shows clear understanding, celebrate their completion of the entire lesson! Be extra enthusiastic and encouraging about their achievement. Set completion to 100 and suggest they can practice what they've learned or explore new lessons.";
+                    "Give a brief review of key points, celebrate their understanding, and give a short preview of the next topic!" :
+                    "Give a quick review of main concepts learned, celebrate their completion! Keep it short and encouraging.";
                 
                 if (context.nextContent) {
                     requirements.nextContent = {
@@ -189,7 +186,8 @@ export class InteractService {
                         title: context.content.title,
                         content: context.content.content,
                         sequenceNumber: context.content.sequenceNumber,
-                        isLastContent: !context.nextContent
+                        isLastContent: !context.nextContent,
+                        currentProgress: context.content.currentProgress || 0
                     },
                     chatHistory: formattedHistory,
                     userQuestion: request.userChat,
@@ -197,37 +195,50 @@ export class InteractService {
                         role: "Friendly and Enthusiastic Educational AI Assistant with PhD",
                         personality: "Warm, encouraging, and relatable - like a supportive friend who happens to be an expert",
                         traits: [
+                            "Teaches one concept at a time with clear examples",
+                            "Uses short, easy-to-follow sentences",
+                            "Keeps explanations concise and focused",
                             "Uses friendly language and emojis naturally",
-                            "Laughs and shows excitement about the topic",
-                            "Celebrates student progress enthusiastically",
-                            "Makes learning feel like a fun conversation",
-                            "Adapts explanation style to student needs"
+                            "Shows excitement about teaching the topic",
+                            "Adapts teaching style based on progress"
                         ],
-                        expertise: "Deep understanding of the subject matter with ability to explain complex concepts in a friendly, relatable way"
+                        teachingStyle: {
+                            newConcept: "Start with a friendly, brief introduction and basic explanation",
+                            inProgress: "Build upon previous knowledge with small, digestible additions",
+                            reinforcement: "Connect concepts using clear, short examples",
+                            mastery: "Challenge with quick, practical applications"
+                        }
                     },
                     requirements,
                     completionGuidelines: {
                         verificationRequired: isCompletionRequest,
-                        criteria: [
-                            "Natural conversation shows understanding of key concepts",
-                            "User responses demonstrate grasp of main ideas",
-                            "Previous chat history shows active engagement"
-                        ],
-                        progressTracking: {
-                            25: "Starting to get familiar with the concepts 🌱",
-                            50: "Building good understanding 🌿",
-                            75: "Discussing concepts confidently 🌳",
-                            100: "Mastered the content! 🌟"
+                        teachingProgress: {
+                            0: "Start with basic concepts - one at a time 🌱",
+                            25: "Add simple examples and details 🌿",
+                            50: "Show quick, practical applications 🌳",
+                            75: "Connect concepts with short examples 🌺",
+                            100: "Quick celebration and next steps! 🌟"
                         },
                         nextContentTransition: context.nextContent ? 
-                            "When setting completion to 100, celebrate their success and excitedly introduce the next section's title and brief overview!" : 
-                            "When setting completion to 100, give an enthusiastic celebration of completing the entire lesson! Encourage them to apply what they've learned and explore more topics."
+                            "Give a quick preview of the next exciting topic!" : 
+                            "Short celebration of completing the lesson!"
+                    },
+                    responseConstraints: {
+                        maxLength: 2000,
+                        style: "Short sentences, clear points",
+                        structure: [
+                            "Start with a brief greeting",
+                            "Teach one small concept",
+                            "Give a quick example",
+                            "Check understanding",
+                            "Keep total response under 2000 characters"
+                        ]
                     }
                 },
                 output_format: {
                     type: "json",
                     fields: {
-                        aiResponse: "string - the educational response (including celebrations and transitions)",
+                        aiResponse: "string - teach content in short, clear sentences (max 2000 chars)",
                         completion: "number - progress percentage (0-100)"
                     }
                 }
@@ -236,6 +247,11 @@ export class InteractService {
             const response = await this.generateAIResponse(prompt);
 
             console.log("Response", response);
+
+            // Ensure response doesn't exceed 2000 characters
+            if (response.aiResponse.length > 2000) {
+                response.aiResponse = response.aiResponse.substring(0, 1997) + "...";
+            }
 
             if (response.completion === 100) {
                 await LessonContent.findByIdAndUpdate(request.contentId, {
