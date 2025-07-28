@@ -1,52 +1,51 @@
-import mongoose from 'mongoose'
+import mongoose, { Schema } from 'mongoose';
 
-const taskSchema = new mongoose.Schema({
-  title: {
-    type: String,
-    required: true,
-    unique: true
-  },
-  description: {
-    type: String,
-    required: true
-  },
-  points: {
-    type: Number,
-    required: true,
-    min: 0
-  },
-  requiredCount: {
-    type: Number,
-    required: true,
-    min: 1
-  },
-  category: {
-    type: String,
-    required: true,
-    enum: ['LESSON', 'CONTENT', 'STREAK', 'ACHIEVEMENT']
-  },
-  prerequisites: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Task'
-  }],
-  level: {
-    type: Number,
-    required: true,
-    min: 1
-  },
-  order: {
-    type: Number,
-    required: true,
-    unique: true
-  }
+const taskSchema = new Schema({
+    title: {
+        type: String,
+        required: true,
+        unique: true,
+        trim: true
+    },
+    description: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    points: {
+        type: Number,
+        required: true,
+        min: 0
+    },
+    requiredCount: {
+        type: Number,
+        required: true,
+        min: 1
+    },
+    category: {
+        type: String,
+        required: true,
+        enum: ['LESSON', 'CONTENT', 'STREAK', 'ACHIEVEMENT']
+    },
+    level: {
+        type: Number,
+        required: true,
+        min: 1
+    },
+    order: {
+        type: Number,
+        required: true,
+        unique: true
+    },
+    prerequisites: [{
+        type: Schema.Types.ObjectId,
+        ref: 'Task'
+    }]
 }, {
-  timestamps: true
-})
+    timestamps: true
+});
 
-taskSchema.index({ order: 1 })
-taskSchema.index({ category: 1 })
-taskSchema.index({ level: 1 })
+taskSchema.index({ category: 1, level: 1, requiredCount: 1 });
+taskSchema.index({ category: 1, level: 1, title: 1 });
 
-const Task = mongoose.model('Task', taskSchema)
-
-export default Task 
+export default mongoose.model('Task', taskSchema); 
