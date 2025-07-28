@@ -179,8 +179,7 @@ export class InteractService {
                 context: {
                     student: {
                         name: context.user.name,
-                        accessibilityNeeds: context.user.accessibilityNeeds || [],
-                        language: context.user.language
+                        accessibilityNeeds: context.user.accessibilityNeeds || []
                     },
                     lesson: {
                         title: context.lesson.title,
