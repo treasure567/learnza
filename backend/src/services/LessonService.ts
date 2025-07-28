@@ -49,10 +49,12 @@ export class LessonService {
         const lesson = await Lesson.findOne({
             _id: new Types.ObjectId(lessonId),
             userId: new Types.ObjectId(userId)
-        });
+        }).populate<{ contents: ILessonContent[] }>('contents');
+
         if (!lesson) {
             throw new CustomError('Lesson not found', 404);
         }
+
         return lesson;
     }
 
@@ -69,7 +71,7 @@ export class LessonService {
         }).sort({ createdAt: 1 });
     }
 
-    private static async getCurrentOrNextContent(lessonId: string): Promise<ILessonContent> {
+    private static async getCurrentOrNextContent(lessonId: string): Promise<ILessonContent & { _id: Types.ObjectId }> {
         const contents = await LessonContent.find({ lessonId: new Types.ObjectId(lessonId) })
             .sort({ sequenceNumber: 1 });
 
@@ -77,9 +79,9 @@ export class LessonService {
             throw new CustomError('No content found for this lesson', 404);
         }
 
-        const currentContent = contents.find(content => 
+        const currentContent = (contents.find(content => 
             content.completionStatus !== 'completed'
-        ) || contents[contents.length - 1];
+        ) || contents[contents.length - 1]) as ILessonContent & { _id: Types.ObjectId };
 
         return currentContent;
     }
@@ -87,7 +89,7 @@ export class LessonService {
     private static async isFirstInteraction(userId: string, contentId: string): Promise<boolean> {
         const history = await LessonChatHistory.findOne({
             userId: new Types.ObjectId(userId),
-            contentId
+            contentId: new Types.ObjectId(contentId)
         });
         return !history;
     }
@@ -109,12 +111,15 @@ export class LessonService {
             if (!lesson) {
                 throw new CustomError('Lesson not found', 404);
             }
+            lesson.lastAccessedAt = new Date();
+            await lesson.save();
 
             const currentContent = await this.getCurrentOrNextContent(lessonId);
-            const isFirst = await this.isFirstInteraction(userId, currentContent._id.toString());
+            const contentId = currentContent._id.toString();
+            const isFirst = await this.isFirstInteraction(userId, contentId);
 
             const userMessage = isFirst ? 
-                await this.getDefaultFirstMessage(userId, currentContent._id.toString()) : 
+                await this.getDefaultFirstMessage(userId, contentId) : 
                 message;
 
             const response = await MicroserviceUtils.post<InteractResponse>(
@@ -123,7 +128,7 @@ export class LessonService {
                 {
                     userId,
                     userChat: userMessage,
-                    contentId: currentContent._id.toString()
+                    contentId
                 }
             );
 
@@ -134,7 +139,7 @@ export class LessonService {
             await LessonChatHistory.create({
                 lessonId: new Types.ObjectId(lessonId),
                 userId: new Types.ObjectId(userId),
-                contentId: currentContent._id.toString(),
+                contentId,
                 agent: ChatAgent.USER,
                 content: userMessage
             });
@@ -142,7 +147,7 @@ export class LessonService {
             await LessonChatHistory.create({
                 lessonId: new Types.ObjectId(lessonId),
                 userId: new Types.ObjectId(userId),
-                contentId: currentContent._id.toString(),
+                contentId,
                 agent: ChatAgent.AI,
                 content: response.data.aiResponse
             });
