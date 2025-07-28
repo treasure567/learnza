@@ -1,11 +1,20 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { useParams, useRouter } from "next/navigation";
-import Button from "@/app/components/ui/button";
-import { useLesson } from "@/lib/hooks/useLesson";
 import { apiFetch } from "@/lib/api";
-import { ArrowLeft, BookOpen, Clock, User, Calendar } from "lucide-react";
+import { useLesson } from "@/lib/hooks/useLesson";
+import Button from "@/app/components/ui/button";
+import { useParams, useRouter } from "next/navigation";
+import { useState, useRef, useEffect } from "react";
+import {
+  ArrowLeft,
+  BookOpen,
+  Clock,
+  User,
+  Calendar,
+  Mic,
+  StopCircle,
+} from "lucide-react";
+import WaveSurfer from "wavesurfer.js";
 
 // Web Speech API types
 interface SpeechRecognitionEvent extends Event {
@@ -47,7 +56,7 @@ declare global {
 export default function LessonDetail() {
   const params = useParams();
   const router = useRouter();
-  const lessonId = params.id as string;
+  const lessonId = params.id as string; // We can use this directly since it's read-only
 
   const { data: lesson, isLoading, error } = useLesson(lessonId);
   const [isInteracting, setIsInteracting] = useState(false);
@@ -58,6 +67,101 @@ export default function LessonDetail() {
 
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const waveformRef = useRef<WaveSurfer | null>(null);
+  const waveformContainerRef = useRef<HTMLDivElement | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+
+  // Initialize waveform
+  useEffect(() => {
+    if (waveformContainerRef.current && !waveformRef.current) {
+      waveformRef.current = WaveSurfer.create({
+        container: waveformContainerRef.current,
+        waveColor: "#4f46e5",
+        progressColor: "#818cf8",
+        cursorColor: "#312e81",
+        barWidth: 2,
+        barGap: 3,
+        height: 60,
+        barRadius: 3,
+        normalize: true,
+        interact: false,
+      });
+    }
+
+    return () => {
+      if (waveformRef.current) {
+        waveformRef.current.destroy();
+        waveformRef.current = null;
+      }
+    };
+  }, []);
+
+  // Initialize audio recording and visualization
+  const initializeAudioRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      // Create MediaRecorder
+      mediaRecorderRef.current = new MediaRecorder(stream);
+      audioChunksRef.current = [];
+
+      // Handle audio data
+      mediaRecorderRef.current.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      // Create audio analyzer for visualization
+      const audioContext = new AudioContext();
+      const source = audioContext.createMediaStreamSource(stream);
+      const analyzer = audioContext.createAnalyser();
+      analyzer.fftSize = 256;
+      source.connect(analyzer);
+
+      // Update waveform
+      const dataArray = new Uint8Array(analyzer.frequencyBinCount);
+      const updateWaveform = () => {
+        if (isRecording && waveformRef.current) {
+          analyzer.getByteTimeDomainData(dataArray);
+          const normalizedData = Array.from(dataArray).map(
+            (value) => (value - 128) / 128
+          );
+          // @ts-ignore
+          waveformRef.current.loadDecodedBuffer({
+            getChannelData: () => normalizedData,
+          } as unknown as AudioBuffer);
+          requestAnimationFrame(updateWaveform);
+        }
+      };
+
+      mediaRecorderRef.current.onstart = () => {
+        updateWaveform();
+      };
+
+      mediaRecorderRef.current.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, {
+          type: "audio/wav",
+        });
+        if (waveformRef.current) {
+          const audioUrl = URL.createObjectURL(audioBlob);
+          waveformRef.current.load(audioUrl);
+        }
+        audioChunksRef.current = [];
+      };
+    } catch (error) {
+      console.error("Error accessing microphone:", error);
+      setErrorMessage("Failed to access microphone");
+    }
+  };
+
+  // Set lessonId from params
+  useEffect(() => {
+    if (params?.id) {
+      // setLessonId(params.id as string); // This line is removed as lessonId is now directly used
+    }
+  }, [params?.id]);
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
@@ -80,7 +184,7 @@ export default function LessonDetail() {
   };
 
   // Initialize speech recognition and audio player
-  useState(() => {
+  useEffect(() => {
     if (typeof window !== "undefined") {
       const SpeechRecognitionConstructor =
         window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -128,26 +232,39 @@ export default function LessonDetail() {
         audioRef.current = null;
       }
     };
-  });
+  }, []);
 
-  const handleStartRecording = () => {
+  const handleStartRecording = async () => {
     setErrorMessage(null);
-    if (recognitionRef.current) {
+    if (!mediaRecorderRef.current) {
+      await initializeAudioRecording();
+    }
+
+    if (recognitionRef.current && mediaRecorderRef.current) {
       try {
         recognitionRef.current.start();
+        mediaRecorderRef.current.start();
         setIsRecording(true);
       } catch (error) {
         console.error("Failed to start recording:", error);
         setErrorMessage("Failed to start recording");
       }
     } else {
-      setErrorMessage("Speech recognition is not supported in your browser");
+      setErrorMessage(
+        "Speech recognition or audio recording is not supported in your browser"
+      );
     }
   };
 
   const handleStopRecording = () => {
     if (recognitionRef.current) {
       recognitionRef.current.stop();
+    }
+    if (
+      mediaRecorderRef.current &&
+      mediaRecorderRef.current.state === "recording"
+    ) {
+      mediaRecorderRef.current.stop();
     }
     setIsRecording(false);
   };
@@ -160,7 +277,7 @@ export default function LessonDetail() {
           method: "POST",
           body: {
             message,
-            lessonId: lesson?._id,
+            lessonId, // Using the ID directly from params
           },
         }
       );
@@ -168,6 +285,12 @@ export default function LessonDetail() {
       if (response.status && response.data?.audioUrl) {
         if (audioRef.current) {
           audioRef.current.src = response.data.audioUrl;
+
+          // Load response audio into waveform
+          if (waveformRef.current) {
+            waveformRef.current.load(response.data.audioUrl);
+          }
+
           await audioRef.current.play();
         }
       }
@@ -304,18 +427,32 @@ export default function LessonDetail() {
               </Button>
             ) : (
               <div className="space-y-4">
-                <Button
-                  onClick={
-                    isRecording ? handleStopRecording : handleStartRecording
-                  }
-                  className={`w-full max-w-md ${
-                    isRecording ? "bg-red-500 hover:bg-red-600" : ""
-                  }`}
-                  size="lg"
-                  disabled={isPlaying}
-                >
-                  {isRecording ? "Stop Recording" : "Start Recording"}
-                </Button>
+                <div className="max-w-2xl mx-auto bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                  <div ref={waveformContainerRef} className="mb-4" />
+
+                  <Button
+                    onClick={
+                      isRecording ? handleStopRecording : handleStartRecording
+                    }
+                    className={`w-full ${
+                      isRecording ? "bg-red-500 hover:bg-red-600" : ""
+                    }`}
+                    size="lg"
+                    disabled={isPlaying}
+                  >
+                    {isRecording ? (
+                      <>
+                        <StopCircle className="w-5 h-5 mr-2" />
+                        Stop Recording
+                      </>
+                    ) : (
+                      <>
+                        <Mic className="w-5 h-5 mr-2" />
+                        Start Recording
+                      </>
+                    )}
+                  </Button>
+                </div>
 
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   {isRecording
