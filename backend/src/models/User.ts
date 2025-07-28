@@ -18,15 +18,6 @@ const userSchema = new Schema({
         type: String,
         required: true
     },
-    preferences: {
-        type: Map,
-        of: Schema.Types.Mixed,
-        default: {
-            emailNotification: false,
-            pushNotification: false,
-            theme: 'light',
-        }
-    },
     verificationCode: {
         type: String
     },
@@ -59,20 +50,26 @@ const userSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'Accessibility'
     }],
+    preferences: {
+        type: Map,
+        of: Schema.Types.Mixed,
+        default: {
+            emailNotification: false,
+            pushNotification: false,
+            theme: 'light',
+        }
+    },
     level: {
         type: Number,
-        default: 1,
-        min: 1
+        default: 1
     },
     totalPoints: {
         type: Number,
-        default: 0,
-        min: 0
+        default: 0
     },
     loginStreak: {
         type: Number,
-        default: 0,
-        min: 0
+        default: 0
     },
     lastLoginDate: {
         type: Date,
@@ -86,8 +83,7 @@ const userSchema = new Schema({
         },
         count: {
             type: Number,
-            default: 0,
-            min: 0
+            default: 0
         },
         completedAt: {
             type: Date,
