@@ -7,6 +7,7 @@ import { ILesson, ILessonContent, GenerateLessonRequest } from '@/types/lesson';
 import { PaginationUtils, PaginationOptions, PaginatedResponse } from '@/utils/PaginationUtils';
 import { MicroserviceUtils, MicroService } from '@/utils/MicroserviceUtils';
 import { OpenAIUtils } from '@/utils/OpenAIUtils';
+import User from '@models/User';
 
 interface GenerateLessonResponse {
     success: boolean;
@@ -83,6 +84,25 @@ export class LessonService {
         return currentContent;
     }
 
+    private static async isFirstInteraction(userId: string, contentId: string): Promise<boolean> {
+        const history = await LessonChatHistory.findOne({
+            userId: new Types.ObjectId(userId),
+            contentId
+        });
+        return !history;
+    }
+
+    private static async getDefaultFirstMessage(userId: string, contentId: string): Promise<string> {
+        const user = await User.findById(userId).lean();
+        const content = await LessonContent.findById(contentId).populate<{ lessonId: ILesson }>('lessonId').lean();
+
+        if (!user || !content || !content.lessonId) {
+            throw new CustomError('Failed to get user or content details', 500);
+        }
+
+        return `Hi, I'm ${user.name} and I want to learn about ${content.lessonId.title}. Can you teach me this concept like you're my PhD professor? I'm excited to learn! 😊`;
+    }
+
     static async interact(userId: string, message: string, lessonId: string): Promise<string> {
         try {
             const lesson = await Lesson.findOne({ _id: lessonId, userId: new Types.ObjectId(userId) });
@@ -91,13 +111,18 @@ export class LessonService {
             }
 
             const currentContent = await this.getCurrentOrNextContent(lessonId);
+            const isFirst = await this.isFirstInteraction(userId, currentContent._id.toString());
+
+            const userMessage = isFirst ? 
+                await this.getDefaultFirstMessage(userId, currentContent._id.toString()) : 
+                message;
 
             const response = await MicroserviceUtils.post<InteractResponse>(
                 MicroService.INTERACT,
                 '/interact',
                 {
                     userId,
-                    userChat: message,
+                    userChat: userMessage,
                     contentId: currentContent._id.toString()
                 }
             );
@@ -111,7 +136,7 @@ export class LessonService {
                 userId: new Types.ObjectId(userId),
                 contentId: currentContent._id.toString(),
                 agent: ChatAgent.USER,
-                content: message
+                content: userMessage
             });
 
             await LessonChatHistory.create({
