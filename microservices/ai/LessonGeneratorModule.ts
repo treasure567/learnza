@@ -131,7 +131,6 @@ export class LessonGeneratorModule {
                 title: lessonTitle,
                 description: description,
                 difficulty: 'beginner',
-                difficulty: 'beginner',
                 estimatedTime: totalEstimatedTime,
                 userId: new mongoose.Types.ObjectId(userId),
                 userRequest: userRequest
@@ -142,7 +141,7 @@ export class LessonGeneratorModule {
             const lessonContents = await Promise.all(
                 contentData.map(item => {
                     const lessonContent = new LessonContent({
-                        lessonId: lesson._id,
+                        lessonId: savedLesson._id,
                         userId: new mongoose.Types.ObjectId(userId),
                         title: item.sectionTitle,
                         description: item.index === 0 ? description : `Section ${item.index + 1} of ${lessonTitle}`,
