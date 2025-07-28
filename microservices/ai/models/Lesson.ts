@@ -38,6 +38,18 @@ const lessonSchema = new Schema({
         type: String,
         required: true // Store the original user request
     }
-}, { timestamps: true });
+}, { 
+    timestamps: true,
+    toJSON: {
+        transform: function(_doc: any, ret: Record<string, any>) {
+            const transformed = { ...ret };
+            delete transformed.userId;
+            delete transformed.__v;
+            delete transformed.createdAt;
+            delete transformed.updatedAt;
+            return transformed;
+        }
+    }
+});
 
 export default mongoose.model<ILesson>('Lesson', lessonSchema); 
