@@ -151,3 +151,30 @@ type ApiError = {
   status: number;
   message: string;
 };
+
+// Lesson Types
+type Lesson = {
+  _id: string;
+  title: string;
+  description: string;
+  difficulty: "beginner" | "intermediate" | "advanced";
+  estimatedTime: number;
+  userId: UserPreferences;
+  userRequest: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type PaginationInfo = {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+};
+
+type PaginatedResponse<T> = {
+  data: T[];
+  pagination: PaginationInfo;
+};

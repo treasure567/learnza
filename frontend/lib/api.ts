@@ -1,8 +1,5 @@
 import { useAuthStore } from "./store/auth";
 
-const API_KEY = process.env.NEXT_PUBLIC_API_KEY || "";
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
-
 // Types
 export type Language = {
   code: string;
@@ -59,13 +56,26 @@ export async function apiFetch<T>(
     process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
   try {
+    // Get token from auth store
+    const token = useAuthStore.getState().getToken();
+
+    // If no token and not a public endpoint, redirect to login
+    if (!token && !endpoint.startsWith("/auth")) {
+      useAuthStore.getState().logout();
+      if (typeof window !== "undefined") {
+        const returnUrl = encodeURIComponent(window.location.pathname);
+        window.location.href = `/signin?from=${returnUrl}`;
+      }
+      throw new Error("Authentication required. Please login.");
+    }
+
     const response = await fetch(`${API_URL}${endpoint}`, {
       ...options,
       headers: {
         "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...options.headers,
       },
-      // Include credentials to send cookies
       credentials: "include",
       body: options.body ? JSON.stringify(options.body) : undefined,
     });
@@ -73,21 +83,35 @@ export async function apiFetch<T>(
     // Handle 401 Unauthorized
     if (response.status === 401) {
       useAuthStore.getState().logout();
-      // Redirect to login if we're in the browser
       if (typeof window !== "undefined") {
-        window.location.href = "/signin";
+        const returnUrl = encodeURIComponent(window.location.pathname);
+        window.location.href = `/signin?from=${returnUrl}`;
       }
       throw new Error("Session expired. Please login again.");
     }
 
     const data = await response.json();
+
+    // If the API indicates authentication error in the response
+    if (!data.status && data.message?.toLowerCase().includes("unauthorized")) {
+      useAuthStore.getState().logout();
+      if (typeof window !== "undefined") {
+        const returnUrl = encodeURIComponent(window.location.pathname);
+        window.location.href = `/signin?from=${returnUrl}`;
+      }
+      throw new Error(
+        data.message || "Authentication failed. Please login again."
+      );
+    }
+
     return data;
   } catch (error: any) {
-    // Handle network errors
-    if (!error.message) {
-      error.message = "Network error. Please check your connection.";
+    // If it's already a handled error, rethrow it
+    if (error.message) {
+      throw error;
     }
-    throw error;
+    // Handle network errors
+    throw new Error("Network error. Please check your connection.");
   }
 }
 
@@ -203,4 +227,11 @@ export const miscApi = {
     apiFetch<{ accessibilities: AccessibilityOption[] }>(
       "/misc/accessibilities"
     ),
+};
+
+export const lessonsApi = {
+  getLessons: (page = 1, limit = 10) =>
+    apiFetch<PaginatedResponse<Lesson>>("/lessons", {
+      params: { page: page.toString(), limit: limit.toString() },
+    }),
 };

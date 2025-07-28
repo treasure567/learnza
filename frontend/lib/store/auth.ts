@@ -1,3 +1,5 @@
+"use client";
+
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import Cookies from "js-cookie";
@@ -28,6 +30,7 @@ type AuthState = {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  getToken: () => string | null;
   setUser: (user: User | null) => void;
   login: (token: string, user: User) => void;
   logout: () => void;
@@ -38,16 +41,18 @@ const COOKIE_NAME = "auth_token";
 const COOKIE_OPTIONS = {
   expires: 7, // 7 days
   secure: process.env.NODE_ENV === "production",
-  sameSite: "strict" as const,
+  sameSite: "lax" as const, // Changed from 'strict' to 'lax' for better compatibility
   path: "/",
 };
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
       isAuthenticated: false,
       isLoading: true,
+
+      getToken: () => Cookies.get(COOKIE_NAME) || null,
 
       setUser: (user) => set({ user }),
 
@@ -67,8 +72,11 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: "auth-storage",
-      // Only persist user data, not the token
-      partialize: (state) => ({ user: state.user }),
+      // Only persist user data and authentication state
+      partialize: (state) => ({
+        user: state.user,
+        isAuthenticated: state.isAuthenticated,
+      }),
     }
   )
 );
