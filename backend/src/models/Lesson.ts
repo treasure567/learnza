@@ -20,6 +20,10 @@ const lessonSchema = new Schema({
         type: Number,
         required: true
     },
+    lastAccessedAt: {
+        type: Date,
+        default: null
+    },
     userId: {
         type: Schema.Types.ObjectId,
         ref: 'User',
@@ -29,6 +33,25 @@ const lessonSchema = new Schema({
         type: String,
         required: true
     }
-}, { timestamps: true });
+}, { 
+    timestamps: true,
+    toJSON: {
+        virtuals: true,
+        transform: function(_doc: any, ret: Record<string, any>) {
+            const transformed = { ...ret };
+            delete transformed.userId;
+            delete transformed.__v;
+            delete transformed.createdAt;
+            delete transformed.updatedAt;
+            return transformed;
+        }
+    }
+});
+
+lessonSchema.virtual('contents', {
+    ref: 'LessonContent',
+    localField: '_id',
+    foreignField: 'lessonId'
+});
 
 export default mongoose.model<ILesson>('Lesson', lessonSchema); 
