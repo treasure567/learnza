@@ -5,6 +5,7 @@ import { lessonsApi } from "@/lib/api";
 import { motion } from "framer-motion";
 import { Button } from "@/app/components/ui";
 import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import {
   Clock,
   BookOpen,
@@ -52,6 +53,7 @@ type PaginatedResponse<T> = {
 };
 
 export default function LessonsPage() {
+  const router = useRouter();
   const [currentPage, setCurrentPage] = useState(1);
   const {
     data: response,
@@ -163,6 +165,10 @@ export default function LessonsPage() {
     }
   };
 
+  const handleLessonClick = (lessonId: string) => {
+    router.push(`/lessons/${lessonId}`);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -180,11 +186,12 @@ export default function LessonsPage() {
             key={lesson._id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-xl p-6 space-y-4 hover:border-primary/50 dark:hover:border-primary-dark/50 transition-colors"
+            className="bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-xl p-6 space-y-4 hover:border-primary/50 dark:hover:border-primary-dark/50 transition-colors cursor-pointer hover:shadow-lg"
+            onClick={() => handleLessonClick(lesson._id)}
           >
             <div className="flex items-start justify-between">
               <h2 className="text-lg font-semibold text-text dark:text-text-light line-clamp-2">
-                {lesson.title}
+                {lesson.title.slice(0, 40)}...
               </h2>
               <span
                 className={`px-3 py-1 rounded-full text-xs font-medium ${getDifficultyColor(

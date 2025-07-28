@@ -1,21 +1,11 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import { useParams } from "next/navigation";
+import { useState, useRef } from "react";
+import { useParams, useRouter } from "next/navigation";
 import Button from "@/app/components/ui/button";
-import Card from "@/app/components/ui/card";
+import { useLesson } from "@/lib/hooks/useLesson";
 import { apiFetch } from "@/lib/api";
-
-interface Lesson {
-  _id: string;
-  title: string;
-  description: string;
-  difficulty: string;
-  estimatedTime: number;
-  userRequest: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import { ArrowLeft, BookOpen, Clock, User, Calendar } from "lucide-react";
 
 // Web Speech API types
 interface SpeechRecognitionEvent extends Event {
@@ -56,13 +46,15 @@ declare global {
 
 export default function LessonDetail() {
   const params = useParams();
-  const [lesson, setLesson] = useState<Lesson | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
+  const lessonId = params.id as string;
+
+  const { data: lesson, isLoading, error } = useLesson(lessonId);
   const [isInteracting, setIsInteracting] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [transcript, setTranscript] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -77,36 +69,18 @@ export default function LessonDetail() {
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty.toLowerCase()) {
       case "beginner":
-        return "text-green-500";
+        return "text-green-500 bg-green-100 dark:bg-green-900/30 dark:text-green-400";
       case "intermediate":
-        return "text-yellow-500";
+        return "text-yellow-500 bg-yellow-100 dark:bg-yellow-900/30 dark:text-yellow-400";
       case "advanced":
-        return "text-red-500";
+        return "text-red-500 bg-red-100 dark:bg-red-900/30 dark:text-red-400";
       default:
-        return "text-gray-500";
+        return "text-gray-500 bg-gray-100 dark:bg-gray-900/30 dark:text-gray-400";
     }
   };
 
-  useEffect(() => {
-    const fetchLesson = async () => {
-      try {
-        const response = await apiFetch<Lesson>(`/lesson/${params.id}`);
-        if (response.status && response.data) {
-          setLesson(response.data);
-        }
-      } catch (error) {
-        console.error("Error fetching lesson:", error);
-        setError("Failed to load lesson");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (params.id) {
-      fetchLesson();
-    }
-
-    // Initialize speech recognition
+  // Initialize speech recognition and audio player
+  useState(() => {
     if (typeof window !== "undefined") {
       const SpeechRecognitionConstructor =
         window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -126,7 +100,7 @@ export default function LessonDetail() {
           event: SpeechRecognitionErrorEvent
         ) => {
           console.error("Speech recognition error:", event.error);
-          setError("Failed to recognize speech");
+          setErrorMessage("Failed to recognize speech");
           setIsRecording(false);
         };
 
@@ -141,7 +115,7 @@ export default function LessonDetail() {
     audioRef.current.onplay = () => setIsPlaying(true);
     audioRef.current.onended = () => setIsPlaying(false);
     audioRef.current.onerror = () => {
-      setError("Failed to play audio response");
+      setErrorMessage("Failed to play audio response");
       setIsPlaying(false);
     };
 
@@ -154,20 +128,20 @@ export default function LessonDetail() {
         audioRef.current = null;
       }
     };
-  }, [params.id]);
+  });
 
   const handleStartRecording = () => {
-    setError(null);
+    setErrorMessage(null);
     if (recognitionRef.current) {
       try {
         recognitionRef.current.start();
         setIsRecording(true);
       } catch (error) {
         console.error("Failed to start recording:", error);
-        setError("Failed to start recording");
+        setErrorMessage("Failed to start recording");
       }
     } else {
-      setError("Speech recognition is not supported in your browser");
+      setErrorMessage("Speech recognition is not supported in your browser");
     }
   };
 
@@ -199,87 +173,180 @@ export default function LessonDetail() {
       }
     } catch (error) {
       console.error("Failed to send message:", error);
-      setError("Failed to get AI response");
+      setErrorMessage("Failed to get AI response");
     }
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto"></div>
+          <p className="text-lg font-medium text-gray-600 dark:text-gray-300">
+            Loading lesson...
+          </p>
+        </div>
       </div>
     );
   }
 
-  if (!lesson) {
+  if (error || !lesson) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-xl">Lesson not found</p>
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="text-center space-y-6 max-w-md">
+          <div className="relative">
+            <div className="w-24 h-24 mx-auto bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+              <BookOpen className="w-12 h-12 text-red-500 dark:text-red-400" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              Lesson Not Found
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              {error?.message ||
+                "The lesson you are looking for does not exist or has been removed."}
+            </p>
+          </div>
+          <div className="space-y-3">
+            <Button onClick={() => router.back()} className="w-full">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Go Back
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => router.push("/lessons")}
+              className="w-full"
+            >
+              Browse All Lessons
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="bg-light rounded-[24px] p-6 space-y-6 animate-float shadow-lg">
-        <div className="space-y-4">
-          <h1 className="text-3xl font-bold">{lesson.title}</h1>
-          <div className="flex items-center gap-4 text-sm">
-            <span className={getDifficultyColor(lesson.difficulty)}>
-              {lesson.difficulty.charAt(0).toUpperCase() +
-                lesson.difficulty.slice(1)}
-            </span>
-            <span>{formatTime(lesson.estimatedTime)}</span>
-          </div>
-          <p className="text-gray-600 dark:text-gray-300">
-            {lesson.description}
-          </p>
-          <div className="text-sm text-gray-500">
-            <p>Generated from: {lesson.userRequest}</p>
-            <p>Created: {new Date(lesson.createdAt).toLocaleDateString()}</p>
-          </div>
-        </div>
-
-        <div className="pt-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="mb-8">
           <Button
-            onClick={() => setIsInteracting(true)}
-            className="w-full"
-            disabled={isInteracting}
+            variant="secondary"
+            onClick={() => router.back()}
+            className="mb-4"
           >
-            Start Voice Interaction
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Lessons
           </Button>
-        </div>
 
-        {isInteracting && (
-          <div className="mt-6 p-4 border rounded-lg space-y-4">
-            <div className="text-center space-y-4">
-              <Button
-                onClick={
-                  isRecording ? handleStopRecording : handleStartRecording
-                }
-                className={`w-full ${
-                  isRecording ? "bg-red-500 hover:bg-red-600" : ""
-                }`}
-                disabled={isPlaying}
-              >
-                {isRecording ? "Stop Recording" : "Start Recording"}
-              </Button>
-              <p className="text-sm">
-                {isRecording
-                  ? "Listening..."
-                  : isPlaying
-                  ? "Playing response..."
-                  : "Click to start speaking"}
-              </p>
-              {transcript && (
-                <p className="text-sm text-gray-600">
-                  Last message: {transcript}
-                </p>
-              )}
-              {error && <p className="text-sm text-red-500">{error}</p>}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex-1">
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                  {lesson.title}
+                </h1>
+                <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-medium ${getDifficultyColor(
+                      lesson.difficulty
+                    )}`}
+                  >
+                    {lesson.difficulty.charAt(0).toUpperCase() +
+                      lesson.difficulty.slice(1)}
+                  </span>
+                  <div className="flex items-center">
+                    <Clock className="w-4 h-4 mr-1" />
+                    {formatTime(lesson.estimatedTime)}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <p className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed mb-6">
+              {lesson.description}
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 dark:text-gray-400">
+              <div className="flex items-center">
+                <User className="w-4 h-4 mr-2" />
+                <span>Generated from: {lesson.userRequest}</span>
+              </div>
+              <div className="flex items-center">
+                <Calendar className="w-4 h-4 mr-2" />
+                <span>
+                  Created: {new Date(lesson.createdAt).toLocaleDateString()}
+                </span>
+              </div>
             </div>
           </div>
-        )}
+        </div>
+
+        {/* Voice Interaction */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <div className="text-center space-y-6">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                Voice Interaction
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400">
+                Start a conversation with your lesson using voice commands
+              </p>
+            </div>
+
+            {!isInteracting ? (
+              <Button
+                onClick={() => setIsInteracting(true)}
+                className="w-full max-w-md"
+                size="lg"
+              >
+                Start Voice Interaction
+              </Button>
+            ) : (
+              <div className="space-y-4">
+                <Button
+                  onClick={
+                    isRecording ? handleStopRecording : handleStartRecording
+                  }
+                  className={`w-full max-w-md ${
+                    isRecording ? "bg-red-500 hover:bg-red-600" : ""
+                  }`}
+                  size="lg"
+                  disabled={isPlaying}
+                >
+                  {isRecording ? "Stop Recording" : "Start Recording"}
+                </Button>
+
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {isRecording
+                    ? "Listening..."
+                    : isPlaying
+                    ? "Playing response..."
+                    : "Click to start speaking"}
+                </p>
+
+                {transcript && (
+                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
+                      Last message:
+                    </p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {transcript}
+                    </p>
+                  </div>
+                )}
+
+                {errorMessage && (
+                  <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                    <p className="text-sm text-red-600 dark:text-red-400">
+                      {errorMessage}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
