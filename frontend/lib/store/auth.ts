@@ -34,6 +34,7 @@ type AuthState = {
   setUser: (user: User | null) => void;
   login: (token: string, user: User) => void;
   logout: () => void;
+  setLoading: (loading: boolean) => void;
 };
 
 // Cookie configuration
@@ -41,7 +42,7 @@ const COOKIE_NAME = "auth_token";
 const COOKIE_OPTIONS = {
   expires: 7, // 7 days
   secure: process.env.NODE_ENV === "production",
-  sameSite: "lax" as const, // Changed from 'strict' to 'lax' for better compatibility
+  sameSite: "lax" as const,
   path: "/",
 };
 
@@ -50,33 +51,37 @@ export const useAuthStore = create<AuthState>()(
     (set, get) => ({
       user: null,
       isAuthenticated: false,
-      isLoading: true,
+      isLoading: false, // Changed initial state to false
 
       getToken: () => Cookies.get(COOKIE_NAME) || null,
 
       setUser: (user) => set({ user }),
 
+      setLoading: (loading) => set({ isLoading: loading }),
+
       login: (token, user) => {
-        // Set token in HTTP-only cookie
         Cookies.set(COOKIE_NAME, token, COOKIE_OPTIONS);
-        // Update store with user data
         set({ user, isAuthenticated: true, isLoading: false });
       },
 
       logout: () => {
-        // Remove token cookie
         Cookies.remove(COOKIE_NAME, { path: "/" });
-        // Clear store
         set({ user: null, isAuthenticated: false, isLoading: false });
       },
     }),
     {
       name: "auth-storage",
-      // Only persist user data and authentication state
       partialize: (state) => ({
         user: state.user,
         isAuthenticated: state.isAuthenticated,
+        isLoading: false, // Always persist loading as false
       }),
+      onRehydrateStorage: () => (state) => {
+        // After rehydration, ensure loading is false
+        if (state) {
+          state.setLoading(false);
+        }
+      },
     }
   )
 );

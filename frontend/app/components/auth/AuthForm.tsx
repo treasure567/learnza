@@ -143,7 +143,7 @@ export default function AuthForm({ route }: AuthFormProps) {
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <h2 className="text-2xl font-bold tracking-tight text-text dark:text-text-light">
+        <h2 className="text-c2xl font-bold tracking-tight text-text dark:text-text-light">
           {route === "register" ? "Create an account" : "Welcome back"}
         </h2>
         <p className="text-text-muted">

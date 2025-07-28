@@ -47,7 +47,7 @@ export default function UserboardLayout({
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
-  const { user, isAuthenticated, isLoading } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
   const logout = useAuthStore((state) => state.logout);
 
   // Handle logout
@@ -57,15 +57,6 @@ export default function UserboardLayout({
     router.push("/signin");
     setShowLogoutModal(false);
   };
-
-  // Always render loading state if loading
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-light dark:bg-dark">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
-      </div>
-    );
-  }
 
   // Always render layout, let middleware handle redirect
   return (
