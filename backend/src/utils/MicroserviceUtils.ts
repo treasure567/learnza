@@ -2,7 +2,8 @@ import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { CustomError } from '@middleware/errorHandler';
 
 export enum MicroService {
-    AI = 'AI'
+    AI = 'AI',
+    INTERACT = 'INTERACT'
 }
 
 interface ServiceConfig {
@@ -28,6 +29,14 @@ export class MicroserviceUtils {
                 }
                 return {
                     baseURL: process.env.AI_SERVICE_URI,
+                    timeout: 100000
+                };
+            case MicroService.INTERACT:
+                if (!process.env.INTERACT_SERVICE_URI) {
+                    throw new Error('INTERACT_SERVICE_URI environment variable is not set');
+                }
+                return {
+                    baseURL: process.env.INTERACT_SERVICE_URI,
                     timeout: 100000
                 };
             default:
