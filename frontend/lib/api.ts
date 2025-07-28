@@ -207,5 +207,7 @@ export const miscApi = {
 
 export const lessonsApi = {
   getLessons: (page = 1, limit = 10) =>
-    apiFetch<PaginatedResponse<Lesson>>(`/lessons?page=${page}&limit=${limit}`),
+    apiFetch<PaginatedResponse<Lesson>>("/lessons", {
+      params: { page: page.toString(), limit: limit.toString() },
+    }),
 };
