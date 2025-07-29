@@ -27,6 +27,29 @@ export type UserPreferences = {
   };
 };
 
+export type Task = {
+  _id: string;
+  title: string;
+  description: string;
+  category: "LESSON" | "CONTENT" | "STREAK";
+  level: number;
+  order: number;
+  points: number;
+  prerequisites: string[];
+  requiredCount: number;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+};
+
+export type TaskProgress = {
+  task: Task;
+  progress: number;
+  remainingCount: number;
+  isCompleted: boolean;
+  earnedPoints: number;
+};
+
 // API Response types
 export type ApiResponse<T = any> = {
   status: boolean;
@@ -219,7 +242,6 @@ export const userApi = {
     }),
 };
 
-// Misc API
 export const miscApi = {
   getLanguages: () => apiFetch<{ languages: Language[] }>("/misc/languages"),
 
@@ -234,4 +256,12 @@ export const lessonsApi = {
     apiFetch<PaginatedResponse<Lesson>>("/lessons", {
       params: { page: page.toString(), limit: limit.toString() },
     }),
+};
+
+// Tasks API
+export const tasksApi = {
+  getAvailableTasks: () => 
+    apiFetch<TaskProgress[]>("/game/tasks/available"),
+  getCompletedTasks: () =>
+    apiFetch<TaskProgress[]>("/game/tasks/completed"),
 };
