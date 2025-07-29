@@ -10,9 +10,9 @@ import "@openzeppelin/contracts/utils/math/Math.sol";
 contract Learnza is ERC20, ERC20Burnable, Ownable {
     using Strings for uint256;
 
-    uint256 private constant TOTAL_SUPPLY = 1_000_000_000 * 10 ** 18;
-    uint256 private constant CLAIM_AMOUNT = 100 * 10 ** 18;
-    uint256 private constant CLAIM_COOLDOWN = 1 hours;
+    uint256 private constant TOTAL_SUPPLY = 100_000_000_000 * 10 ** 18;
+    uint256 private constant CLAIM_AMOUNT = 1000 * 10 ** 18;
+    uint256 private constant CLAIM_COOLDOWN = 3 hours;
 
     struct ClaimHistory {
         address userAddress;
