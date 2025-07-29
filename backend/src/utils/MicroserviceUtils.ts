@@ -4,7 +4,7 @@ import { CustomError } from '@middleware/errorHandler';
 export enum MicroService {
     AI = 'AI',
     INTERACT = 'INTERACT',
-    GAME = 'GAME'
+    BLOCKCHAIN = 'BLOCKCHAIN'
 }
 
 interface ServiceConfig {
@@ -39,14 +39,14 @@ export class MicroserviceUtils {
                 return {
                     baseURL: process.env.INTERACT_SERVICE_URI,
                     timeout: 100000
-                };  
-            case MicroService.GAME:
-                if (!process.env.GAME_SERVICE_URI) {
-                    throw new Error('GAME_SERVICE_URI environment variable is not set');
+                };
+            case MicroService.BLOCKCHAIN:
+                if (!process.env.BLOCKCHAIN_SERVICE_URI) {
+                    throw new Error('BLOCKCHAIN_SERVICE_URI environment variable is not set');
                 }
                 return {
-                    baseURL: process.env.GAME_SERVICE_URI + '/api/game',
-                    timeout: 100000
+                    baseURL: process.env.BLOCKCHAIN_SERVICE_URI,
+                    timeout: 30000
                 };
             default:
                 throw new Error(`Unknown microservice: ${service}`);
