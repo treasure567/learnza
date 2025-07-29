@@ -3,6 +3,8 @@ import { AuthService } from '@services/AuthService';
 import { UserResponse, VerifyEmailRequest, ForgotPasswordRequest, ResetPasswordRequest } from '@/types/user';
 import { ResponseUtils } from '@utils/ResponseUtils';
 import { AuthRequest } from '@middleware/authMiddleware';
+import GameUtil from '@utils/GameUtil';
+import { Types } from 'mongoose';
 
 export class AuthController {
     static async register(req: Request, res: Response): Promise<void> {
@@ -10,6 +12,7 @@ export class AuthController {
             const { email, name, password } = req.body;
             const result: UserResponse = await AuthService.register(email, name, password);
             ResponseUtils.created(res, result, 'User registered successfully. Please check your email for verification code.');
+            GameUtil.updateLoginStreak(result.user._id as Types.ObjectId);
         } catch (error) {
             ResponseUtils.error(res, (error as Error).message);
         }
@@ -18,8 +21,10 @@ export class AuthController {
     static async login(req: Request, res: Response): Promise<void> {
         try {
             const { email, password } = req.body;
+            console.log('Login started');
             const result: UserResponse = await AuthService.login(email, password);
             ResponseUtils.success(res, result, 'Login successful');
+            // GameUtil.updateLoginStreak(result.user._id as Types.ObjectId);
         } catch (error) {
             ResponseUtils.unauthorized(res, (error as Error).message);
         }
