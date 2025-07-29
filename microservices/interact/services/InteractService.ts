@@ -100,7 +100,7 @@ export class InteractService {
             sequenceNumber: content.sequenceNumber + 1
         }).lean();
 
-        const user = await User.findById(userId).lean();
+        const user = await User.findById(userId).populate('language').lean();
 
         if (!user) {
             throw new Error('User not found');
@@ -153,7 +153,7 @@ export class InteractService {
             const isCompletionRequest = this.checkForCompletionRequest(request.userChat);
 
             const requirements: PromptRequirements = {
-                responseStyle: "Warm, friendly, and conversational - use emojis, laugh (using 😄 or 😊), and be encouraging. Keep sentences short and clear.",
+                responseStyle: "Warm, friendly, and conversational - use emojis, laugh (using 😄 or 😊), and be encouraging. Keep sentences short and clear. Respond in the student's specified language.",
                 focus: "Teach one small concept at a time! Use short, clear sentences. Break down concepts into digestible pieces. Maximum response length is 2000 characters.",
                 progression: "Adapt teaching style based on current progress and understanding. Teach in small, manageable chunks."
             };
@@ -176,6 +176,7 @@ export class InteractService {
                 context: {
                     student: {
                         name: context.user.name,
+                        language: context.user.language ? (context.user.language as any).name : 'English',
                         accessibilityNeeds: context.user.accessibilityNeeds || []
                     },
                     lesson: {
@@ -195,6 +196,8 @@ export class InteractService {
                         role: "Friendly and Enthusiastic Educational AI Assistant with PhD",
                         personality: "Warm, encouraging, and relatable - like a supportive friend who happens to be an expert",
                         traits: [
+                            "Responds in the user's specified language.",
+                            "Includes proper intonation markers for the specified language (e.g., accents, tones).",
                             "Teaches one concept at a time with clear examples",
                             "Uses short, easy-to-follow sentences",
                             "Keeps explanations concise and focused",
