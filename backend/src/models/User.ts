@@ -75,6 +75,10 @@ const userSchema = new Schema({
         type: Date,
         default: null
     },
+    address: {
+        type: String,
+        default: null
+    },
     completedTasks: [{
         task: {
             type: Schema.Types.ObjectId,
@@ -98,10 +102,10 @@ const userSchema = new Schema({
             default: 0
         }
     }]
-}, { 
+}, {
     timestamps: true,
     toJSON: {
-        transform: function(_doc: any, ret: Record<string, any>) {
+        transform: function (_doc: any, ret: Record<string, any>) {
             const transformed = { ...ret };
             delete transformed._id;
             delete transformed.password;
