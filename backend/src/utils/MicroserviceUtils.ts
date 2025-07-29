@@ -3,7 +3,8 @@ import { CustomError } from '@middleware/errorHandler';
 
 export enum MicroService {
     AI = 'AI',
-    INTERACT = 'INTERACT'
+    INTERACT = 'INTERACT',
+    GAME = 'GAME'
 }
 
 interface ServiceConfig {
@@ -37,6 +38,14 @@ export class MicroserviceUtils {
                 }
                 return {
                     baseURL: process.env.INTERACT_SERVICE_URI,
+                    timeout: 100000
+                };  
+            case MicroService.GAME:
+                if (!process.env.GAME_SERVICE_URI) {
+                    throw new Error('GAME_SERVICE_URI environment variable is not set');
+                }
+                return {
+                    baseURL: process.env.GAME_SERVICE_URI + '/api/game',
                     timeout: 100000
                 };
             default:

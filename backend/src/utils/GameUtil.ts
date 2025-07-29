@@ -121,11 +121,11 @@ export class GameUtil {
             }
 
             await user.save();
-            await this.updateLevel(userId);
+            // await this.updateLevel(userId);
             return { taskCompleted: true, newPoints: user.totalPoints };
         }
 
-        await this.updateLevel(userId);
+        // await this.updateLevel(userId);
         return { taskCompleted: false, newPoints: user.totalPoints };
     }
 
