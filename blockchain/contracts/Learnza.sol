@@ -20,7 +20,15 @@ contract Learnza is ERC20, ERC20Burnable, Ownable {
         uint256 lastClaimed;
     }
 
+    struct LessonCompletion {
+        string lessonTitle;
+        string lessonDescription;
+        uint256 completedAt;
+        bool completed;
+    }
+
     mapping(address => ClaimHistory) private claimHistories;
+    mapping(address => LessonCompletion[]) private userLessonCompletions;
 
     uint256 private totalLearnzaClaimed;
     uint256 private totalWalletsClaimed;
@@ -32,6 +40,14 @@ contract Learnza is ERC20, ERC20Burnable, Ownable {
     constructor() ERC20("Learnza Token", "LEARNZA") Ownable(msg.sender) {
         _mint(msg.sender, TOTAL_SUPPLY);
         totalLearnzaMinted += TOTAL_SUPPLY;
+    }
+
+    function depositTokensForClaims(uint256 _amount) external onlyOwner {
+        _transfer(msg.sender, address(this), _amount);
+    }
+
+    function getTokenBalance() public view onlyOwner returns (uint256) {
+        return balanceOf(address(this));
     }
 
     function claimTokens() public {
@@ -71,6 +87,23 @@ contract Learnza is ERC20, ERC20Burnable, Ownable {
         userClaim.lastClaimed = block.timestamp;
 
         emit TokenClaimed(msg.sender, CLAIM_AMOUNT);
+    }
+
+    function getEDUBalance() public view onlyOwner returns (uint256) {
+        return address(this).balance;
+    }
+
+     function withdrawEDU(uint256 _amount) public onlyOwner {
+        require(address(this).balance >= _amount, "Not enough EDU in contract");
+        (bool sent, ) = msg.sender.call{value: _amount}("");
+        require(sent, "Failed to send EDU");
+    }
+    
+    function withdrawAllEDU() public onlyOwner {
+        uint256 balance = address(this).balance;
+        require(balance > 0, "No EDU in contract");
+        (bool sent, ) = msg.sender.call{value: balance}("");
+        require(sent, "Failed to send EDU");
     }
 
     function getClaimHistory(
@@ -117,5 +150,23 @@ contract Learnza is ERC20, ERC20Burnable, Ownable {
         uint256 _amount
     ) public onlyOwner {
         _burn(_user, _amount);
+    }
+
+    function addLessonCompletion(
+        address _user,
+        string memory _lessonTitle,
+        string memory _lessonDescription
+    ) public onlyOwner {
+        LessonCompletion memory newCompletion = LessonCompletion({
+            lessonTitle: _lessonTitle,
+            lessonDescription: _lessonDescription,
+            completedAt: block.timestamp,
+            completed: true
+        });
+        userLessonCompletions[_user].push(newCompletion);
+    }
+
+    function getUserCompletedLessons(address _user) public view returns (LessonCompletion[] memory) {
+        return userLessonCompletions[_user];
     }
 }
