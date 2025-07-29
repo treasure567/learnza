@@ -57,7 +57,7 @@ const isValidEthereumAddress = (address: string): boolean => {
     return /^0x[a-fA-F0-9]{40}$/.test(address);
 };
 
-app.post('/api/lessons/complete', authenticateToken, async (req: Request, res: Response) => {
+app.post('/lessons/complete', authenticateToken, async (req: Request, res: Response) => {
     try {
         const { userAddress, lessonTitle, lessonDescription } = req.body;
 
@@ -106,7 +106,7 @@ app.post('/api/lessons/complete', authenticateToken, async (req: Request, res: R
     }
 });
 
-app.get('/api/lessons/:address', authenticateToken, async (req: Request, res: Response) => {
+app.get('/lessons/:address', authenticateToken, async (req: Request, res: Response) => {
     try {
         const { address } = req.params;
 
@@ -144,7 +144,7 @@ app.get('/api/lessons/:address', authenticateToken, async (req: Request, res: Re
     }
 });
 
-app.get('/api/balance/:address', authenticateToken, async (req: Request, res: Response) => {
+app.get('/balance/:address', authenticateToken, async (req: Request, res: Response) => {
     try {
         const { address } = req.params;
 
@@ -182,7 +182,7 @@ app.get('/api/balance/:address', authenticateToken, async (req: Request, res: Re
     }
 });
 
-app.post('/api/deduct-points', authenticateToken, async (req: Request, res: Response) => {
+app.post('/deduct-token', authenticateToken, async (req: Request, res: Response) => {
     try {
         const { userAddress, amount } = req.body;
 
@@ -212,24 +212,23 @@ app.post('/api/deduct-points', authenticateToken, async (req: Request, res: Resp
         return sendResponse(res, {
             code: 200,
             status: true,
-            message: 'Points deducted successfully',
+            message: 'Tokens deducted successfully',
             data: {
                 userAddress,
                 amountDeducted: amount
             }
         });
     } catch (error: any) {
-        console.error('Error deducting points:', error.message);
+        console.error('Error deducting tokens:', error.message);
         return sendResponse(res, {
             code: 500,
             status: false,
-            message: 'Failed to deduct points',
+            message: 'Failed to deduct tokens',
             data: { error: error.message }
         });
     }
 });
 
-// Health check endpoint
 app.get('/health', (req: Request, res: Response) => {
     return sendResponse(res, {
         code: 200,
