@@ -37,8 +37,8 @@ export function useUpdateAccessibility() {
     mutationFn: userApi.updateAccessibility,
     onSuccess: (data) => {
       // Update accessibility settings in store
-      if (data.data?.settings) {
-        setAccessibility(data.data.settings);
+      if (data.data?.accessibilityNeeds) {
+        setAccessibility(data.data.accessibilityNeeds);
       }
 
       // Show success message
@@ -58,7 +58,7 @@ export function useUpdateLanguage() {
     onSuccess: (data) => {
       // Update language in store
       if (data.data?.language) {
-        setLanguage(data.data.language);
+        setLanguage(data.data.language.code);
       }
 
       // Show success message

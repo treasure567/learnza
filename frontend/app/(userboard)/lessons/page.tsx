@@ -5,6 +5,7 @@ import { lessonsApi } from "@/lib/api";
 import { motion } from "framer-motion";
 import { Button } from "@/app/components/ui";
 import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import {
   Clock,
   BookOpen,
@@ -14,6 +15,7 @@ import {
   BookOpenCheck,
 } from "lucide-react";
 import type { ApiResponse } from "@/lib/api";
+import GenerateLessonModal from "@/app/components/lesson/GenerateLessonModal";
 
 // Types
 type Lesson = {
@@ -52,11 +54,15 @@ type PaginatedResponse<T> = {
 };
 
 export default function LessonsPage() {
+  const router = useRouter();
   const [currentPage, setCurrentPage] = useState(1);
+  const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
+
   const {
     data: response,
     isLoading,
     error,
+    refetch,
   } = useQuery<ApiResponse<PaginatedResponse<Lesson>>>({
     queryKey: ["lessons", currentPage],
     queryFn: () => lessonsApi.getLessons(currentPage),
@@ -143,10 +149,11 @@ export default function LessonsPage() {
     );
   }
 
-  const formatTime = (minutes: number) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return `${hours}h ${mins}m`;
+  const formatTime = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hours}h ${minutes}m ${secs}s`;
   };
 
   const getDifficultyColor = (difficulty: string) => {
@@ -162,6 +169,15 @@ export default function LessonsPage() {
     }
   };
 
+  const handleLessonClick = (lessonId: string) => {
+    router.push(`/lessons/${lessonId}`);
+  };
+
+  const handleGenerateSuccess = () => {
+    // Refetch lessons to show the newly generated lesson
+    refetch();
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -169,7 +185,13 @@ export default function LessonsPage() {
         <h1 className="text-2xl font-bold text-text dark:text-text-light">
           Lessons
         </h1>
-        <Button>Start New Lesson</Button>
+        <Button
+          onClick={() => setIsGenerateModalOpen(true)}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Generate New Lesson
+        </Button>
       </div>
 
       {/* Lessons Grid */}
@@ -179,11 +201,12 @@ export default function LessonsPage() {
             key={lesson._id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-xl p-6 space-y-4 hover:border-primary/50 dark:hover:border-primary-dark/50 transition-colors"
+            className="bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-xl p-6 space-y-4 hover:border-primary/50 dark:hover:border-primary-dark/50 transition-colors cursor-pointer hover:shadow-lg"
+            onClick={() => handleLessonClick(lesson._id)}
           >
             <div className="flex items-start justify-between">
               <h2 className="text-lg font-semibold text-text dark:text-text-light line-clamp-2">
-                {lesson.title}
+                {lesson.title.slice(0, 40)}...
               </h2>
               <span
                 className={`px-3 py-1 rounded-full text-xs font-medium ${getDifficultyColor(
@@ -261,6 +284,13 @@ export default function LessonsPage() {
           </div>
         </div>
       )}
+
+      {/* Generate Lesson Modal */}
+      <GenerateLessonModal
+        isOpen={isGenerateModalOpen}
+        onClose={() => setIsGenerateModalOpen(false)}
+        onSuccess={handleGenerateSuccess}
+      />
     </div>
   );
 }
