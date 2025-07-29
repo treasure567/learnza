@@ -58,6 +58,7 @@ export class AuthService {
         }
 
         const token = JwtUtils.generateToken({ userId: user._id as string });
+        GameUtil.updateTaskProgress(user._id as Types.ObjectId, 'STREAK');
         return { user: await UserUtils.populateUser(user), token };
     }
 
