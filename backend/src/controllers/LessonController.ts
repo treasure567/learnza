@@ -2,8 +2,15 @@ import { Response } from 'express';
 import { AuthRequest } from '@middleware/authMiddleware';
 import { ResponseUtils } from '@utils/ResponseUtils';
 import { LessonService } from '@services/LessonService';
-import fs from 'fs';
-import path from 'path';
+import OpenAI from 'openai';
+import { Readable } from 'stream';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY
+});
 
 export class LessonController {
     static async getLessons(req: AuthRequest, res: Response): Promise<void> {
@@ -52,22 +59,49 @@ export class LessonController {
     static async interact(req: AuthRequest, res: Response): Promise<void> {
         try {
             const { message, lessonId } = req.body;
-            const fileName = await LessonService.interact(req.user._id, message, lessonId);
-            const filePath = path.join(__dirname, '..', '..', 'audio', fileName);
+            console.log(message, lessonId);
 
-            res.setHeader('Content-Type', 'audio/mpeg');
-            res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+            const aiResponse = await LessonService.interact(req.user._id, message, lessonId);
 
-            const stream = fs.createReadStream(filePath);
-            stream.pipe(res);
-            
-            stream.on('end', () => {
-                fs.unlink(filePath, (err) => {
-                    if (err) console.error('Error deleting file:', err);
+            try {
+                const response = await openai.audio.speech.create({
+                    model: "tts-1",
+                    voice: "alloy",
+                    input: aiResponse,
                 });
-            });
+                console.log("ddd");
+
+                if (!response.body) {
+                    throw new Error('No audio stream received from OpenAI');
+                }
+
+                res.writeHead(200, {
+                    "Content-Type": "audio/mpeg",
+                    "Transfer-Encoding": "chunked",
+                });
+
+                const audioStream = Readable.from(response.body);
+
+                audioStream.pipe(res);
+
+                audioStream.on('error', (error: Error) => {
+                    console.error('Error streaming audio:', error);
+                    if (!res.headersSent) {
+                        ResponseUtils.error(res, 'Error streaming audio response');
+                    }
+                });
+
+            } catch (error) {
+                console.error('Error in text-to-speech conversion:', error);
+                if (!res.headersSent) {
+                    ResponseUtils.error(res, 'Failed to convert response to speech');
+                }
+            }
         } catch (error) {
-            ResponseUtils.error(res, (error as Error).message);
+            console.error('Error in lesson interaction:', error);
+            if (!res.headersSent) {
+                ResponseUtils.error(res, (error as Error).message);
+            }
         }
     }
 }
