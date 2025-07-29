@@ -154,8 +154,9 @@ export class LessonService {
                 content: response.data.aiResponse
             });
             GameUtil.updateTaskProgress(new Types.ObjectId(userId), 'CONTENT');
-            const fileName = await OpenAIUtils.generateAudio(response.data.aiResponse);
-            return fileName;
+            return response.data.aiResponse;
+            // const fileName = await OpenAIUtils.generateAudio(response.data.aiResponse);
+            // return fileName;
         } catch (error) {
             console.error('Interaction error:', error);
             throw new CustomError('Failed to process interaction', 500);
