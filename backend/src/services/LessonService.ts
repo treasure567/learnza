@@ -8,6 +8,7 @@ import { PaginationUtils, PaginationOptions, PaginatedResponse } from '@/utils/P
 import { MicroserviceUtils, MicroService } from '@/utils/MicroserviceUtils';
 import { OpenAIUtils } from '@/utils/OpenAIUtils';
 import User from '@models/User';
+import { GameUtil } from '@/utils/GameUtil';
 
 interface GenerateLessonResponse {
     success: boolean;
@@ -20,7 +21,7 @@ interface InteractResponse {
     aiResponse: string;
     userId: string;
     contentId: string;
-    userQuestion: string;
+    userQuestion: string; 
 }
 
 export class LessonService {
@@ -34,6 +35,7 @@ export class LessonService {
                     userId
                 }
             );
+            GameUtil.updateTaskProgress(new Types.ObjectId(userId), 'LESSON');
             return true;
         } catch (error) {
             throw new CustomError('Failed to generate lesson', 500);
@@ -151,7 +153,7 @@ export class LessonService {
                 agent: ChatAgent.AI,
                 content: response.data.aiResponse
             });
-
+            GameUtil.updateTaskProgress(new Types.ObjectId(userId), 'CONTENT');
             const fileName = await OpenAIUtils.generateAudio(response.data.aiResponse);
             return fileName;
         } catch (error) {
