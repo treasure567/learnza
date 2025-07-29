@@ -43,7 +43,7 @@ export const useLesson = (lessonId: string) => {
 export const useLessonInteraction = () => {
   return useMutation({
     mutationFn: async ({ message, lessonId }: InteractionRequest) => {
-      const response = await apiFetch<InteractionResponse>(
+      const response = await apiFetch<any>(
         "/lessons/interact",
         {
           method: "POST",
@@ -53,11 +53,11 @@ export const useLessonInteraction = () => {
       return response;
     },
     onSuccess: (data) => {
-      if (data.status) {
-        toast.success("Message sent successfully");
-      } else {
-        toast.error(data.message || "Failed to send message");
-      }
+      // if (data.status) {
+      //   toast.success("Message sent successfully");
+      // } else {
+      //   toast.error(data.message || "Failed to send message");
+      // }
     },
     onError: (error: any) => {
       const errorMessage =
