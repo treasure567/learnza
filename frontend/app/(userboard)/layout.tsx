@@ -9,6 +9,7 @@ import {
   Bell,
   Search,
   BookOpen,
+  Book,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -34,6 +35,11 @@ const sidebarLinks = [
     name: "Profile",
     href: "/profile",
     icon: User,
+  },
+  {
+    name: "Tasks",
+    href: "/tasks",
+    icon: Book,
   },
 ];
 
