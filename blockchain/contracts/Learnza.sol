@@ -141,8 +141,8 @@ contract Learnza is ERC20, ERC20Burnable, Ownable {
         }
     }
 
-    function checkBalance() public view returns (uint256) {
-        return balanceOf(msg.sender);
+    function checkBalance(address _user) public view returns (uint256) {
+        return balanceOf(_user);
     }
 
     function deductFromUserBalance(
