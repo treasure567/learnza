@@ -125,6 +125,7 @@ export class GameUtil {
             return { taskCompleted: true, newPoints: user.totalPoints };
         }
 
+        await this.updateLevel(userId);
         return { taskCompleted: false, newPoints: user.totalPoints };
     }
 
