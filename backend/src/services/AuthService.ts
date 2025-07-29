@@ -33,7 +33,10 @@ export class AuthService {
             name,
             password: hashedPassword,
             verificationCode: hashedVerificationCode,
-            lastSentOtp: new Date()
+            level: 1,
+            totalPoints: 0,
+            loginStreak: 1,
+            lastLogin: new Date()
         });
 
         console.log(`Verification code ${verificationCode} would be sent to ${email}`);
