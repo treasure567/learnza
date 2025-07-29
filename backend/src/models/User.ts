@@ -88,6 +88,14 @@ const userSchema = new Schema({
         completedAt: {
             type: Date,
             default: Date.now
+        },
+        requiredCount: {
+            type: Number,
+            default: 0
+        },
+        points: {
+            type: Number,
+            default: 0
         }
     }]
 }, { 
