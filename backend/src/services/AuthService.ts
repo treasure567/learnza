@@ -6,6 +6,8 @@ import { IUser, UserResponse } from '@/types/user';
 import { CustomError } from '@middleware/errorHandler';
 import crypto from 'crypto';
 import { UserUtils } from '@/utils/UserUtils';
+import { GameUtil } from '@/utils/GameUtil';
+import { Types } from 'mongoose';
 
 export class AuthService {
     private static generateVerificationCode(): string {
@@ -37,6 +39,7 @@ export class AuthService {
         console.log(`Verification code ${verificationCode} would be sent to ${email}`);
 
         const token = JwtUtils.generateToken({ userId: user._id as string });
+        GameUtil.updateTaskProgress(user._id as Types.ObjectId, 'STREAK');
         return { user: await UserUtils.populateUser(user), token };
     }
 
@@ -52,6 +55,7 @@ export class AuthService {
         }
 
         const token = JwtUtils.generateToken({ userId: user._id as string });
+        GameUtil.updateTaskProgress(user._id as Types.ObjectId, 'STREAK');
         return { user: await UserUtils.populateUser(user), token };
     }
 
