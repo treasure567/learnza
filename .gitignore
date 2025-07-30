@@ -142,5 +142,3 @@ vite.config.ts.timestamp-*
 serviceAccountKey.json
 
 .cursor/
-animation/
-mediic/
