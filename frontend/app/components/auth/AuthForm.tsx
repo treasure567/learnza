@@ -1,14 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Button, Input } from "@/app/components/ui";
+import { z } from "zod";
+import Link from "next/link";
 import { toast } from "sonner";
-import { useMutation } from "@tanstack/react-query";
+import { useState } from "react";
 import { authApi } from "@/lib/api";
+import { Button, Input } from "@/app/components/ui";
+import { useMutation } from "@tanstack/react-query";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { ApiResponse, UserPreferences } from "@/lib/api";
 import { useOnlineStatus } from "@/lib/hooks/useOnlineStatus";
-import { z } from "zod";
 
 type LoginCredentials = {
   email: string;
@@ -150,22 +151,22 @@ export default function AuthForm({ route }: AuthFormProps) {
           {route === "register" ? (
             <>
               Already have an account?{" "}
-              <a
+              <Link
                 href="/signin"
                 className="text-primary dark:text-primary-dark hover:underline"
               >
                 Sign in
-              </a>
+              </Link>
             </>
           ) : (
             <>
               Don't have an account?{" "}
-              <a
+              <Link
                 href="/signup"
                 className="text-primary dark:text-primary-dark hover:underline"
               >
                 Sign up
-              </a>
+              </Link>
             </>
           )}
         </p>
@@ -208,12 +209,12 @@ export default function AuthForm({ route }: AuthFormProps) {
         </div>
         {route === "login" && (
           <div className="flex justify-end">
-            <a
+            <Link
               href="/reset"
               className="text-sm text-primary dark:text-primary-dark hover:underline"
             >
               Forgot password?
-            </a>
+            </Link>
           </div>
         )}
         <Button
