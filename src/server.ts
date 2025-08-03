@@ -28,6 +28,10 @@ app.use("/api/misc", miscRoutes);
 app.use("/api/game", gameRoutes);
 app.use("/api/lessons", lessonRoutes);
 
+app.get("/health", (req, res) => {
+  res.send("OK");
+});
+
 app.use(notFoundHandler);
 app.use(errorHandler);
 
