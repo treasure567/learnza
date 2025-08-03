@@ -27,5 +27,6 @@ jobs:
           git pull origin backend
           npm install
           npm run build
+          /home/learnza-api/.nvm/versions/node/v22.18.0/bin/pm2 restart learnza-backend
         " > temp_dev.sh
         sshpass -p "${{ secrets.BACKEND_VPS_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.BACKEND_VPS_USER }}@${{ secrets.VPS_HOST }} 'bash -s' < temp_dev.sh
