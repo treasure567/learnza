@@ -1,0 +1,32 @@
+name: Auto Deploy to ms_ai
+
+on:
+  push:
+    branches:
+      - ms_ai
+
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Install sshpass
+      run: sudo apt-get install -y sshpass
+
+    - name: Run deploy script
+      run: |
+        echo "
+          export NVM_DIR=\$HOME/.nvm
+          source \$NVM_DIR/nvm.sh
+          nvm use 22
+          cd htdocs/ai.learnza.net.ng
+          git pull origin ms_ai
+          npm install
+          npm run build
+          /home/learnza-api/.nvm/versions/node/v22.18.0/bin/pm2 restart ms_ai
+        " > temp_dev.sh
+        sshpass -p "${{ secrets.AI_VPS_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.AI_VPS_USER }}@${{ secrets.VPS_HOST }} 'bash -s' < temp_dev.sh
