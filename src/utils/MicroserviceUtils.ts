@@ -4,7 +4,8 @@ import { CustomError } from '@middleware/errorHandler';
 export enum MicroService {
     AI = 'AI',
     INTERACT = 'INTERACT',
-    BLOCKCHAIN = 'BLOCKCHAIN'
+    BLOCKCHAIN = 'BLOCKCHAIN',
+    NOTIFICATION = 'NOTIFICATION'
 }
 
 interface ServiceConfig {
@@ -21,6 +22,21 @@ interface MicroServiceResponse<T> {
 export class MicroserviceUtils {
     private static instances: Map<MicroService, AxiosInstance> = new Map();
     private static readonly DEFAULT_TIMEOUT = 30000; 
+
+    private static getServiceSecret(service: MicroService): string|undefined {
+        switch (service) {
+            case MicroService.AI:
+                return process.env.AI_SERVICE_SECRET;
+            case MicroService.INTERACT:
+                return process.env.INTERACT_SERVICE_SECRET;
+            case MicroService.BLOCKCHAIN:
+                return process.env.BLOCKCHAIN_SERVICE_SECRET;
+            case MicroService.NOTIFICATION:
+                return process.env.NOTIFICATION_SERVICE_SECRET;
+            default:
+                return undefined;
+        }
+    }
 
     private static getServiceConfig(service: MicroService): ServiceConfig {
         switch (service) {
@@ -65,10 +81,11 @@ export class MicroserviceUtils {
             });
 
             instance.interceptors.request.use((config) => {
-                if (!process.env.MICROSERVICE_SECRET) {
-                    throw new Error('MICROSERVICE_SECRET environment variable is not set');
+                const serviceSecret = this.getServiceSecret(service);
+                if (!serviceSecret) {
+                    throw new Error(`MICROSERVICE_SECRET for ${service} is not set`);
                 }
-                config.headers.Authorization = `Bearer ${process.env.MICROSERVICE_SECRET}`;
+                config.headers.Authorization = `Bearer ${serviceSecret}`;
                 return config;
             });
 
