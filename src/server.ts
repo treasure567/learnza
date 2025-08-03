@@ -3,6 +3,7 @@ import express, { Application } from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import authRoutes from "@/routes/authRoutes";
+
 import userRoutes from "@/routes/userRoutes";
 import miscRoutes from "@/routes/miscRoutes";
 import lessonRoutes from "@/routes/lessonRoutes";
