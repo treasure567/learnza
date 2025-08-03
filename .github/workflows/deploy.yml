@@ -1,0 +1,31 @@
+name: Auto Deploy to ms_notification
+
+on:
+  push:
+    branches:
+      - ms_notification
+
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Install sshpass
+      run: sudo apt-get install -y sshpass
+
+    - name: Run deploy script
+      run: |
+        echo "
+          export NVM_DIR=\$HOME/.nvm
+          source \$NVM_DIR/nvm.sh
+          nvm use 22
+          cd htdocs/notification.learnza.net.ng
+          git pull origin ms_notification
+          npm install
+          /home/learnza-notification/.nvm/versions/node/v22.18.0/bin/pm2 restart learnza-notification
+        " > temp_dev.sh
+        sshpass -p "${{ secrets.NOTIFICATION_VPS_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.NOTIFICATION_VPS_USER }}@${{ secrets.VPS_HOST }} 'bash -s' < temp_dev.sh
