@@ -5,7 +5,7 @@
   "scripts": {
     "start": "node -r tsconfig-paths/register dist/server.js",
     "dev": "ts-node-dev -r tsconfig-paths/register --respawn --transpile-only src/server.ts",
-    "build": "tsc",
+    "build": "tsc && tsc-alias",
     "clean": "rm -rf dist",
     "prebuild": "npm run clean",
     "seed": "ts-node -r tsconfig-paths/register src/seeders/index.ts all",
