@@ -1,5 +1,7 @@
 
 import { Request, Response, NextFunction } from 'express';
+import dotenv from 'dotenv';
+dotenv.config();
 
 export interface AuthRequest extends Request {
     user?: any;
@@ -19,7 +21,7 @@ export const authMiddleware = async (req: AuthRequest, res: Response, next: Next
         const token = authHeader.split(' ')[1];
         
         // Check if token matches the environment variable
-        const expectedToken = process.env.MICROSERVICE_SECRET;
+        const expectedToken = process.env.SMS_SECRET;
         if (!expectedToken) {
             res.status(500).json({
                 success: false,
