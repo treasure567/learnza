@@ -4,23 +4,17 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
-import notificationRoutes from './routes/notificationRoutes';
-import { FirebaseService } from './services/FirebaseService';
-import { EmailService } from './services/EmailService';
+import smsRoutes from './routes/smsRoutes';
 
 dotenv.config();
 
-// Initialize services
-FirebaseService.initialize();
-EmailService.initialize();
-
 const app = express();
-const port = process.env.NOTIFICATION_SERVICE_PORT || 4002;
+const port = process.env.SMS_SERVICE_PORT || 4002;
 
 app.use(cors());
 app.use(bodyParser.json());
 
-app.use('/api/notifications', notificationRoutes);
+app.use('/api/sms', smsRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -36,18 +30,23 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
     });
 });
 
-// Connect to MongoDB
+// Connect to MongoDB (if needed for future features)
 const mongoUri = process.env.MONGODB_URI;
-mongoose.connect(mongoUri as string)
-    .then(() => {
-        console.log('Notifications Service connected to MongoDB');
-        
-        // Start server
-        app.listen(port, () => {
-            console.log(`Notifications microservice running on port ${port}`);
+if (mongoUri) {
+    mongoose.connect(mongoUri as string)
+        .then(() => {
+            console.log('SMS Service connected to MongoDB');
+        })
+        .catch((error) => {
+            console.error('SMS Service MongoDB connection error:', error);
         });
-    })
-    .catch((error) => {
-        console.error('Notifications Service MongoDB connection error:', error);
-        process.exit(1);
-    }); 
+}
+
+// Start server
+app.listen(port, () => {
+    console.log(`SMS microservice running on port ${port}`);
+    console.log(`SMS endpoints available at:`);
+    console.log(`  POST /api/sms/sms - Send SMS (single or multiple)`);
+    console.log(`  POST /api/sms/sms/bulk - Send bulk SMS (optimized)`);
+    console.log(`  GET  /api/sms/sms/health - SMS service health check`);
+}); 
