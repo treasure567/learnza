@@ -22,7 +22,7 @@ export default function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="inline-flex items-center gap-3 bg-whiterounded-full px-4 py-2 mb-8"
+            className="inline-flex items-center gap-3 bg-white rounded-full border border-gray-200 px-4 py-2 mb-8"
           >
             <div className="flex -space-x-2">
               <img

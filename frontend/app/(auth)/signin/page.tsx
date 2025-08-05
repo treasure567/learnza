@@ -21,12 +21,12 @@ export default function SignIn() {
             priority
           />
           {/* Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-r from-green-900/90 to-green-800/80 rounded-tr-[60px] rounded-br-[60px]" />
+          <div className="absolute inset-0 bg-gradient-to-r from-green-900/50 to-green-800/50 rounded-tr-[60px] rounded-br-[60px]" />
           
           {/* Logo Overlay */}
           <div className="absolute bottom-8 left-8 z-10">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-white/10 backdrop-blur-sm rounded-lg flex items-center justify-center">
+              <div className="w-12 h-12 bg-white backdrop-blur-sm rounded-lg flex items-center justify-center">
                 <Image
                   src="/images/logo.png"
                   alt="Learnza Logo"

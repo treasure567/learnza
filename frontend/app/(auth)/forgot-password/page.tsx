@@ -5,9 +5,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { Button } from "@/app/components/ui";
-import { ArrowRight } from "lucide-react";
+import { ArrowLeft, Send } from "lucide-react";
 
-export default function SignUp() {
+export default function ForgotPassword() {
   return (
     <div className="min-h-screen w-full flex">
       {/* Left Banner */}
@@ -21,12 +21,12 @@ export default function SignUp() {
             priority
           />
           {/* Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-r from-green-900/50 to-green-800/50 rounded-tr-[60px] rounded-br-[60px]" />
+          <div className="absolute inset-0 bg-gradient-to-r from-green-900/90 to-green-800/80 rounded-tr-[60px] rounded-br-[60px]" />
           
           {/* Logo Overlay */}
           <div className="absolute bottom-8 left-8 z-10">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-white backdrop-blur-sm rounded-lg flex items-center justify-center">
+              <div className="w-12 h-12 bg-white/10 backdrop-blur-sm rounded-lg flex items-center justify-center">
                 <Image
                   src="/images/logo.png"
                   alt="Learnza Logo"
@@ -48,12 +48,19 @@ export default function SignUp() {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
         <div className="w-full max-w-md space-y-8">
           <div>
+            <Link 
+              href="/signin" 
+              className="inline-flex items-center text-sm text-green-700 hover:text-green-800 mb-6"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to login
+            </Link>
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="text-2xl font-bold text-gray-900"
             >
-              Create your account
+              Reset your password
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -61,10 +68,7 @@ export default function SignUp() {
               transition={{ delay: 0.1 }}
               className="mt-2 text-sm text-gray-600"
             >
-              Already have an account?{" "}
-              <Link href="/signin" className="text-green-700 hover:text-green-800 font-medium">
-                Sign in
-              </Link>
+              Enter your email address and we'll send you instructions to reset your password.
             </motion.p>
           </div>
 
@@ -89,47 +93,9 @@ export default function SignUp() {
               />
             </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="new-password"
-                required
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-600/20 focus:border-green-600 transition-colors"
-                placeholder="••••••••"
-              />
-              <p className="mt-2 text-xs text-gray-500">
-                Must be at least 8 characters long
-              </p>
-            </div>
-
-            <div className="flex items-center">
-              <input
-                id="terms"
-                name="terms"
-                type="checkbox"
-                required
-                className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-600/20"
-              />
-              <label htmlFor="terms" className="ml-2 block text-sm text-gray-700">
-                I agree to the{" "}
-                <Link href="/terms" className="text-green-700 hover:text-green-800">
-                  Terms of Service
-                </Link>{" "}
-                and{" "}
-                <Link href="/privacy-policy" className="text-green-700 hover:text-green-800">
-                  Privacy Policy
-                </Link>
-              </label>
-            </div>
-
             <Button className="w-full bg-green-700 hover:bg-green-800 text-white py-3 rounded-lg flex items-center justify-center gap-2">
-              Create Account
-              <ArrowRight className="w-4 h-4" />
+              Send reset instructions
+              <Send className="w-4 h-4" />
             </Button>
           </motion.div>
         </div>

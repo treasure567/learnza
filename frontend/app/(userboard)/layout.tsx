@@ -32,14 +32,14 @@ const sidebarLinks = [
     icon: BookOpen,
   },
   {
-    name: "Profile",
-    href: "/profile",
-    icon: User,
-  },
-  {
     name: "Tasks",
     href: "/tasks",
     icon: Book,
+  },
+  {
+    name: "Profile",
+    href: "/profile",
+    icon: User,
   },
 ];
 
@@ -66,7 +66,7 @@ export default function UserboardLayout({
 
   // Always render layout, let middleware handle redirect
   return (
-    <div className="min-h-screen bg-light dark:bg-dark">
+    <div className="min-h-screen bg-white">
       {/* Logout Confirmation Modal */}
       <Modal
         isOpen={showLogoutModal}
@@ -96,13 +96,18 @@ export default function UserboardLayout({
       <aside
         className={`fixed top-0 left-0 z-40 h-screen transition-transform ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0 w-64 bg-light-surface dark:bg-dark-surface border-r border-light-border dark:border-dark-border`}
+        } lg:translate-x-0 w-64 bg-white border-r border-gray-200`}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="p-4 border-b border-light-border dark:border-dark-border">
-            <Link href="/" className="flex items-center space-x-3">
-              <span className="text-xl font-semibold text-dark dark:text-light">
+            <Link href="/" className="flex items-center space-x-2">
+              <img
+                src="/images/logo.png"
+                alt="Learnza Logo"
+                className="w-8 h-8 object-contain"
+              />
+              <span className="text-xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
                 Learnza
               </span>
             </Link>
@@ -146,7 +151,7 @@ export default function UserboardLayout({
         }`}
       >
         {/* Top Navigation */}
-        <header className="sticky top-0 z-30 bg-light-surface dark:bg-dark-surface border-b border-light-border dark:border-dark-border">
+        <header className="sticky top-0 z-30 bg-white border-b border-gray-200">
           <div className="flex h-16 items-center justify-between px-4">
             {/* Left Section */}
             <div className="flex items-center space-x-4">
