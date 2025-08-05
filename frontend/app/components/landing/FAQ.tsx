@@ -24,6 +24,18 @@ export default function FAQ() {
       question: "Which languages are supported?",
       answer: "We currently support English, Yoruba, Igbo, Hausa, and several other languages. Our AI system can also provide real-time translations and cultural context for better understanding.",
     },
+    {
+      question: "How does the AI personalize my learning experience?",
+      answer: "Our AI analyzes your learning patterns, preferred pace, and areas of difficulty to create customized lesson plans. It adapts content delivery, provides targeted feedback, and suggests relevant resources to optimize your learning journey.",
+    },
+    {
+      question: "Is my data secure on the blockchain?",
+      answer: "Yes, we use advanced encryption and decentralized storage to ensure your data remains private and secure. Only essential credential information is stored on the blockchain, while personal data is protected through industry-standard security measures.",
+    },
+    {
+      question: "Can I transfer my certificates to other platforms?",
+      answer: "Absolutely! Our blockchain-verified certificates are portable and can be shared across any platform that supports digital credentials. You can easily export and share your achievements with employers, educational institutions, or professional networks.",
+    },
   ];
 
   return (

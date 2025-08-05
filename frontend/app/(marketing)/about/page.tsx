@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Button } from "@/app/components/ui";
 import { ArrowRight, Users, Target, Award, Sparkles } from "lucide-react";
 import DemoVideo from "@/app/components/landing/DemoVideo";
+import FAQ from "@/app/components/landing/FAQ";
 
 export default function About() {
   const stats = [
@@ -19,38 +20,48 @@ export default function About() {
   const values = [
     {
       icon: <Users className="w-6 h-6" />,
-      title: "Community-Driven",
-      description: "Building a supportive learning environment where everyone can thrive.",
+      title: "AI-Powered Learning",
+      description: "Advanced artificial intelligence that adapts to your learning style, provides personalized content, and offers real-time assistance in multiple languages.",
     },
     {
       icon: <Target className="w-6 h-6" />,
-      title: "Goal-Oriented",
-      description: "Focused on helping our users achieve their learning objectives effectively.",
+      title: "Blockchain Verification",
+      description: "Tamper-proof digital credentials stored on the blockchain, ensuring your achievements are globally verifiable and permanently secure.",
     },
     {
       icon: <Award className="w-6 h-6" />,
-      title: "Quality Education",
-      description: "Delivering high-quality, verified educational content and resources.",
+      title: "Inclusive Education",
+      description: "Accessibility features including sign language support, screen readers, and voice commands to make learning accessible to everyone.",
     },
     {
       icon: <Sparkles className="w-6 h-6" />,
-      title: "Innovation",
-      description: "Continuously improving our platform with cutting-edge technology.",
+      title: "Token Rewards",
+      description: "Earn cryptocurrency tokens for learning achievements, creating a gamified experience that motivates continuous education.",
     },
   ];
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <section className="pt-32 pb-16 bg-white">
+      <section className="pt-40 pb-16 bg-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6"
+            >
+              <span className="inline-block bg-green-100 text-green-700 text-sm font-medium px-4 py-2 rounded-full">
+                About Learnza
+              </span>
+            </motion.div>
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
               className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6"
             >
-              Transforming Education Through Technology
+              Revolutionizing Education with AI & Blockchain
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -58,7 +69,7 @@ export default function About() {
               transition={{ delay: 0.1 }}
               className="text-xl text-gray-600 mb-8"
             >
-              We're on a mission to make quality education accessible to everyone, everywhere.
+              We're pioneering the future of education by combining artificial intelligence with blockchain technology to create a truly inclusive, verifiable, and personalized learning experience.
             </motion.p>
           </div>
         </div>
@@ -89,9 +100,9 @@ export default function About() {
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Our Values</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Our Technology</h2>
             <p className="text-gray-600">
-              The principles that guide us in creating the best learning experience for our users.
+              Discover how we're leveraging cutting-edge AI and blockchain technology to revolutionize education.
             </p>
           </div>
           <div className="max-w-5xl mx-auto">
@@ -123,12 +134,12 @@ export default function About() {
       <section className="py-16 bg-green-800">
               <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="max-w-3xl mx-auto text-center">
-                  <h2 className="text-3xl font-bold text-white mb-6">
-                    Join Us in Shaping the Future of Education
-                  </h2>
-                  <p className="text-green-100 mb-8">
-                    Start your learning journey today and be part of our growing community.
-                  </p>
+                              <h2 className="text-3xl font-bold text-white mb-6">
+              Experience the Future of Learning Today
+            </h2>
+            <p className="text-green-100 mb-8">
+              Join thousands of learners who are already benefiting from AI-powered education and blockchain-verified credentials.
+            </p>
                   <Link href="/signup">
                     <Button size="lg" variant="secondary" className="bg-white text-green-800 hover:bg-green-50">
                       Get Started
@@ -139,53 +150,7 @@ export default function About() {
               </div>
             </section>
       {/* FAQs Section */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl mx-auto text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Frequently Asked Questions</h2>
-            <p className="text-gray-600">
-              Find answers to common questions about our platform and services.
-            </p>
-          </div>
-          <div className="max-w-4xl mx-auto">
-            <div className="space-y-6">
-              {[
-                {
-                  question: "How does the AI-powered learning work?",
-                  answer: "Our AI system adapts to your learning style and pace, providing personalized content and recommendations based on your progress and preferences."
-                },
-                {
-                  question: "Are the certificates blockchain-verified?",
-                  answer: "Yes, all certificates issued through our platform are stored on the blockchain, ensuring they are tamper-proof and globally verifiable."
-                },
-                {
-                  question: "What languages are supported?",
-                  answer: "We support multiple languages with real-time translation features, making our platform accessible to learners worldwide."
-                },
-                {
-                  question: "Is the platform accessible for users with disabilities?",
-                  answer: "Absolutely! We've built our platform with accessibility in mind, including screen reader support, keyboard navigation, and other assistive technologies."
-                },
-                {
-                  question: "How much does it cost to use the platform?",
-                  answer: "We offer both free and premium plans. The free plan includes basic features, while premium plans unlock advanced features and unlimited access."
-                }
-              ].map((faq, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="bg-gray-50 rounded-2xl p-6"
-                >
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">{faq.question}</h3>
-                  <p className="text-gray-600">{faq.answer}</p>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+      <FAQ />
     </div>
   );
 }
