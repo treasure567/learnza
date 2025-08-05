@@ -20,6 +20,8 @@
     "js-cookie": "^3.0.5",
     "lucide-react": "^0.471.1",
     "next": "^15.1.4",
+    "next-nprogress-bar": "^2.4.7",
+    "nextjs-toploader": "^3.8.16",
     "react": "^19.0.0",
     "react-countup": "^6.5.3",
     "react-dom": "^19.0.0",

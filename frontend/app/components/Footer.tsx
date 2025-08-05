@@ -11,15 +11,10 @@ export default function Footer() {
       { label: "Pricing", href: "/pricing" },
       { label: "Resources", href: "/resources" },
     ],
-    Company: [
-      { label: "About Us", href: "/about" },
-      { label: "Careers", href: "/careers" },
-      { label: "Contact", href: "/contact" },
-    ],
     Legal: [
-      { label: "Privacy Policy", href: "/privacy" },
+      { label: "Privacy Policy", href: "/privacy-policy" },
       { label: "Terms of Service", href: "/terms" },
-      { label: "Cookie Policy", href: "/cookies" },
+      { label: "Cookie Policy", href: "/cookie-policy" },
     ],
   };
 

@@ -4,6 +4,7 @@ import localFont from "next/font/local";
 import { Montserrat, Inter } from "next/font/google";
 import { Syne } from "next/font/google";
 import type { Metadata, Viewport } from "next";
+import NextTopLoader from "nextjs-toploader";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -117,6 +118,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${montserrat.className} ${geistMono.variable} ${syne.variable} ${inter.variable} antialiased bg-light text-text dark:bg-dark dark:text-light`}
       >
+        <NextTopLoader color="#166534" height={3} showSpinner={false} />
         <Providers>{children}</Providers>
       </body>
     </html>
