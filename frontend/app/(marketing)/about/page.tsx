@@ -117,30 +117,27 @@ export default function About() {
       </section>
 
 
-
-      {/* CTA Section */}
-      <section className="py-16 bg-green-800">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl font-bold text-white mb-6">
-              Join Us in Shaping the Future of Education
-            </h2>
-            <p className="text-green-100 mb-8">
-              Start your learning journey today and be part of our growing community.
-            </p>
-            <Link href="/signup">
-              <Button size="lg" variant="secondary" className="bg-white text-green-800 hover:bg-green-50">
-                Get Started
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
-
       {/* Demo Video Section */}
       <DemoVideo />
-
+      {/* CTA Section */}
+      <section className="py-16 bg-green-800">
+              <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="max-w-3xl mx-auto text-center">
+                  <h2 className="text-3xl font-bold text-white mb-6">
+                    Join Us in Shaping the Future of Education
+                  </h2>
+                  <p className="text-green-100 mb-8">
+                    Start your learning journey today and be part of our growing community.
+                  </p>
+                  <Link href="/signup">
+                    <Button size="lg" variant="secondary" className="bg-white text-green-800 hover:bg-green-50">
+                      Get Started
+                      <ArrowRight className="ml-2 w-5 h-5" />
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </section>
       {/* FAQs Section */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
