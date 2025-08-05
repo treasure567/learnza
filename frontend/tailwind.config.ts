@@ -11,6 +11,8 @@ const config: Config = {
     extend: {
       fontFamily: {
         geistSans: ["var(--font-geist-sans)"],
+        syne: ["var(--font-syne)"],
+        inter: ["var(--font-inter)"],
       },
       keyframes: {
         "fade-effect": {

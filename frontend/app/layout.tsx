@@ -1,7 +1,8 @@
 import "./global.css";
 import Providers from "./providers";
 import localFont from "next/font/local";
-import { Montserrat } from "next/font/google";
+import { Montserrat, Inter } from "next/font/google";
+import { Syne } from "next/font/google";
 import type { Metadata, Viewport } from "next";
 
 const geistSans = localFont({
@@ -22,6 +23,18 @@ const montserrat = Montserrat({
   weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
 });
 
+const syne = Syne({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-syne",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+});
+
 export const viewport: Viewport = {
   maximumScale: 1,
   themeColor: "#2A9D8F",
@@ -29,11 +42,11 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://learnza.xyz"),
-  icons: { icon: "/images/logo.svg" },
-  title: "IILCB - Inclusive Interactive Learning & Credential Blockchain",
+  icons: { icon: "/images/logo.png" },
+  title: "Learnza - Inclusive Interactive Learning & Credential Blockchain",
   description:
     "An accessible learning platform for everyone, powered by blockchain technology. Learn, earn, and verify credentials on-chain.",
-  applicationName: "IILCB Platform",
+  applicationName: "Learnza Platform",
   authors: [{ name: "Learnza Team", url: "https://learnza.xyz" }],
   keywords: [
     "Education",
@@ -59,22 +72,22 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     url: "https://learnza.xyz",
-    title: "IILCB - Inclusive Interactive Learning & Credential Blockchain",
-    siteName: "IILCB Platform",
+    title: "Learnza - Inclusive Interactive Learning & Credential Blockchain",
+    siteName: "Learnza Platform",
     locale: "en_US",
     images: [
       {
         url: "/images/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "IILCB Platform - Inclusive Learning for Everyone",
+        alt: "Learnza Platform - Inclusive Learning for Everyone",
       },
     ],
   },
   twitter: {
     site: "@learnza",
     creator: "@learnza",
-    title: "IILCB - Inclusive Interactive Learning & Credential Blockchain",
+    title: "Learnza - Inclusive Interactive Learning & Credential Blockchain",
     description:
       "An accessible learning platform for everyone, powered by blockchain technology. Learn, earn, and verify credentials on-chain.",
     card: "summary_large_image",
@@ -82,14 +95,14 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    title: "IILCB Platform",
+    title: "Learnza Platform",
     statusBarStyle: "black-translucent",
   },
   formatDetection: {
     telephone: false,
   },
   abstract:
-    "IILCB is a revolutionary learning platform that combines accessibility, blockchain technology, and cultural inclusivity to make education accessible to everyone.",
+    "Learnza is a revolutionary learning platform that combines accessibility, blockchain technology, and cultural inclusivity to make education accessible to everyone.",
   category: "Education",
   classification: "Education Technology",
 };
@@ -102,7 +115,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${montserrat.className} ${geistMono.variable} antialiased bg-light text-text dark:bg-dark dark:text-light`}
+        className={`${geistSans.variable} ${montserrat.className} ${geistMono.variable} ${syne.variable} ${inter.variable} antialiased bg-light text-text dark:bg-dark dark:text-light`}
       >
         <Providers>{children}</Providers>
       </body>
