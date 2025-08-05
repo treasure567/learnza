@@ -92,7 +92,7 @@ export default function CookiePolicy() {
                       <li><strong>Analytics:</strong> Understanding how you use our platform to improve features</li>
                       <li><strong>Functionality:</strong> Enabling advanced features like progress tracking and AI recommendations</li>
                       <li><strong>Accessibility:</strong> Remembering your accessibility preferences and settings</li>
-                    </ul>
+              </ul>
                   </motion.div>
 
                   {/* Types of Cookies */}
@@ -268,7 +268,7 @@ export default function CookiePolicy() {
                       <li><strong>Progress Tracking:</strong> Learning progress and achievements may not be saved</li>
                       <li><strong>Performance:</strong> Page load times may be slower</li>
                       <li><strong>Security:</strong> Some security features may be compromised</li>
-                    </ul>
+              </ul>
                     <p className="text-gray-700 mt-4">
                       We recommend keeping essential cookies enabled for the best learning experience.
                     </p>
