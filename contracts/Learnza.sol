@@ -93,12 +93,12 @@ contract Learnza is ERC20, ERC20Burnable, Ownable {
         return address(this).balance;
     }
 
-     function withdrawEDU(uint256 _amount) public onlyOwner {
+    function withdrawEDU(uint256 _amount) public onlyOwner {
         require(address(this).balance >= _amount, "Not enough EDU in contract");
         (bool sent, ) = msg.sender.call{value: _amount}("");
         require(sent, "Failed to send EDU");
     }
-    
+
     function withdrawAllEDU() public onlyOwner {
         uint256 balance = address(this).balance;
         require(balance > 0, "No EDU in contract");
@@ -166,7 +166,9 @@ contract Learnza is ERC20, ERC20Burnable, Ownable {
         userLessonCompletions[_user].push(newCompletion);
     }
 
-    function getUserCompletedLessons(address _user) public view returns (LessonCompletion[] memory) {
+    function getUserCompletedLessons(
+        address _user
+    ) public view returns (LessonCompletion[] memory) {
         return userLessonCompletions[_user];
     }
 }
