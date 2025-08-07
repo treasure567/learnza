@@ -24,7 +24,7 @@ jobs:
           source \$NVM_DIR/nvm.sh
           nvm use 22
           cd htdocs/interact.learnza.net.ng
-          git pull origin interact
+          git pull origin ms_interact
           npm install
           /home/learnza-interact/.nvm/versions/node/v22.18.0/bin/pm2 restart learnza-interact
         " > temp_dev.sh
