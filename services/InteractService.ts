@@ -100,7 +100,7 @@ export class InteractService {
             sequenceNumber: content.sequenceNumber + 1
         }).lean();
 
-        const user = await User.findById(userId).populate('language').lean();
+        const user = await User.findById(userId);
 
         if (!user) {
             throw new Error('User not found');
@@ -176,7 +176,7 @@ export class InteractService {
                 context: {
                     student: {
                         name: context.user.name,
-                        language: context.user.language ? (context.user.language as any).name : 'English',
+                        language: 'English',
                         accessibilityNeeds: context.user.accessibilityNeeds || []
                     },
                     lesson: {
