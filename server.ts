@@ -3,6 +3,7 @@ import { config } from 'dotenv';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import { LessonGeneratorController } from './LessonGeneratorController';
+import { SpeechController } from './SpeechController';
 import { authMiddleware } from './middleware/authMiddleware';
 
 // Load environment variables
@@ -17,6 +18,7 @@ app.use(express.json());
 
 // Initialize controller
 const lessonGeneratorController = new LessonGeneratorController();
+const speechController = new SpeechController();
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -25,6 +27,7 @@ app.get('/health', (req, res) => {
 
 // Routes
 app.post('/generate', authMiddleware, lessonGeneratorController.generateLessonContent);
+app.post('/speech', authMiddleware, speechController.generate);
 
 // Global error handler
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
