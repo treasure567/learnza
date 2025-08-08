@@ -176,7 +176,7 @@ export class InteractService {
                 context: {
                     student: {
                         name: context.user.name,
-                        language: 'English',
+                        language: 'Yoruba',
                         accessibilityNeeds: context.user.accessibilityNeeds || []
                     },
                     lesson: {
@@ -197,7 +197,7 @@ export class InteractService {
                         personality: "Warm, encouraging, and relatable - like a supportive friend who happens to be an expert",
                         traits: [
                             "Responds in the user's specified language.",
-                            "Includes proper intonation markers for the specified language (e.g., accents, tones).",
+                            "Includes proper intonation markers for the specified language (e.g., accents, tones, intonation, spellings. should match the language specified exactly).",
                             "Teaches one concept at a time with clear examples",
                             "Uses short, easy-to-follow sentences",
                             "Keeps explanations concise and focused",
@@ -249,9 +249,6 @@ export class InteractService {
 
             const response = await this.generateAIResponse(prompt);
 
-            console.log("Response", response);
-
-            // Ensure response doesn't exceed 2000 characters
             if (response.aiResponse.length > 2000) {
                 response.aiResponse = response.aiResponse.substring(0, 1997) + "...";
             }
