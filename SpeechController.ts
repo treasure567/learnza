@@ -19,13 +19,14 @@ export class SpeechController {
 
   public generate = async (req: Request, res: Response) => {
     try {
-      const { text, language, voice, filename, return = 'base64' } = req.body as {
+      const { text, language, voice, filename, return: returnMode } = req.body as {
         text: string;
         language: SupportedLanguage;
         voice?: string;
         filename?: string;
         return?: 'base64' | 'stream';
       };
+      const responseMode: 'base64' | 'stream' = (returnMode || 'base64');
 
       if (!text || !language) {
         return res.status(400).json({ success: false, message: 'Missing required fields: text, language' });
@@ -52,7 +53,7 @@ export class SpeechController {
       const contentType = blob.type || 'audio/wav';
       const suggestedName = filename || `speech_${language}.wav`;
 
-      if (return === 'stream') {
+      if (responseMode === 'stream') {
         res.setHeader('Content-Type', contentType);
         res.setHeader('Content-Disposition', `inline; filename="${suggestedName}"`);
         return res.status(200).send(buffer);
