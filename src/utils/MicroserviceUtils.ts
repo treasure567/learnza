@@ -64,6 +64,14 @@ export class MicroserviceUtils {
                     baseURL: process.env.BLOCKCHAIN_SERVICE_URI,
                     timeout: 30000
                 };
+            case MicroService.NOTIFICATION:
+                if (!process.env.NOTIFICATION_SERVICE_URI) {
+                    throw new Error('NOTIFICATION_SERVICE_URI environment variable is not set');
+                }
+                return {
+                    baseURL: process.env.NOTIFICATION_SERVICE_URI,
+                    timeout: 30000
+                };
             default:
                 throw new Error(`Unknown microservice: ${service}`);
         }

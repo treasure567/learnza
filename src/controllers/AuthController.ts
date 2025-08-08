@@ -34,7 +34,7 @@ export class AuthController {
         try {
             const { code } = req.body as VerifyEmailRequest;
             const user = await AuthService.verifyEmail(req.user._id, code);
-            ResponseUtils.success(res, user, 'Email verified successfully');
+            ResponseUtils.success(res, { verified: true, user }, 'Email verified successfully');
         } catch (error) {
             ResponseUtils.error(res, (error as Error).message);
         }
@@ -43,7 +43,7 @@ export class AuthController {
     static async resendVerificationCode(req: AuthRequest, res: Response): Promise<void> {
         try {
             await AuthService.resendVerificationCode(req.user._id);
-            ResponseUtils.success(res, null, 'Verification code resent successfully');
+            ResponseUtils.success(res, { sent: true }, 'Verification code resent successfully');
         } catch (error) {
             ResponseUtils.error(res, (error as Error).message);
         }
@@ -53,7 +53,7 @@ export class AuthController {
         try {
             const { email } = req.body as ForgotPasswordRequest;
             await AuthService.forgotPassword(email);
-            ResponseUtils.success(res, null, 'Password reset instructions sent to your email');
+            ResponseUtils.success(res, { sent: true }, 'Password reset instructions sent to your email');
         } catch (error) {
             ResponseUtils.error(res, (error as Error).message);
         }
@@ -63,7 +63,7 @@ export class AuthController {
         try {
             const { token, password } = req.body as ResetPasswordRequest;
             await AuthService.resetPassword(token, password);
-            ResponseUtils.success(res, null, 'Password reset successful');
+            ResponseUtils.success(res, { success: true }, 'Password reset successful');
         } catch (error) {
             ResponseUtils.error(res, (error as Error).message);
         }

@@ -17,6 +17,7 @@ const app: Application = express();
 const corsOptions = {
   origin: [
     'https://learnza.net.ng',
+    'http://localhost:3000',
     'http://localhost:3002',
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
