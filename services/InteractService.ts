@@ -176,7 +176,7 @@ export class InteractService {
                 context: {
                     student: {
                         name: context.user.name,
-                        language: 'Hausa',
+                        language: 'Yoruba',
                         accessibilityNeeds: context.user.accessibilityNeeds || []
                     },
                     lesson: {
