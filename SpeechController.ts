@@ -1,5 +1,8 @@
 import { Request, Response } from 'express';
 import Spitch from 'spitch';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 type SupportedLanguage = 'en' | 'yo' | 'ha' | 'ig';
 
