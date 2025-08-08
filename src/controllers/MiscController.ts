@@ -40,13 +40,31 @@ export class MiscController {
             }
 
             const payload = { text, language, voice, filename, return: returnMode } as any;
-            const response = await MicroserviceUtils.post<{ filename: string; contentType: string; audioBase64?: string }>(
+
+            if (returnMode === 'stream') {
+                // Request stream from AI service and pipe directly to client
+                const streamResponse: any = await MicroserviceUtils.post(
+                    MicroService.AI,
+                    '/speech',
+                    payload,
+                    { responseType: 'stream' }
+                );
+
+                const contentType = streamResponse.headers['content-type'] || 'audio/wav';
+                const contentDisposition = streamResponse.headers['content-disposition'] || `inline; filename="${filename || 'speech.wav'}"`;
+                res.setHeader('Content-Type', contentType);
+                res.setHeader('Content-Disposition', contentDisposition);
+                streamResponse.data.pipe(res);
+                return;
+            }
+
+            const jsonResponse = await MicroserviceUtils.post<{ filename: string; contentType: string; audioBase64?: string }>(
                 MicroService.AI,
                 '/speech',
                 payload
             );
 
-            ResponseUtils.success(res, response.data, 'Speech generated');
+            ResponseUtils.success(res, jsonResponse.data, 'Speech generated');
         } catch (error) {
             ResponseUtils.error(res, (error as Error).message);
         }

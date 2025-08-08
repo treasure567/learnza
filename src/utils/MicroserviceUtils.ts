@@ -98,7 +98,13 @@ export class MicroserviceUtils {
             });
 
             instance.interceptors.response.use(
-                (response) => response.data,
+                (response) => {
+                    // For streaming responses, return the full response so callers can access headers and pipe the stream
+                    if (response.config.responseType === 'stream') {
+                        return response;
+                    }
+                    return response.data;
+                },
                 (error) => {
                     if (error.response) {
                         throw new CustomError(
