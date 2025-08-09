@@ -9,10 +9,7 @@ export class GeminiService {
   private modelName: string;
   private readonly MAX_RETRIES = 3;
   private readonly FALLBACK_MESSAGES = [
-    "Hi! I'm here to help with Learnza. Reply with what you need: courses, pricing, account, or support.",
-    "Hello! Welcome to Learnza. How can I assist you today? Ask about our courses, pricing, or support.",
-    "Hi there! Thanks for contacting Learnza. What would you like to know about our learning platform?",
-    "Welcome to Learnza! I'm here to help. What can I assist you with today?"
+    "Hi there, thanks for contacting Learnza. What do you plan on learning today?"
   ];
 
   constructor() {
@@ -70,28 +67,8 @@ export class GeminiService {
   private getFallbackMessage(userMessage: string, senderPhone: string): string {
     console.log(`🔄 Using fallback message for ${senderPhone}: "${userMessage}"`);
     
-    // Simple keyword-based responses
-    const lowerMessage = userMessage.toLowerCase();
-    
-    if (lowerMessage.includes('price') || lowerMessage.includes('cost') || lowerMessage.includes('fee')) {
-      return "Thanks for your interest! For pricing information, please visit our website or contact our support team. How else can I help?";
-    }
-    
-    if (lowerMessage.includes('course') || lowerMessage.includes('learn') || lowerMessage.includes('class')) {
-      return "Great! We offer various courses on our platform. Check our website for the full catalog or ask about specific topics you're interested in.";
-    }
-    
-    if (lowerMessage.includes('help') || lowerMessage.includes('support') || lowerMessage.includes('problem')) {
-      return "I'm here to help! You can ask me about our courses, pricing, account issues, or general questions about Learnza.";
-    }
-    
-    if (lowerMessage.includes('hi') || lowerMessage.includes('hello') || lowerMessage.includes('hey')) {
-      return "Hello! Welcome to Learnza. I'm here to help with questions about our courses, pricing, or support. What would you like to know?";
-    }
-    
-    // Random fallback for unrecognized messages
-    const randomIndex = Math.floor(Math.random() * this.FALLBACK_MESSAGES.length);
-    return this.FALLBACK_MESSAGES[randomIndex];
+    // Always respond with minimal bot prompt
+    return "What do you plan on learning today?";
   }
 
   async craftSmsReply(userMessage: string, senderPhone: string): Promise<string> {
@@ -106,13 +83,13 @@ export class GeminiService {
 
     const systemPrompt = [
       "You are Learnza's SMS assistant. Reply via SMS only.",
-      'Goals:',
+      'Guidelines:',
       '- Be friendly, concise, and helpful.',
       '- Keep responses within 300 characters suitable for 1-2 SMS segments.',
-      '- If greeting or vague, briefly introduce Learnza and suggest next actions (e.g., pricing, courses, support).',
-      '- If a direct question, answer with one clear, actionable response and next step.',
+      "- Do NOT include pricing, discounts, or cost information.",
+      "- If the user asks about pricing, reply exactly with: 'Hi there, thanks for contacting Learnza. What do you plan on learning today?'",
       '- Avoid links unless explicitly requested. Avoid markdown or emojis. Plain text only.',
-      '- Always end with a follow-up question or suggestion to keep conversation going.',
+      '- If uncertain, ask a short follow-up to clarify their learning goal.',
     ].join('\n');
 
     const prompt = [
@@ -132,9 +109,18 @@ export class GeminiService {
         return text;
       }, `SMS reply generation for ${senderPhone}`);
 
-      const cleaned = response.trim();
-      const finalResponse = cleaned.slice(0, 320); // Hard limit for SMS safety
-      
+      // Sanitize and enforce constraints (only pricing-related content is banned)
+      const bannedPatterns = /(price|pricing|cost|fee|discount)/i;
+      const cleaned = response
+        .replace(/\r?\n+/g, ' ')
+        .replace(/\*|_|`|~|>/g, '')
+        .trim();
+
+      const safeReply = cleaned && !bannedPatterns.test(cleaned)
+        ? cleaned
+        : this.getFallbackMessage(userMessage, senderPhone);
+
+      const finalResponse = safeReply.slice(0, 320);
       console.log(`✅ Gemini response for ${senderPhone}: "${finalResponse}"`);
       return finalResponse;
 

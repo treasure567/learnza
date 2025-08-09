@@ -10,12 +10,41 @@ import { EmailService } from './services/EmailService';
 
 dotenv.config();
 
-// Initialize services
-FirebaseService.initialize();
-EmailService.initialize();
+// Initialize services (conditionally to avoid blocking SMS/Gemini tests)
+const hasFirebaseEnv = !!(
+  process.env.FIREBASE_PROJECT_ID &&
+  process.env.FIREBASE_CLIENT_EMAIL &&
+  process.env.FIREBASE_PRIVATE_KEY
+);
+if (hasFirebaseEnv) {
+  try {
+    FirebaseService.initialize();
+  } catch (err) {
+    console.warn('Skipping Firebase init due to error:', err);
+  }
+} else {
+  console.warn('Skipping Firebase init: FIREBASE_* env vars not fully set');
+}
+
+const hasEmailEnv = !!(
+  process.env.EMAIL_HOST &&
+  process.env.EMAIL_PORT &&
+  process.env.EMAIL_USER &&
+  process.env.EMAIL_PASS &&
+  process.env.EMAIL_FROM
+);
+if (hasEmailEnv) {
+  try {
+    EmailService.initialize();
+  } catch (err) {
+    console.warn('Skipping Email service init due to error:', err);
+  }
+} else {
+  console.warn('Skipping Email service init: EMAIL_* env vars not fully set');
+}
 
 const app = express();
-const port = process.env.NOTIFICATION_SERVICE_PORT 
+const port = process.env.NOTIFICATION_SERVICE_PORT || 4002
 
 app.use(cors());
 app.use(bodyParser.json());
