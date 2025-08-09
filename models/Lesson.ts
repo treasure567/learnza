@@ -10,6 +10,7 @@ export interface ILesson {
     userRequest: string;
     createdAt: Date;
     updatedAt: Date;
+    languageCode: string;
 }
 
 const lessonSchema = new Schema<ILesson>({
@@ -35,6 +36,10 @@ const lessonSchema = new Schema<ILesson>({
         required: true
     },
     userRequest: {
+        type: String,
+        required: true
+    },
+    languageCode: {
         type: String,
         required: true
     }

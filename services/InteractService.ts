@@ -84,6 +84,21 @@ export class InteractService {
         .lean();
     }
 
+    private async getLanguageCode(languageCode: string): Promise<string> {
+        switch (languageCode) {
+            case 'en':
+                return 'English';
+            case 'yo':
+                return 'Yoruba';
+            case 'ha':
+                return 'Hausa';
+            case 'ig':
+                return 'Igbo';
+            default:
+                return 'English';
+        }
+    }
+
     private async getLessonContext(contentId: string, userId: string): Promise<any> {
         const content = await LessonContent.findById(contentId).lean();
         if (!content) {
@@ -149,11 +164,18 @@ export class InteractService {
                 this.getLessonContext(request.contentId, request.userId)
             ]);
 
+            const lesson = await Lesson.findById(context.lesson._id).lean();
+            if (!lesson) {
+                throw new Error('Lesson not found');
+            }
+
+            const languageCode = await this.getLanguageCode(lesson.languageCode || 'en');
+
             const formattedHistory = this.formatChatHistory(chatHistory);
             const isCompletionRequest = this.checkForCompletionRequest(request.userChat);
 
             const requirements: PromptRequirements = {
-                responseStyle: "Warm, friendly, and conversational - use emojis, laugh (using 😄 or 😊), and be encouraging. Keep sentences short and clear. Respond in the student's specified language.",
+                responseStyle: `Warm, friendly, and conversational. Keep sentences short and clear. ${languageCode === 'English' ? 'Use emojis and friendly expressions (😄 or 😊)' : 'Maintain formal and clear communication without emojis'}. Respond in ${languageCode}.`,
                 focus: "Teach one small concept at a time! Use short, clear sentences. Break down concepts into digestible pieces. Maximum response length is 2000 characters.",
                 progression: "Adapt teaching style based on current progress and understanding. Teach in small, manageable chunks."
             };
@@ -176,7 +198,7 @@ export class InteractService {
                 context: {
                     student: {
                         name: context.user.name,
-                        language: 'Yoruba',
+                        language: languageCode,
                         accessibilityNeeds: context.user.accessibilityNeeds || []
                     },
                     lesson: {
@@ -196,13 +218,18 @@ export class InteractService {
                         role: "Friendly and Enthusiastic Educational AI Assistant with PhD",
                         personality: "Warm, encouraging, and relatable - like a supportive friend who happens to be an expert",
                         traits: [
-                            "Responds in the user's specified language.",
-                            "Includes proper intonation markers for the specified language (e.g., accents, tones, intonation, spellings. should match the language specified exactly).",
+                            `Responds exclusively in ${languageCode}`,
+                            `Includes proper intonation markers, accents, tones, and spellings specific to ${languageCode}`,
                             "Teaches one concept at a time with clear examples",
                             "Uses short, easy-to-follow sentences",
                             "Keeps explanations concise and focused",
-                            "Uses friendly language and emojis naturally",
-                            "Shows excitement about teaching the topic",
+                            ...(languageCode === 'English' ? [
+                                "Uses friendly language and emojis naturally",
+                                "Shows excitement about teaching the topic with emojis"
+                            ] : [
+                                "Uses friendly and respectful language",
+                                "Shows enthusiasm through appropriate cultural expressions"
+                            ]),
                             "Adapts teaching style based on progress"
                         ],
                         teachingStyle: {
@@ -215,12 +242,18 @@ export class InteractService {
                     requirements,
                     completionGuidelines: {
                         verificationRequired: isCompletionRequest,
-                        teachingProgress: {
+                        teachingProgress: languageCode === 'English' ? {
                             0: "Start with basic concepts - one at a time 🌱",
                             25: "Add simple examples and details 🌿",
                             50: "Show quick, practical applications 🌳",
                             75: "Connect concepts with short examples 🌺",
                             100: "Quick celebration and next steps! 🌟"
+                        } : {
+                            0: "Start with basic concepts - one at a time",
+                            25: "Add simple examples and details",
+                            50: "Show quick, practical applications",
+                            75: "Connect concepts with short examples",
+                            100: "Quick celebration and next steps"
                         },
                         nextContentTransition: context.nextContent ? 
                             "Give a quick preview of the next exciting topic!" : 
