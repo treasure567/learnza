@@ -179,7 +179,7 @@ export class LessonService {
         return `Hi, I'm ${user.name} and I want to learn about ${content.lessonId.title}. Can you teach me this concept like you're my PhD professor? I'm excited to learn! 😊`;
     }
 
-    static async interact(userId: string, message: string, lessonId: string): Promise<string> {
+    static async interact(userId: string, message: string, lessonId: string, languageCode?: 'en' | 'yo' | 'ha' | 'ig' | string): Promise<string> {
         try {
             const lesson = await Lesson.findOne({ _id: lessonId, userId: new Types.ObjectId(userId) });
             if (!lesson) {
@@ -207,7 +207,8 @@ export class LessonService {
                 {
                     userId,
                     userChat: userMessage,
-                    contentId
+                    contentId,
+                    languageCode
                 }
             );
 

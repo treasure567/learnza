@@ -74,15 +74,22 @@ export class LessonController {
 
     static async interact(req: AuthRequest, res: Response): Promise<void> {
         try {
-            const { message, lessonId } = req.body;
+            const { message, lessonId, languageCode } = req.body as {
+                message: string;
+                lessonId: string;
+                languageCode?: 'en' | 'yo' | 'ha' | 'ig' | string;
+            };
             console.log(message, lessonId);
 
-            const aiResponse = await LessonService.interact(req.user._id, message, lessonId);
+            const aiResponse = await LessonService.interact(req.user._id, message, lessonId, languageCode);
             console.log(aiResponse);
             try {
-                const streamResponse: any = await SpitchUtils.generateSpeech({ text: aiResponse, returnMode: 'stream', language: 'yo' });
+                const validLanguages = ['en', 'yo', 'ha', 'ig'];
+                const ttsLanguage = typeof languageCode === 'string' && validLanguages.includes(languageCode) ? languageCode : 'en';
+
+                const streamResponse: any = await SpitchUtils.generateSpeech({ text: aiResponse, returnMode: 'stream', language: ttsLanguage });
                 const contentType = streamResponse.headers['content-type'] || 'audio/wav';
-                const contentDisposition = streamResponse.headers['content-disposition'] || `inline; filename="speech_yo.wav"`;
+                const contentDisposition = streamResponse.headers['content-disposition'] || `inline; filename="speech_${ttsLanguage}.wav"`;
                 res.writeHead(200, {
                     "Content-Type": contentType,
                     "Content-Disposition": contentDisposition,
