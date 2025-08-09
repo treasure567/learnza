@@ -1,5 +1,12 @@
 import mongoose, { Schema } from 'mongoose';
-import { ILanguage } from '@/types/misc';
+
+interface ILanguage {
+    code: string;
+    name: string;
+    nativeName: string;
+    region: string;
+    isActive: boolean;
+}
 
 const languageSchema = new Schema({
     code: {

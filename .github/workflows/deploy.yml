@@ -1,0 +1,31 @@
+name: Auto Deploy to interact
+
+on:
+  push:
+    branches:
+      - ms_interact
+
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Install sshpass
+      run: sudo apt-get install -y sshpass
+
+    - name: Run deploy script
+      run: |
+        echo "
+          export NVM_DIR=\$HOME/.nvm
+          source \$NVM_DIR/nvm.sh
+          nvm use 22
+          cd htdocs/interact.learnza.net.ng
+          git pull origin ms_interact
+          npm install
+          /home/learnza-interact/.nvm/versions/node/v22.18.0/bin/pm2 restart learnza-interact
+        " > temp_dev.sh
+        sshpass -p "${{ secrets.INTERACT_VPS_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.INTERACT_VPS_USER }}@${{ secrets.VPS_HOST }} 'bash -s' < temp_dev.sh

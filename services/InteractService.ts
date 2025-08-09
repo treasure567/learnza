@@ -100,7 +100,7 @@ export class InteractService {
             sequenceNumber: content.sequenceNumber + 1
         }).lean();
 
-        const user = await User.findById(userId).populate('language').lean();
+        const user = await User.findById(userId);
 
         if (!user) {
             throw new Error('User not found');
@@ -282,9 +282,6 @@ export class InteractService {
 
             const response = await this.generateAIResponse(prompt);
 
-            console.log("Response", response);
-
-            // Ensure response doesn't exceed 2000 characters
             if (response.aiResponse.length > 2000) {
                 response.aiResponse = response.aiResponse.substring(0, 1997) + "...";
             }
