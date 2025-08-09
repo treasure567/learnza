@@ -189,7 +189,7 @@ export class InteractService {
                 : (context.user.language ? (context.user.language as any).name : 'English');
 
             const requirements: PromptRequirements = {
-                responseStyle: `Warm, friendly, and conversational. Keep sentences short and clear. ${languageCode === 'English' ? 'Use emojis and friendly expressions (😄 or 😊)' : 'Maintain formal and clear communication without emojis'}. Respond in ${languageCode}.`,
+                responseStyle: `Warm, friendly, and conversational. Keep sentences short and clear. ${languageCode === 'English' ? 'Use emojis and friendly expressions (😄 or 😊)' : 'Maintain formal and clear communication. DO NOT ADD ANY EMOJIS'}. Respond in ${languageCode}.`,
                 focus: "Teach one small concept at a time! Use short, clear sentences. Break down concepts into digestible pieces. Maximum response length is 2000 characters.",
                 progression: "Adapt teaching style based on current progress and understanding. Teach in small, manageable chunks."
             };
@@ -242,7 +242,7 @@ export class InteractService {
                                 "Shows excitement about teaching the topic with emojis"
                             ] : [
                                 "Uses friendly and respectful language",
-                                "Shows enthusiasm through appropriate cultural expressions"
+                                "Shows enthusiasm through appropriate cultural expressions without emojis"
                             ]),
                             "Adapts teaching style based on progress"
                         ],
@@ -254,13 +254,6 @@ export class InteractService {
                         }
                     },
                     requirements,
-                    languagePolicy: {
-                        instructions: [
-                            "If request.languageCode is provided and recognized (English, Yoruba, Hausa, Igbo), respond strictly in that language.",
-                            "If request.languageCode is missing or unrecognized, respond in the student's stored language; fallback to English if unavailable.",
-                            "Do not switch languages within the response."
-                        ]
-                    },
                     completionGuidelines: {
                         verificationRequired: isCompletionRequest,
                         teachingProgress: languageCode === 'English' ? {
