@@ -60,7 +60,8 @@ export class LessonService {
                 '/generate',
                 {
                     userRequest: data.message,
-                    userId
+                    userId,
+                    languageCode: data.languageCode || 'en'
                 }
             );
             GameUtil.updateTaskProgress(new Types.ObjectId(userId), 'LESSON');
@@ -239,5 +240,13 @@ export class LessonService {
             console.error('Interaction error:', error);
             throw new CustomError('Failed to process interaction', 500);
         }
+    }
+
+    static async updateLessonLanguage(userId: string, lessonId: string, languageCode: string): Promise<ILesson> {
+        const lesson = await Lesson.findOneAndUpdate({ _id: new Types.ObjectId(lessonId), userId: new Types.ObjectId(userId) }, { languageCode }, { new: true });
+        if (!lesson) {
+            throw new CustomError('Lesson not found', 404);
+        }
+        return lesson.toObject() as unknown as ILesson;
     }
 } 

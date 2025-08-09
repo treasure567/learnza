@@ -37,6 +37,16 @@ export class LessonController {
         }
     }
 
+    static async updateLessonLanguage(req: AuthRequest, res: Response): Promise<void> {
+        try {
+            const { lessonId, languageCode } = req.body;
+            const lesson = await LessonService.updateLessonLanguage(req.user._id, lessonId, languageCode);
+            ResponseUtils.success(res, lesson, 'Lesson language updated successfully');
+        } catch (error) {
+            ResponseUtils.error(res, (error as Error).message);
+        }
+    }
+
     static async getLesson(req: AuthRequest, res: Response): Promise<void> {
         try {
             const lesson = await LessonService.getLesson(req.user._id, req.params.id);
@@ -86,7 +96,8 @@ export class LessonController {
             console.log(aiResponse);
             try {
                 const validLanguages = ['en', 'yo', 'ha', 'ig'];
-                const ttsLanguage = typeof languageCode === 'string' && validLanguages.includes(languageCode) ? languageCode : 'en';
+                const lesson = await LessonService.getLesson(req.user._id, lessonId);
+                const ttsLanguage = lesson.languageCode || 'en';
 
                 const streamResponse: any = await SpitchUtils.generateSpeech({ text: aiResponse, returnMode: 'stream', language: ttsLanguage });
                 const contentType = streamResponse.headers['content-type'] || 'audio/wav';

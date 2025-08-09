@@ -30,6 +30,7 @@ export interface ILessonContent extends Document {
 
 export interface GenerateLessonRequest {
     message: string;
+    languageCode?: 'en' | 'yo' | 'ha' | 'ig';
 }
 
 export interface CreateLessonRequest {

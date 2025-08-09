@@ -42,6 +42,11 @@ const lessonSchema = new Schema({
         type: String,
         enum: ['not_started', 'in_progress', 'completed'],
         default: 'not_started'
+    },
+    languageCode: {
+        type: String,
+        enum: ['en', 'yo', 'ha', 'ig'],
+        default: 'en'
     }
 }, { 
     timestamps: true,
