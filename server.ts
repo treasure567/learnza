@@ -44,7 +44,7 @@ if (hasEmailEnv) {
 }
 
 const app = express();
-const port = process.env.NOTIFICATION_SERVICE_PORT || 4002
+const port = process.env.NOTIFICATION_SERVICE_PORT;
 
 app.use(cors());
 app.use(bodyParser.json());
