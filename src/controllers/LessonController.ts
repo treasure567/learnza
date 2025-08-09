@@ -5,6 +5,8 @@ import { LessonService } from '@services/LessonService';
 import OpenAI from 'openai';
 import { Readable } from 'stream';
 import dotenv from 'dotenv';
+import { OpenAIUtils } from '@utils/OpenAIUtils';
+import { SpitchUtils } from '@utils/SpitchUtils';
 
 dotenv.config();
 
@@ -21,9 +23,14 @@ export class LessonController {
                 limit: limit ? parseInt(limit as string) : undefined,
                 sort: sort ? JSON.parse(sort as string) : undefined
             };
-            
+
             const lessons = await LessonService.getLessons(req.user._id, paginationOptions);
-            ResponseUtils.success(res, lessons, 'Lessons retrieved successfully');
+            const progressStats = await LessonService.getProgressStats(req.user._id);
+            const data = {
+                lessons: lessons.data,
+                progressStats: progressStats
+            }
+            ResponseUtils.success(res, data, 'Lessons retrieved successfully');
         } catch (error) {
             ResponseUtils.error(res, (error as Error).message);
         }
@@ -33,6 +40,15 @@ export class LessonController {
         try {
             const lesson = await LessonService.getLesson(req.user._id, req.params.id);
             ResponseUtils.success(res, lesson, 'Lesson fetched successfully');
+        } catch (error) {
+            ResponseUtils.error(res, (error as Error).message);
+        }
+    }
+
+    static async checkForGeneratingLessons(req: AuthRequest, res: Response): Promise<void> {
+        try {
+            const lessons = await LessonService.checkForGeneratingLessons(req.user._id);
+            ResponseUtils.success(res, lessons, 'Lessons fetched successfully');
         } catch (error) {
             ResponseUtils.error(res, (error as Error).message);
         }
@@ -62,39 +78,38 @@ export class LessonController {
             console.log(message, lessonId);
 
             const aiResponse = await LessonService.interact(req.user._id, message, lessonId);
-
+            console.log(aiResponse);
             try {
-                const response = await openai.audio.speech.create({
-                    model: "tts-1",
-                    voice: "alloy",
-                    input: aiResponse,
-                });
-                console.log("ddd");
-
-                if (!response.body) {
-                    throw new Error('No audio stream received from OpenAI');
-                }
-
+                const streamResponse: any = await SpitchUtils.generateSpeech({ text: aiResponse, returnMode: 'stream', language: 'yo' });
+                const contentType = streamResponse.headers['content-type'] || 'audio/wav';
+                const contentDisposition = streamResponse.headers['content-disposition'] || `inline; filename="speech_yo.wav"`;
                 res.writeHead(200, {
-                    "Content-Type": "audio/mpeg",
+                    "Content-Type": contentType,
+                    "Content-Disposition": contentDisposition,
                     "Transfer-Encoding": "chunked",
                 });
-
-                const audioStream = Readable.from(response.body);
-
-                audioStream.pipe(res);
-
-                audioStream.on('error', (error: Error) => {
-                    console.error('Error streaming audio:', error);
-                    if (!res.headersSent) {
-                        ResponseUtils.error(res, 'Error streaming audio response');
-                    }
-                });
-
+                streamResponse.data.pipe(res);
             } catch (error) {
-                console.error('Error in text-to-speech conversion:', error);
-                if (!res.headersSent) {
-                    ResponseUtils.error(res, 'Failed to convert response to speech');
+                console.error('Error in text-to-speech conversion using spitch, falling back to openai:', error);
+                try {
+                    const response = await OpenAIUtils.generateSpeech(aiResponse);
+                    res.writeHead(200, {
+                        "Content-Type": "audio/mpeg",
+                        "Transfer-Encoding": "chunked",
+                    });
+                    const audioStream = response;
+                    audioStream.pipe(res);
+                    audioStream.on('error', (error: Error) => {
+                        console.error('Error streaming audio:', error);
+                        if (!res.headersSent) {
+                            ResponseUtils.error(res, 'Error streaming audio response');
+                        }
+                    });
+                } catch (error) {
+                    console.error('Error in text-to-speech conversion using openai:', error);
+                    if (!res.headersSent) {
+                        ResponseUtils.error(res, 'Failed to convert response to speech');
+                    }
                 }
             }
         } catch (error) {

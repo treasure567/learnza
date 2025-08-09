@@ -111,7 +111,6 @@ export class AuthService {
             lastLogin: new Date()
         });
 
-        // Send verification email via Notifications microservice (if configured)
         try {
             const html = this.buildVerificationEmail(name, verificationCode);
             await MicroserviceUtils.post(
@@ -193,7 +192,6 @@ export class AuthService {
         user.lastSentOtp = new Date();
         await user.save();
 
-        // Send new verification email via Notifications microservice (if configured)
         try {
             const html = this.buildVerificationEmail(user.name, verificationCode);
             await MicroserviceUtils.post(

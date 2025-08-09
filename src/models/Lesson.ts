@@ -32,6 +32,16 @@ const lessonSchema = new Schema({
     userRequest: {
         type: String,
         required: true
+    },
+    generatingStatus: {
+        type: String,
+        enum: ['not_started', 'in_progress', 'completed', 'failed'],
+        default: 'not_started'
+    },
+    status: {
+        type: String,
+        enum: ['not_started', 'in_progress', 'completed'],
+        default: 'not_started'
     }
 }, { 
     timestamps: true,

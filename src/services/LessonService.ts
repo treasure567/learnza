@@ -15,6 +15,24 @@ interface GenerateLessonResponse {
     lessonPlan: string;
 }
 
+interface LessonWithProgress {
+    _id: Types.ObjectId;
+    title: string;
+    description: string;
+    difficulty: "beginner" | "intermediate" | "advanced";
+    estimatedTime: number;
+    lastAccessedAt: Date | null;
+    userId: Types.ObjectId;
+    contents: ILessonContent[];
+    progress: number;
+    [key: string]: any;
+}
+
+interface ProgressStats {
+    averageProgress: number;
+    totalLessons: number;
+}
+
 interface InteractResponse {
     success: boolean;
     message: string;
@@ -25,6 +43,16 @@ interface InteractResponse {
 }
 
 export class LessonService {
+    private static calculateLessonProgress(contents: ILessonContent[]): number {
+        if (!contents || contents.length === 0) return 0;
+        
+        const completedContents = contents.filter(content => 
+            content.completionStatus == 'completed' || content.completionStatus == 'in_progress'
+        ).length;
+        
+        return (completedContents / contents.length) * 100;
+    }
+
     static async generateLesson(userId: string, data: GenerateLessonRequest): Promise<boolean> {
         try {
             MicroserviceUtils.post<GenerateLessonResponse>(
@@ -42,12 +70,25 @@ export class LessonService {
         }
     }
 
-    static async getLessons(userId: string, options?: PaginationOptions): Promise<PaginatedResponse<ILesson>> {
-        const query = Lesson.find({ userId: new Types.ObjectId(userId) });
-        return PaginationUtils.paginate(query, options);
+    static async getLessons(userId: string, options?: PaginationOptions): Promise<PaginatedResponse<LessonWithProgress>> {
+        const query = Lesson.find({ userId: new Types.ObjectId(userId) }).populate('contents');
+        const paginatedResult = await PaginationUtils.paginate(query, options);      
+        const lessonsWithProgress = paginatedResult.data.map(lesson => {
+            const lessonObj = lesson.toObject();
+            return {
+                ...lessonObj,
+                _id: lessonObj._id as Types.ObjectId,
+                progress: this.calculateLessonProgress(lesson.contents || [])
+            } as LessonWithProgress;
+        });
+
+        return {
+            ...paginatedResult,
+            data: lessonsWithProgress
+        };
     }
 
-    static async getLesson(userId: string, lessonId: string): Promise<ILesson> {
+    static async getLesson(userId: string, lessonId: string): Promise<LessonWithProgress> {
         const lesson = await Lesson.findOne({
             _id: new Types.ObjectId(lessonId),
             userId: new Types.ObjectId(userId)
@@ -57,7 +98,38 @@ export class LessonService {
             throw new CustomError('Lesson not found', 404);
         }
 
-        return lesson;
+        const lessonObj = lesson.toObject();
+        return {
+            ...lessonObj,
+            _id: lessonObj._id as Types.ObjectId,
+            progress: this.calculateLessonProgress(lesson.contents || [])
+        } as LessonWithProgress;
+    }
+
+    static async checkForGeneratingLessons(userId: string): Promise<InstanceType<typeof Lesson>[]> {
+        return Lesson.find({ userId: new Types.ObjectId(userId), generatingStatus: 'in_progress' });
+    }
+
+    static async getProgressStats(userId: string): Promise<ProgressStats> {
+        const lessons = await Lesson.find({ 
+            userId: new Types.ObjectId(userId) 
+        }).populate('contents');
+
+        if (!lessons.length) {
+            return {
+                averageProgress: 0,
+                totalLessons: 0
+            };
+        }
+
+        const totalProgress = lessons.reduce((sum, lesson) => {
+            return sum + this.calculateLessonProgress(lesson.contents || []);
+        }, 0);
+
+        return {
+            averageProgress: totalProgress / lessons.length,
+            totalLessons: lessons.length
+        };
     }
 
     static async getChatHistory(userId: string, contentId: string): Promise<ILessonChatHistory[]> {
@@ -119,6 +191,11 @@ export class LessonService {
             const currentContent = await this.getCurrentOrNextContent(lessonId);
             const contentId = currentContent._id.toString();
             const isFirst = await this.isFirstInteraction(userId, contentId);
+
+            if (isFirst) {
+                lesson.status = 'in_progress';
+                await lesson.save();
+            }
 
             const userMessage = isFirst ? 
                 await this.getDefaultFirstMessage(userId, contentId) : 

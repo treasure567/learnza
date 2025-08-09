@@ -10,8 +10,9 @@ router.use(authMiddleware);
 router.use(verifiedEmailMiddleware)
 
 router.get('/', LessonController.getLessons);
+router.get('/check-for-generating', LessonController.checkForGeneratingLessons);
 router.get('/:id', LessonController.getLesson);
-router.get('/:contentId/chat', authMiddleware, LessonController.getChatHistory);
+router.get('/:contentId/chat', LessonController.getChatHistory);
 router.post('/generate', validateRequest(generateLessonRules), LessonController.generateLesson);
 router.post('/interact', validateRequest(interactRules), LessonController.interact);
 

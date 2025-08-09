@@ -42,7 +42,6 @@ export class MiscController {
             const payload = { text, language, voice, filename, return: returnMode } as any;
 
             if (returnMode === 'stream') {
-                // Request stream from AI service and pipe directly to client
                 const streamResponse: any = await MicroserviceUtils.post(
                     MicroService.AI,
                     '/speech',

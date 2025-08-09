@@ -11,6 +11,8 @@ export interface ILesson extends Document {
     contents: ILessonContent[];
     createdAt: Date;
     updatedAt: Date;
+    generatingStatus: 'not_started' | 'in_progress' | 'completed' | 'failed';
+    status: 'not_started' | 'in_progress' | 'completed';
 }
 
 export interface ILessonContent extends Document {
