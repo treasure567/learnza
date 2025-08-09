@@ -1,4 +1,5 @@
 import { Response } from 'express';
+import { Buffer } from 'buffer';
 import { AuthRequest } from '@middleware/authMiddleware';
 import { ResponseUtils } from '@utils/ResponseUtils';
 import { LessonService } from '@services/LessonService';
@@ -74,28 +75,41 @@ export class LessonController {
 
     static async interact(req: AuthRequest, res: Response): Promise<void> {
         try {
-            const { message, lessonId } = req.body;
+            const { message, lessonId, languageCode } = req.body as {
+                message: string;
+                lessonId: string;
+                languageCode?: 'en' | 'yo' | 'ha' | 'ig' | string;
+            };
             console.log(message, lessonId);
 
-            const aiResponse = await LessonService.interact(req.user._id, message, lessonId);
+            const aiResponse = await LessonService.interact(req.user._id, message, lessonId, languageCode);
             console.log(aiResponse);
             try {
-                const streamResponse: any = await SpitchUtils.generateSpeech({ text: aiResponse, returnMode: 'stream', language: 'yo' });
+                const validLanguages = ['en', 'yo', 'ha', 'ig'];
+                const ttsLanguage = typeof languageCode === 'string' && validLanguages.includes(languageCode) ? languageCode : 'en';
+
+                const streamResponse: any = await SpitchUtils.generateSpeech({ text: aiResponse, returnMode: 'stream', language: ttsLanguage });
                 const contentType = streamResponse.headers['content-type'] || 'audio/wav';
-                const contentDisposition = streamResponse.headers['content-disposition'] || `inline; filename="speech_yo.wav"`;
+                const contentDisposition = streamResponse.headers['content-disposition'] || `inline; filename="speech_${ttsLanguage}.wav"`;
+                const transcriptBase64 = Buffer.from(aiResponse, 'utf-8').toString('base64');
                 res.writeHead(200, {
                     "Content-Type": contentType,
                     "Content-Disposition": contentDisposition,
                     "Transfer-Encoding": "chunked",
+                    "X-AI-Response-Base64": transcriptBase64,
+                    "Access-Control-Expose-Headers": "X-AI-Response-Base64",
                 });
                 streamResponse.data.pipe(res);
             } catch (error) {
                 console.error('Error in text-to-speech conversion using spitch, falling back to openai:', error);
                 try {
                     const response = await OpenAIUtils.generateSpeech(aiResponse);
+                    const transcriptBase64 = Buffer.from(aiResponse, 'utf-8').toString('base64');
                     res.writeHead(200, {
                         "Content-Type": "audio/mpeg",
                         "Transfer-Encoding": "chunked",
+                        "X-AI-Response-Base64": transcriptBase64,
+                        "Access-Control-Expose-Headers": "X-AI-Response-Base64",
                     });
                     const audioStream = response;
                     audioStream.pipe(res);
