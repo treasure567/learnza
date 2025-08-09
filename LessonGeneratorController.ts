@@ -10,9 +10,9 @@ const lessonGenerator = new LessonGeneratorModule(process.env.GEMINI_API_KEY || 
 export class LessonGeneratorController {
     async generateLessonContent(req: AuthRequest, res: Response) {
         try {
-            const { userRequest, userId } = req.body;
+            const { userRequest, userId, languageCode } = req.body;
 
-            if (!userRequest || !userId) {
+            if (!userRequest || !userId || !languageCode) {
                 return res.status(400).json({
                     success: false,
                     message: 'Missing required fields: userRequest or userId'
@@ -21,7 +21,8 @@ export class LessonGeneratorController {
 
             const result = await lessonGenerator.generateAndStoreLessonContent(
                 userRequest,
-                userId
+                userId,
+                languageCode
             );
 
             return res.status(200).json({

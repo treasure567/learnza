@@ -219,7 +219,8 @@ export class LessonGeneratorModule {
 
     async generateAndStoreLessonContent(
         userRequest: string,
-        userId: string
+        userId: string,
+        languageCode: string
     ): Promise<{ lesson: any, contents: ILessonContent[] }> {
         console.log("Starting lesson generation process");
         try {
@@ -235,7 +236,8 @@ export class LessonGeneratorModule {
                 estimatedTime: 0,
                 userId: new mongoose.Types.ObjectId(userId),
                 userRequest,
-                generatingStatus: 'in_progress'
+                generatingStatus: 'in_progress',
+                languageCode
             });
             
             const savedLesson = await lesson.save();
