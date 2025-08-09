@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { SmsHistory } from '../models/SmsHistory';
 dotenv.config();
 
 export class GeminiService {
@@ -81,6 +82,20 @@ export class GeminiService {
       return this.getFallbackMessage(userMessage, senderPhone);
     }
 
+    // Get conversation context from SMS history
+    let conversationContext = '';
+    try {
+      conversationContext = await (SmsHistory as any).getConversationContext(senderPhone, 5);
+      if (conversationContext) {
+        console.log(`📜 Retrieved conversation context for ${senderPhone}:`, conversationContext.substring(0, 200) + '...');
+      } else {
+        console.log(`📜 No previous conversation history found for ${senderPhone}`);
+      }
+    } catch (error) {
+      console.error('⚠️ Failed to retrieve conversation context:', error);
+      // Continue without context if history retrieval fails
+    }
+
     const systemPrompt = [
       "You are Learnza's SMS assistant. Reply via SMS only.",
       'Guidelines:',
@@ -90,13 +105,16 @@ export class GeminiService {
       "- If the user asks about pricing, reply exactly with: 'Hi there, thanks for contacting Learnza. What do you plan on learning today?'",
       '- Avoid links unless explicitly requested. Avoid markdown or emojis. Plain text only.',
       '- If uncertain, ask a short follow-up to clarify their learning goal.',
+      '- Use the conversation context to provide more relevant and personalized responses.',
+      '- Reference previous topics when appropriate to maintain conversation flow.',
     ].join('\n');
 
     const prompt = [
       systemPrompt,
+      conversationContext,
       `Sender: ${senderPhone}`,
-      `Message: ${userMessage}`,
-      'Respond with a single SMS-friendly message. No prefixes like "Assistant:" Keep it under 300 characters.',
+      `Current Message: ${userMessage}`,
+      'Respond with a single SMS-friendly message that considers the conversation context. No prefixes like "Assistant:" Keep it under 300 characters.',
     ].join('\n\n');
 
     try {

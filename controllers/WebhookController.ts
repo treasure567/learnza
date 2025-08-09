@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import geminiService from '../services/GeminiService';
 import fetch from 'node-fetch';
+import { SmsHistory } from '../models/SmsHistory';
 
 interface SmsGatewayWebhookPayload {
   deviceId: string;
@@ -44,6 +45,15 @@ export const handleSmsWebhook = async (req: Request, res: Response) => {
     if (!senderPhone || !inboundText) {
       console.log('❌ Missing phone number or message content');
       return res.status(400).json({ success: false, message: 'Missing phoneNumber or message' });
+    }
+
+    // Save incoming user message to SMS history
+    try {
+      await (SmsHistory as any).saveMessage(senderPhone, inboundText, 'user');
+      console.log('✅ User message saved to SMS history');
+    } catch (error) {
+      console.error('⚠️ Failed to save user message to SMS history:', error);
+      // Continue processing even if history save fails
     }
 
     // Only process messages from SIM 1
@@ -94,6 +104,15 @@ export const handleSmsWebhook = async (req: Request, res: Response) => {
 
     const smsApiResponse = await smsRes.json();
     console.log('✅ SMS sent successfully:', JSON.stringify(smsApiResponse, null, 2));
+
+    // Save AI response to SMS history
+    try {
+      await (SmsHistory as any).saveMessage(senderPhone, replyText, 'ai');
+      console.log('✅ AI response saved to SMS history');
+    } catch (error) {
+      console.error('⚠️ Failed to save AI response to SMS history:', error);
+      // Continue processing even if history save fails
+    }
 
     const response = {
       success: true,
