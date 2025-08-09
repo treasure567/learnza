@@ -174,6 +174,20 @@ export class InteractService {
             const formattedHistory = this.formatChatHistory(chatHistory);
             const isCompletionRequest = this.checkForCompletionRequest(request.userChat);
 
+            // Determine requested language (request.languageCode has absolute priority over stored user language)
+            const incomingLanguageCode = (request.languageCode || '').trim().toLowerCase();
+            const codeToLanguageName: Record<string, string> = {
+                en: 'English',
+                yo: 'Yoruba',
+                ha: 'Hausa',
+                ig: 'Igbo'
+            };
+            const hasValidIncomingCode = Boolean(codeToLanguageName[incomingLanguageCode]);
+            const effectiveLanguageCode = hasValidIncomingCode ? incomingLanguageCode : '';
+            const effectiveLanguageName = hasValidIncomingCode
+                ? codeToLanguageName[incomingLanguageCode]
+                : (context.user.language ? (context.user.language as any).name : 'English');
+
             const requirements: PromptRequirements = {
                 responseStyle: `Warm, friendly, and conversational. Keep sentences short and clear. ${languageCode === 'English' ? 'Use emojis and friendly expressions (😄 or 😊)' : 'Maintain formal and clear communication without emojis'}. Respond in ${languageCode}.`,
                 focus: "Teach one small concept at a time! Use short, clear sentences. Break down concepts into digestible pieces. Maximum response length is 2000 characters.",
@@ -240,6 +254,24 @@ export class InteractService {
                         }
                     },
                     requirements,
+                    languagePolicy: {
+                        priority: "request.languageCode overrides any stored preference",
+                        mapping: {
+                            en: "English",
+                            yo: "Yoruba",
+                            ha: "Hausa",
+                            ig: "Igbo"
+                        },
+                        effectiveLanguage: {
+                            code: effectiveLanguageCode || null,
+                            name: effectiveLanguageName
+                        },
+                        instructions: [
+                            "If request.languageCode is provided and recognized (en, yo, ha, ig), respond strictly in that language.",
+                            "If request.languageCode is missing or unrecognized, respond in the student's stored language; fallback to English if unavailable.",
+                            "Do not switch languages within the response."
+                        ]
+                    },
                     completionGuidelines: {
                         verificationRequired: isCompletionRequest,
                         teachingProgress: languageCode === 'English' ? {

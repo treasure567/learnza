@@ -7,13 +7,13 @@ const interactService = new InteractService();
 
 export const handleInteraction = async (req: Request, res: Response) => {
     try {
-        const { userId, userChat, contentId } = req.body as InteractionRequest;
+        const { userId, userChat, contentId, languageCode } = req.body as InteractionRequest;
 
         if (!userId || !userChat || !contentId) {
             return res.status(400).json({ success: false, message: 'Missing required fields' });
         }
 
-        const response = await interactService.handleInteraction({ userId, userChat, contentId });
+        const response = await interactService.handleInteraction({ userId, userChat, contentId, languageCode });
 
         return res.status(200).json(response);
     } catch (error) {
