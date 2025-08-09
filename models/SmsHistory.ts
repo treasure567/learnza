@@ -74,7 +74,7 @@ SmsHistorySchema.statics.getConversationContext = async function(
   phone: string,
   limit: number = 5
 ): Promise<string> {
-  const messages = await this.getRecentMessages(phone, limit);
+  const messages = await (this as any).getRecentMessages(phone, limit);
   
   // Reverse to get chronological order (oldest first)
   const chronologicalMessages = messages.reverse();
@@ -85,7 +85,7 @@ SmsHistorySchema.statics.getConversationContext = async function(
   
   // Format messages for AI context
   const context = chronologicalMessages
-    .map(msg => `${msg.type === 'user' ? 'User' : 'Assistant'}: ${msg.message}`)
+    .map((msg: any) => `${msg.type === 'user' ? 'User' : 'Assistant'}: ${msg.message}`)
     .join('\n');
     
   return `Previous conversation:\n${context}\n\n`;
