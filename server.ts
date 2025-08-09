@@ -14,7 +14,8 @@ const port = process.env.SMS_SERVICE_PORT || 4002;
 app.use(cors());
 app.use(bodyParser.json());
 
-app.use('/api/sms', smsRoutes);
+// Mount at /api so routes are /api/sms, /api/sms/bulk, /api/sms/health, /api/webhook
+app.use('/api', smsRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -46,7 +47,8 @@ if (mongoUri) {
 app.listen(port, () => {
     console.log(`SMS microservice running on port ${port}`);
     console.log(`SMS endpoints available at:`);
-    console.log(`  POST /api/sms/sms - Send SMS (single or multiple)`);
-    console.log(`  POST /api/sms/sms/bulk - Send bulk SMS (optimized)`);
-    console.log(`  GET  /api/sms/sms/health - SMS service health check`);
+    console.log(`  POST /api/sms - Send SMS (single or multiple)`);
+    console.log(`  POST /api/sms/bulk - Send bulk SMS (optimized)`);
+    console.log(`  GET  /api/sms/health - SMS service health check`);
+    console.log(`  POST /api/webhook - Inbound SMS webhook (public)`);
 }); 

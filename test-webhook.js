@@ -45,27 +45,12 @@ async function testWebhook() {
 
     if (!process.env.SMS_GATE_USERNAME || !process.env.SMS_GATE_PASSWORD) {
       console.error('❌ Error: SMS_GATE_USERNAME and SMS_GATE_PASSWORD must be set in environment variables');
-      rl.close();
       return;
     }
 
-    const url = await new Promise((resolve) => {
-      rl.question('Enter webhook URL: ', (answer) => {
-        resolve(answer.trim());
-      });
-    });
-
-    if (!url) {
-      console.error('❌ Webhook URL is required');
-      rl.close();
-      return;
-    }
-
-    const event = await new Promise((resolve) => {
-      rl.question('Enter event type (default: sms:received): ', (answer) => {
-        resolve(answer.trim() || 'sms:received');
-      });
-    });
+    // Hardcoded webhook URL and event type
+    const url = 'https://notification.learnza.net.ng/api/notifications/webhook';
+    const event = 'sms:received';
 
     console.log(`\n🔗 Registering webhook for event "${event}" at URL: ${url}`);
     console.log('⏳ Please wait...\n');
@@ -76,15 +61,12 @@ async function testWebhook() {
   } catch (error) {
     console.error('❌ Error registering webhook:', error.message);
     console.error('🔍 Full error:', error);
-  } finally {
-    rl.close();
   }
 }
 
 process.on('SIGINT', () => {
   console.log('\n👋 Test cancelled');
-  rl.close();
   process.exit(0);
 });
 
-testWebhook(); 
+testWebhook();
