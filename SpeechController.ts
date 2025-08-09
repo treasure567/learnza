@@ -34,10 +34,10 @@ export class SpeechController {
       }
 
       const voiceMap: Record<SupportedLanguage, string> = {
-        en: 'john',
+        en: 'lucy',
         yo: 'femi',
         ha: 'hasan',
-        ig: 'ngozi',
+        ig: 'amara',
       };
 
       const selectedVoice = voice || voiceMap[language];
