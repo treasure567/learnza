@@ -26,48 +26,6 @@ export class LanguageSeeder {
             name: 'Igbo',
             nativeName: 'Asụsụ Igbo',
             region: 'Nigeria'
-        },
-        {
-            code: 'pcm',
-            name: 'Nigerian Pidgin',
-            nativeName: 'Naijá',
-            region: 'Nigeria'
-        },
-        {
-            code: 'fuv',
-            name: 'Fulfulde',
-            nativeName: 'Fulfulde',
-            region: 'Nigeria'
-        },
-        {
-            code: 'kcg',
-            name: 'Tyap',
-            nativeName: 'Tyap',
-            region: 'Nigeria'
-        },
-        {
-            code: 'tiv',
-            name: 'Tiv',
-            nativeName: 'Tiv',
-            region: 'Nigeria'
-        },
-        {
-            code: 'ibb',
-            name: 'Ibibio',
-            nativeName: 'Ibibio',
-            region: 'Nigeria'
-        },
-        {
-            code: 'edo',
-            name: 'Edo',
-            nativeName: 'Ẹ̀dó',
-            region: 'Nigeria'
-        },
-        {
-            code: 'kau',
-            name: 'Kanuri',
-            nativeName: 'Kanuri',
-            region: 'Nigeria'
         }
     ];
 

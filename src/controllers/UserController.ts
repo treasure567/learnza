@@ -24,6 +24,16 @@ export class UserController {
         }
     }
 
+    static async updateAddress(req: AuthRequest, res: Response): Promise<void> {
+        try {
+            const { address } = req.body;
+            const user = await UserService.updateAddress(req.user._id, address);
+            ResponseUtils.success(res, user, 'Address updated successfully');
+        } catch (error) { 
+            ResponseUtils.error(res, (error as Error).message);
+        }
+    }
+
     static async updateLanguage(req: AuthRequest, res: Response): Promise<void> {
         try {
             const { languageCode } = req.body as UpdateLanguageRequest;

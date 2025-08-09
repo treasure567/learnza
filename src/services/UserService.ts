@@ -20,6 +20,23 @@ export class UserService {
         return UserUtils.populateUser(user);
     }
 
+    static async updateAddress(userId: string, address: string): Promise<IUser> {
+        const user = await User.findById(userId);
+        if (!user) {
+            throw new CustomError('User not found', 404);
+        }
+        const checkAddress = await User.findOne({ address, _id: { $ne: userId } });
+        if (checkAddress) {
+            throw new CustomError('Address already in use', 400);
+        }
+        if (user.address) {
+            throw new CustomError('Address already set', 400);
+        }
+        user.address = address;
+        await user.save();
+        return UserUtils.populateUser(user);
+    }
+
     static async updateProfile(userId: string, updateData: { name?: string; email?: string }): Promise<IUser> {
         const user = await User.findById(userId);
         if (!user) {

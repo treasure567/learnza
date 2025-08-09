@@ -12,6 +12,7 @@ export interface CompletedTask {
 export interface IUser extends Document {
     email: string;
     name: string;
+    address: string;
     password: string;
     verificationCode?: string;
     emailVerifiedAt: Date | null;
