@@ -19,14 +19,15 @@ export class SpeechController {
 
   public generate = async (req: Request, res: Response) => {
     try {
-      const { text, language, voice, filename, return: returnMode } = req.body as {
+      const { text, language, voice, filename, returnMode } = req.body as {
         text: string;
         language: SupportedLanguage;
         voice?: string;
         filename?: string;
-        return?: 'base64' | 'stream';
+        returnMode?: 'base64' | 'stream';
       };
-      const responseMode: 'base64' | 'stream' = (returnMode || 'base64');
+      
+      const responseMode: 'base64' | 'stream' = (returnMode || 'base64') as 'base64' | 'stream';
 
       if (!text || !language) {
         return res.status(400).json({ success: false, message: 'Missing required fields: text, language' });
@@ -34,7 +35,7 @@ export class SpeechController {
 
       const voiceMap: Record<SupportedLanguage, string> = {
         en: 'john',
-        yo: 'segun',
+        yo: 'femi',
         ha: 'hasan',
         ig: 'ngozi',
       };

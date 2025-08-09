@@ -181,7 +181,6 @@ export class LessonGeneratorModule {
     ): Promise<{ lesson: any, contents: ILessonContent[] }> {
         console.log("Starting lesson generation process");
         try {
-            // Step 1: Generate initial data
             const topic = await this.retryOperation(
                 () => this.formTopicFromUserRequest(userRequest),
                 'topic generation'
@@ -192,15 +191,16 @@ export class LessonGeneratorModule {
                 'title generation'
             );
 
-            // Step 2: Create lesson first
             const lesson = new Lesson({
                 title: titleData.title,
                 description: titleData.description,
                 difficulty: 'beginner',
                 estimatedTime: 0,
                 userId: new mongoose.Types.ObjectId(userId),
-                userRequest
+                userRequest,
+                generatingStatus: 'in_progress'
             });
+            
             const savedLesson = await lesson.save();
             console.log("Lesson created:", savedLesson._id);
 
@@ -241,6 +241,7 @@ export class LessonGeneratorModule {
             }, 0);
 
             savedLesson.estimatedTime = totalEstimatedTime;
+            savedLesson.generatingStatus = 'completed';
             await savedLesson.save();
             console.log("Lesson updated with total time:", totalEstimatedTime);
 
