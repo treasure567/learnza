@@ -35,18 +35,33 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
     });
 });
 
-// Connect to MongoDB
+// Helper to start server
+const startServer = () => {
+    app.listen(port, () => {
+        console.log(`Notifications microservice running on port ${port}`);
+        console.log('Endpoints:');
+        console.log('  POST /api/notifications/push');
+        console.log('  POST /api/notifications/email');
+        console.log('  POST /api/notifications/sms');
+        console.log('  POST /api/notifications/sms/bulk');
+        console.log('  GET  /api/notifications/sms/health');
+        console.log('  POST /api/notifications/webhook');
+    });
+};
+
+// Connect to MongoDB if MONGODB_URI is set; otherwise, start without DB
 const mongoUri = process.env.MONGODB_URI;
-mongoose.connect(mongoUri as string)
-    .then(() => {
-        console.log('Notifications Service connected to MongoDB');
-        
-        // Start server
-        app.listen(port, () => {
-            console.log(`Notifications microservice running on port ${port}`);
+if (mongoUri) {
+    mongoose.connect(mongoUri as string)
+        .then(() => {
+            console.log('Notifications Service connected to MongoDB');
+            startServer();
+        })
+        .catch((error) => {
+            console.error('Notifications Service MongoDB connection error (continuing without DB):', error);
+            startServer();
         });
-    })
-    .catch((error) => {
-        console.error('Notifications Service MongoDB connection error:', error);
-        process.exit(1);
-    }); 
+} else {
+    console.warn('MONGODB_URI not set. Starting Notifications Service without database...');
+    startServer();
+}
