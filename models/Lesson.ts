@@ -7,6 +7,7 @@ interface ILesson extends Document {
     estimatedTime: number; // Total time in seconds
     userId: string;
     userRequest: string; // Store the original request
+    languageCode: string;
     generatingStatus: 'not_started' | 'in_progress' | 'completed' | 'failed';
     status: 'not_started' | 'in_progress' | 'completed';
 }
@@ -38,6 +39,12 @@ const lessonSchema = new Schema({
     userRequest: {
         type: String,
         required: true // Store the original user request
+    },
+    languageCode: {
+        type: String,
+        required: true,
+        enum: ['en', 'yo', 'ha', 'ig'],
+        default: 'en'
     },
     generatingStatus: {
         type: String,
