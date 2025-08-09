@@ -65,11 +65,42 @@ export const sendBulkSms = async (req: Request, res: Response) => {
 
 export const smsHealthCheck = async (req: Request, res: Response) => {
   try {
-    if (!process.env.SMS_GATE_USERNAME || !process.env.SMS_GATE_PASSWORD) {
-      return res.status(503).json({ success: false, message: 'SMS service not configured - missing credentials' });
+    const smsConfigured = !!(process.env.SMS_GATE_USERNAME && process.env.SMS_GATE_PASSWORD);
+    
+    // Import Gemini service dynamically to avoid circular imports
+    let geminiStatus = { available: false, model: 'unknown', error: 'Not checked' };
+    try {
+      const { default: geminiService } = await import('../services/GeminiService');
+      const status = await geminiService.healthCheck();
+      geminiStatus = {
+        available: status.available,
+        model: status.model,
+        error: status.error || 'No error'
+      };
+    } catch (error) {
+      geminiStatus.error = error instanceof Error ? error.message : 'Import failed';
     }
-    return res.status(200).json({ success: true, message: 'SMS service is healthy and ready', configured: true });
-  } catch {
+
+    const overallHealthy = smsConfigured;
+    
+    return res.status(overallHealthy ? 200 : 503).json({ 
+      success: overallHealthy, 
+      message: overallHealthy ? 'SMS service is healthy and ready' : 'SMS service not fully configured',
+      services: {
+        sms: {
+          configured: smsConfigured,
+          status: smsConfigured ? 'healthy' : 'missing credentials'
+        },
+        gemini: {
+          available: geminiStatus.available,
+          model: geminiStatus.model,
+          status: geminiStatus.available ? 'healthy' : 'fallback mode',
+          error: geminiStatus.error
+        }
+      }
+    });
+  } catch (error) {
+    console.error('SMS health check error:', error);
     return res.status(500).json({ success: false, message: 'SMS service health check failed' });
   }
 };

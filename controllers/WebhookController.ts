@@ -57,8 +57,15 @@ export const handleSmsWebhook = async (req: Request, res: Response) => {
     }
 
     console.log('🤖 Generating Gemini reply...');
-    const replyText = await geminiService.craftSmsReply(inboundText, senderPhone);
-    console.log(`💬 Gemini reply: "${replyText}"`);
+    let replyText: string;
+    try {
+      replyText = await geminiService.craftSmsReply(inboundText, senderPhone);
+      console.log(`💬 Gemini reply: "${replyText}"`);
+    } catch (error) {
+      console.error('❌ Gemini service error:', error);
+      replyText = "Hi! Thanks for contacting Learnza. How can I help you today?";
+      console.log(`💬 Using fallback reply: "${replyText}"`);
+    }
 
     const port = process.env.NOTIFICATION_SERVICE_PORT || 4002;
     const baseUrl = `http://127.0.0.1:${port}`;
@@ -66,6 +73,7 @@ export const handleSmsWebhook = async (req: Request, res: Response) => {
 
     console.log(`📤 Posting to internal SMS API: ${baseUrl}/api/notifications/sms`);
     console.log(`🔑 Using auth token: ${token ? 'YES' : 'NO'}`);
+    console.log(`📱 Outgoing SMS will use SIM 1`);
 
     const smsRes = await fetch(`${baseUrl}/api/notifications/sms`, {
       method: 'POST',

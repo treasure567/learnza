@@ -13,7 +13,7 @@ class SmsService {
     }
   }
 
-  async sendSms(phoneNumber: string, message: string) {
+  async sendSms(phoneNumber: string, message: string, simSlot: number = 1) {
     const response = await fetch(this.api_url, {
       method: 'POST',
       headers: {
@@ -23,6 +23,7 @@ class SmsService {
       body: JSON.stringify({
         textMessage: { text: message },
         phoneNumbers: [phoneNumber],
+        simSlot: simSlot, // Force SIM 1 for outgoing messages
       }),
     });
 
@@ -34,7 +35,7 @@ class SmsService {
     return await response.json();
   }
 
-  async sendBulkSms(phoneNumbers: string[], message: string) {
+  async sendBulkSms(phoneNumbers: string[], message: string, simSlot: number = 1) {
     const response = await fetch(this.api_url, {
       method: 'POST',
       headers: {
@@ -44,6 +45,7 @@ class SmsService {
       body: JSON.stringify({
         textMessage: { text: message },
         phoneNumbers: phoneNumbers,
+        simSlot: simSlot, // Force SIM 1 for outgoing messages
       }),
     });
 
