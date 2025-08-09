@@ -255,19 +255,8 @@ export class InteractService {
                     },
                     requirements,
                     languagePolicy: {
-                        priority: "request.languageCode overrides any stored preference",
-                        mapping: {
-                            en: "English",
-                            yo: "Yoruba",
-                            ha: "Hausa",
-                            ig: "Igbo"
-                        },
-                        effectiveLanguage: {
-                            code: effectiveLanguageCode || null,
-                            name: effectiveLanguageName
-                        },
                         instructions: [
-                            "If request.languageCode is provided and recognized (en, yo, ha, ig), respond strictly in that language.",
+                            "If request.languageCode is provided and recognized (English, Yoruba, Hausa, Igbo), respond strictly in that language.",
                             "If request.languageCode is missing or unrecognized, respond in the student's stored language; fallback to English if unavailable.",
                             "Do not switch languages within the response."
                         ]
