@@ -37,12 +37,23 @@ export const handleSmsWebhook = async (req: Request, res: Response) => {
 
     const inboundText = body.payload.message?.trim() || '';
     const senderPhone = body.payload.phoneNumber;
+    const simNumber = body.payload.simNumber;
     
-    console.log(`📱 SMS from ${senderPhone}: "${inboundText}"`);
+    console.log(`📱 SMS from ${senderPhone} (SIM ${simNumber}): "${inboundText}"`);
     
     if (!senderPhone || !inboundText) {
       console.log('❌ Missing phone number or message content');
       return res.status(400).json({ success: false, message: 'Missing phoneNumber or message' });
+    }
+
+    // Only process messages from SIM 1
+    if (simNumber !== 1) {
+      console.log(`⚠️ Ignoring SMS from SIM ${simNumber} - only processing SIM 1`);
+      return res.status(200).json({ 
+        success: true, 
+        message: 'SMS ignored - not from SIM 1',
+        data: { simNumber, ignored: true }
+      });
     }
 
     console.log('🤖 Generating Gemini reply...');
