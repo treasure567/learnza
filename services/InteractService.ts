@@ -152,6 +152,20 @@ export class InteractService {
             const formattedHistory = this.formatChatHistory(chatHistory);
             const isCompletionRequest = this.checkForCompletionRequest(request.userChat);
 
+            // Determine requested language (request.languageCode has absolute priority over stored user language)
+            const incomingLanguageCode = (request.languageCode || '').trim().toLowerCase();
+            const codeToLanguageName: Record<string, string> = {
+                en: 'English',
+                yo: 'Yoruba',
+                ha: 'Hausa',
+                ig: 'Igbo'
+            };
+            const hasValidIncomingCode = Boolean(codeToLanguageName[incomingLanguageCode]);
+            const effectiveLanguageCode = hasValidIncomingCode ? incomingLanguageCode : '';
+            const effectiveLanguageName = hasValidIncomingCode
+                ? codeToLanguageName[incomingLanguageCode]
+                : (context.user.language ? (context.user.language as any).name : 'English');
+
             const requirements: PromptRequirements = {
                 responseStyle: "Warm, friendly, and conversational - use emojis, laugh (using 😄 or 😊), and be encouraging. Keep sentences short and clear. Respond in the student's specified language.",
                 focus: "Teach one small concept at a time! Use short, clear sentences. Break down concepts into digestible pieces. Maximum response length is 2000 characters.",
@@ -176,7 +190,8 @@ export class InteractService {
                 context: {
                     student: {
                         name: context.user.name,
-                        language: context.user.language ? (context.user.language as any).name : 'English',
+                        languageCode: effectiveLanguageCode || undefined,
+                        languageName: effectiveLanguageName,
                         accessibilityNeeds: context.user.accessibilityNeeds || []
                     },
                     lesson: {
@@ -196,7 +211,7 @@ export class InteractService {
                         role: "Friendly and Enthusiastic Educational AI Assistant with PhD",
                         personality: "Warm, encouraging, and relatable - like a supportive friend who happens to be an expert",
                         traits: [
-                            "Responds in the user's specified language.",
+                            "Responds ONLY in the specified language.",
                             "Includes proper intonation markers for the specified language (e.g., accents, tones).",
                             "Teaches one concept at a time with clear examples",
                             "Uses short, easy-to-follow sentences",
@@ -213,6 +228,24 @@ export class InteractService {
                         }
                     },
                     requirements,
+                    languagePolicy: {
+                        priority: "request.languageCode overrides any stored preference",
+                        mapping: {
+                            en: "English",
+                            yo: "Yoruba",
+                            ha: "Hausa",
+                            ig: "Igbo"
+                        },
+                        effectiveLanguage: {
+                            code: effectiveLanguageCode || null,
+                            name: effectiveLanguageName
+                        },
+                        instructions: [
+                            "If request.languageCode is provided and recognized (en, yo, ha, ig), respond strictly in that language.",
+                            "If request.languageCode is missing or unrecognized, respond in the student's stored language; fallback to English if unavailable.",
+                            "Do not switch languages within the response."
+                        ]
+                    },
                     completionGuidelines: {
                         verificationRequired: isCompletionRequest,
                         teachingProgress: {
