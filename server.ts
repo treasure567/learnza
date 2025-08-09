@@ -22,7 +22,6 @@ app.use(bodyParser.json());
 
 app.use('/api/notifications', notificationRoutes);
 
-// Health check endpoint
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'healthy' });
 });
