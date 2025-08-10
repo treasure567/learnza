@@ -104,6 +104,7 @@ export class GeminiService {
       '- Uses AI and blockchain for decentralized credentialing',
       '- Features an earn-to-learn model to reward continuous learning',
       '- Offers offline-first access and culturally relevant content',
+      '- Website: https://learnza.net.ng (provide this link if someone asks about the website)',
       '',
       'Guidelines:',
       '- Be friendly, concise, and helpful.',
